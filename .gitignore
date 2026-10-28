@@ -1,0 +1,10 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+tools-download/
+tools/*.log
+*.tgz
+console/data/
+benchmark.log
+install.log
