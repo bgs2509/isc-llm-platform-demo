@@ -264,7 +264,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum by (api_key_alias) (rate(litellm_proxy_total_requests_metric_total[1m]))",
+          "expr": "sum by (api_key_alias) (rate(litellm_proxy_total_requests_metric_total{api_key_alias!~\"None|\"}[1m]))",
           "legendFormat": "{{api_key_alias}}"
         }
       ]
@@ -296,7 +296,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum by (api_key_alias, exception_status) (rate(litellm_proxy_failed_requests_metric_total[1m]))",
+          "expr": "sum by (api_key_alias, exception_status) (rate(litellm_proxy_failed_requests_metric_total{api_key_alias!~\"None|\"}[1m]))",
           "legendFormat": "{{api_key_alias}} {{exception_status}}"
         }
       ]
@@ -328,7 +328,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum by (api_key_alias) (litellm_spend_metric_total)",
+          "expr": "sum by (api_key_alias) (litellm_spend_metric_total{api_key_alias!~\"None|\"})",
           "legendFormat": "{{api_key_alias}}"
         }
       ]
@@ -360,7 +360,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum by (api_key_alias) (rate(litellm_total_tokens_metric_total[1m]))",
+          "expr": "sum by (api_key_alias) (rate(litellm_total_tokens_metric_total{api_key_alias!~\"None|\"}[1m]))",
           "legendFormat": "{{api_key_alias}}"
         }
       ]
