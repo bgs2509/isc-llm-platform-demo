@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Private LLM platform console</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <div>
+    <h1>Private LLM platform</h1>
+    <p class="sub">Load tests against <code id="model">…</code> through the team gateway. Change a setting, run a test, watch the numbers move.</p>
+  </div>
+  <span id="conn" class="pill off">connecting…</span>
+</header>
+<main>
+  <section class="card controls">
+    <h2>Load test</h2>
+    <label>Team (gateway key)
+      <select id="tenant"></select>
+    </label>
+    <label>Concurrent requests: <b id="vConc">4</b>
+      <input id="concurrency" type="range" min="1" max="32" value="4">
+    </label>
+    <label>Duration, seconds: <b id="vDur">30</b>
+      <input id="duration" type="range" min="10" max="120" step="5" value="30">
+    </label>
+    <label>Max output tokens: <b id="vTok">128</b>
+      <input id="maxtokens" type="range" min="16" max="512" step="16" value="128">
+    </label>
+    <label>Workload
+      <select id="shape">
+        <option value="unique">Unique prompts (gateway cache cannot hit)</option>
+        <option value="repeated">Repeated prompts (gateway cache can hit)</option>
+      </select>
+    </label>
+    <label>GPU price, USD per hour (demo assumption)
+      <input id="price" type="number" min="0" step="0.05" value="0.20">
+    </label>
+    <div class="buttons">
+      <button id="run" class="primary">Run test</button>
+      <button id="stop">Stop</button>
+    </div>
+    <p id="runmsg" class="hint"></p>
+    <p class="hint">GPU utilization is a whole-GPU number: it includes any other process using the card.</p>
+  </section>
+
+  <section class="card live">
+    <h2>Live <span id="runstate" class="pill off">idle</span></h2>
+    <div class="kpis">
+      <div><span id="kGpu">–</span><small>GPU utilization, %</small></div>
+      <div><span id="kKv">–</span><small>KV cache used, %</small></div>
+      <div><span id="kRun">–</span><small>running / waiting (model)</small></div>
+      <div><span id="kTps">–</span><small>output tokens/s (last 5 s)</small></div>
+      <div><span id="kTtft">–</span><small>time to first token p95, s</small></div>
+      <div><span id="kReq">–</span><small>ok / failed / cache hits</small></div>
+    </div>
+    <div class="charts">
+      <figure><figcaption>Output tokens per second</figcaption><canvas id="cTps"></canvas></figure>
+      <figure><figcaption>Time to first token, seconds</figcaption><canvas id="cTtft"></canvas></figure>
+      <figure><figcaption>GPU utilization and KV cache, %</figcaption><canvas id="cGpu"></canvas></figure>
+      <figure><figcaption>Requests: in flight (client), running and waiting (model)</figcaption><canvas id="cReq"></canvas></figure>
+    </div>
+  </section>
+
+  <section class="card results">
+    <h2>Saved runs</h2>
+    <div class="scroll">
+      <table id="runs"><thead><tr>
+        <th>Run</th><th>Team</th><th>Conc.</th><th>Workload</th><th>tokens/s</th><th>TTFT p95, s</th>
+        <th>GPU avg, %</th><th>USD / 1M tokens</th><th>Errors</th><th>Label</th>
+      </tr></thead><tbody></tbody></table>
+    </div>
+    <h3>Compare two runs</h3>
+    <div class="cmp">
+      <label>A <select id="cmpA"></select></label>
+      <label>B <select id="cmpB"></select></label>
+    </div>
+    <div id="compare" class="scroll"></div>
+  </section>
+</main>
+<script src="app.js"></script>
+</body>
+</html>
