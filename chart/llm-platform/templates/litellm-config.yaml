@@ -1,0 +1,26 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: litellm-config
+  labels: {{- include "llm-platform.labels" . | nindent 4 }}
+data:
+  config.yaml: |
+    model_list:
+      - model_name: {{ .Values.model.alias }}
+        litellm_params:
+          model: openai/{{ .Values.model.servedName }}
+          api_base: {{ include "llm-platform.modelBase" . }}/v1
+          api_key: none
+        model_info:
+          input_cost_per_token: {{ printf "%.10f" (divf .Values.pricing.inputPerMillion 1000000) }}
+          output_cost_per_token: {{ printf "%.10f" (divf .Values.pricing.outputPerMillion 1000000) }}
+    general_settings:
+      master_key: os.environ/LITELLM_MASTER_KEY
+      database_url: os.environ/DATABASE_URL
+    litellm_settings:
+      cache: true
+      cache_params:
+        type: local
+      callbacks: ["prometheus"]
+      drop_params: true
+      num_retries: 1

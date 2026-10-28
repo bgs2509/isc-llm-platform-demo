@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: litellm
+  labels: {{- include "llm-platform.labels" . | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels: {app: litellm}
+  template:
+    metadata:
+      labels: {app: litellm}
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/litellm-config.yaml") . | sha256sum | trunc 16 }}
+    spec:
+      initContainers:
+        - name: wait-for-postgres
+          image: {{ .Values.images.postgres }}
+          imagePullPolicy: IfNotPresent
+          command: ["sh", "-c", "until pg_isready -h postgres -U litellm; do sleep 2; done"]
+      containers:
+        - name: litellm
+          image: {{ .Values.images.litellm }}
+          imagePullPolicy: IfNotPresent
+          args: ["--config", "/etc/litellm/config.yaml", "--port", "4000"]
+          env:
+            - name: LITELLM_MASTER_KEY
+              valueFrom: {secretKeyRef: {name: llm-platform-secrets, key: masterKey}}
+            - name: POSTGRES_PASSWORD
+              valueFrom: {secretKeyRef: {name: llm-platform-secrets, key: postgresPassword}}
+            - name: DATABASE_URL
+              value: postgresql://litellm:$(POSTGRES_PASSWORD)@postgres:5432/litellm
+          ports: [{containerPort: 4000}]
+          readinessProbe:
+            httpGet: {path: /health/readiness, port: 4000}
+            initialDelaySeconds: 15
+            periodSeconds: 5
+            failureThreshold: 30
+          volumeMounts: [{name: config, mountPath: /etc/litellm}]
+          resources: {requests: {cpu: 100m, memory: 512Mi}, limits: {memory: 2Gi}}
+      volumes:
+        - name: config
+          configMap: {name: litellm-config}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: litellm
+spec:
+  selector: {app: litellm}
+  ports: [{port: 4000}]

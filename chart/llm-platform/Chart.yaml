@@ -1,0 +1,6 @@
+apiVersion: v2
+name: llm-platform
+description: Private LLM platform in a box - a team gateway, observability and a load-test console in front of an existing OpenAI-compatible model server
+type: application
+version: 0.1.0
+appVersion: "0.1.0"

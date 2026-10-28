@@ -1,0 +1,43 @@
+{{- /* Creates the team keys in the gateway after install and upgrade. Safe to repeat. */ -}}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: bootstrap-team-keys
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-weight": "5"
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+spec:
+  backoffLimit: 3
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: bootstrap
+          image: {{ .Values.images.curl }}
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: MASTER
+              valueFrom: {secretKeyRef: {name: llm-platform-secrets, key: masterKey}}
+            {{- range .Values.tenants }}
+            - name: KEY_{{ upper .name }}
+              valueFrom: {secretKeyRef: {name: llm-platform-secrets, key: key-{{ .name }}}}
+            {{- end }}
+          command: ["sh", "-c"]
+          args:
+            - |
+              set -e
+              until curl -fsS http://litellm:4000/health/readiness >/dev/null; do sleep 3; done
+              create() {
+                code=$(curl -s -o /tmp/out -w '%{http_code}' -X POST http://litellm:4000/key/generate \
+                  -H "Authorization: Bearer $MASTER" -H 'Content-Type: application/json' \
+                  -d "{\"key\":\"$2\",\"key_alias\":\"$1\",\"models\":[\"{{ .Values.model.alias }}\"],\"max_parallel_requests\":$3,\"rpm_limit\":$4,\"max_budget\":$5,\"budget_duration\":\"1d\",\"metadata\":{\"team\":\"$1\"}}")
+                case "$code" in
+                  200) echo "created key for $1" ;;
+                  400|409) echo "key for $1 already exists or was rejected ($code): $(cat /tmp/out)" ;;
+                  *) echo "failed for $1 ($code): $(cat /tmp/out)"; exit 1 ;;
+                esac
+              }
+              {{- range .Values.tenants }}
+              create {{ .name }} "$KEY_{{ upper .name }}" {{ .maxParallelRequests }} {{ .rpmLimit }} {{ .maxBudgetUsd }}
+              {{- end }}

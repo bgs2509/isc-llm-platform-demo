@@ -1,0 +1,80 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-config
+  labels: {{- include "llm-platform.labels" . | nindent 4 }}
+data:
+  prometheus.yml: |
+    global:
+      scrape_interval: 5s
+      evaluation_interval: 5s
+    rule_files:
+      - /etc/prometheus/rules/*.yml
+    scrape_configs:
+      - job_name: vllm
+        metrics_path: /metrics
+        static_configs:
+          - targets: ["{{ .Values.host.address }}:{{ .Values.host.modelPort }}"]
+      - job_name: gpu
+        static_configs:
+          - targets: ["{{ .Values.host.address }}:{{ .Values.host.gpuPort }}"]
+      - job_name: gateway
+        metrics_path: /metrics/
+        authorization:
+          type: Bearer
+          credentials_file: /etc/prometheus/secrets/masterKey
+        static_configs:
+          - targets: ["litellm:4000"]
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-rules
+  labels: {{- include "llm-platform.labels" . | nindent 4 }}
+data:
+  llm-platform.yml: |
+    groups:
+      - name: llm-platform
+        rules:
+          - alert: ModelEndpointDown
+            expr: up{job="vllm"} == 0
+            for: 1m
+            labels: {severity: critical}
+            annotations:
+              summary: "The model server does not answer metrics scrapes"
+              runbook: "docs/runbooks/01-model-endpoint-down.md"
+          - alert: ModelQueueBuildingUp
+            expr: sum(vllm:num_requests_waiting) > 4
+            for: 1m
+            labels: {severity: warning}
+            annotations:
+              summary: "More than 4 requests wait for a free slot on the model"
+              runbook: "docs/runbooks/02-slow-answers-or-queue.md"
+          - alert: TimeToFirstTokenSlow
+            expr: histogram_quantile(0.95, sum(rate(vllm:time_to_first_token_seconds_bucket[5m])) by (le)) > 5
+            for: 5m
+            labels: {severity: warning}
+            annotations:
+              summary: "p95 time to first token is above 5 seconds"
+              runbook: "docs/runbooks/02-slow-answers-or-queue.md"
+          - alert: KvCacheNearlyFull
+            expr: max(vllm:kv_cache_usage_perc) > 0.9
+            for: 2m
+            labels: {severity: warning}
+            annotations:
+              summary: "KV cache is more than 90 percent full"
+              runbook: "docs/runbooks/03-kv-cache-full.md"
+          - alert: GatewayErrorRateHigh
+            expr: sum(rate(litellm_proxy_failed_requests_metric_total[5m])) / clamp_min(sum(rate(litellm_proxy_total_requests_metric_total[5m])), 0.001) > 0.05
+            for: 5m
+            labels: {severity: warning}
+            annotations:
+              summary: "More than 5 percent of gateway requests fail"
+              runbook: "docs/runbooks/04-gateway-errors-and-limits.md"
+          - alert: GpuUnderusedUnderLoad
+            expr: avg_over_time(gpu_utilization_percent[2m]) < 30 and sum(vllm:num_requests_running) > 4
+            for: 2m
+            labels: {severity: info}
+            annotations:
+              summary: "Many requests run but the GPU is mostly idle"
+              runbook: "docs/runbooks/02-slow-answers-or-queue.md"

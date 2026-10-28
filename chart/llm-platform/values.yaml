@@ -1,0 +1,44 @@
+# The model server (vLLM) runs outside the cluster, as a plain container on the GPU host.
+# kind nodes cannot see the host loopback, so a small relay listens on the cluster network
+# gateway address and forwards to the server (tools/model_forward.py), and a GPU exporter
+# listens next to it (tools/gpu_exporter.py).
+host:
+  address: 172.23.0.1   # gateway address of the kind Docker network
+  modelPort: 18310      # relay to the vLLM server
+  gpuPort: 18311        # nvidia-smi exporter
+
+model:
+  alias: qwen38              # model name the teams use at the gateway
+  servedName: qwen38-lil     # model name on the vLLM server
+
+# Internal chargeback rates, USD per 1 million tokens (demo values, edit for a real customer).
+pricing:
+  inputPerMillion: 0.15
+  outputPerMillion: 0.60
+
+# One virtual key per team. Limits are enforced by the gateway.
+tenants:
+  - name: research
+    maxParallelRequests: 16
+    rpmLimit: 600
+    maxBudgetUsd: 50
+  - name: engineering
+    maxParallelRequests: 8
+    rpmLimit: 300
+    maxBudgetUsd: 20
+  - name: operations
+    maxParallelRequests: 2
+    rpmLimit: 30
+    maxBudgetUsd: 5
+
+images:
+  litellm: ghcr.io/berriai/litellm:main-latest   # tested with revision eeb7732 (2026-10-28)
+  postgres: postgres:17-alpine
+  prometheus: prom/prometheus:v3.14.0
+  grafana: grafana/grafana:13.2.1
+  console: llm-platform-console:0.1.0
+  curl: curlimages/curl:latest
+
+nodePorts:
+  console: 30500   # mapped to the host by cluster/kind-cluster.yaml
+  grafana: 30501
