@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>AI Gateway with LiteLLM</title>
 <link rel="icon" href="data:,">
-<link rel="stylesheet" href="mock.css">
+<link rel="stylesheet" href="static/site.css">
 </head>
 <body>
 <header class="top"><div class="top-in">
@@ -18,7 +18,6 @@
     <a href="observability.html" target="_blank" rel="noopener">5 Observability</a>
     <a href="delivery.html" target="_blank" rel="noopener">6 Delivery</a>
   </nav>
-  <button id="notes-toggle" class="notes-btn" type="button">Hide mock notes</button>
 </div></header>
 
 <main>
@@ -36,30 +35,29 @@
     </div>
     <div data-panel="research" style="margin-top:8px">
       <div class="strip">
-        <div><b><span class="ph">#.#</span></b><span>requests/s</span></div>
-        <div><b><span class="ph">###</span></b><span>tokens/s</span></div>
-        <div><b><span class="ph">#.####</span> of 50</b><span>USD spent of daily budget</span></div>
+        <div><b><span data-team-f="research.rps">{{g_research_rps}}</span></b><span>requests/s</span></div>
+        <div><b><span data-team-f="research.tps">{{g_research_tps}}</span></b><span>tokens/s</span></div>
+        <div><b>50 USD</b><span>daily budget (resets every 24 h)</span></div>
         <div><b>16 &middot; 600</b><span>parallel limit &middot; requests/min limit</span></div>
       </div>
     </div>
     <div data-panel="engineering" hidden style="margin-top:8px">
       <div class="strip">
-        <div><b><span class="ph">#.#</span></b><span>requests/s</span></div>
-        <div><b><span class="ph">###</span></b><span>tokens/s</span></div>
-        <div><b><span class="ph">#.####</span> of 20</b><span>USD spent of daily budget</span></div>
+        <div><b><span data-team-f="engineering.rps">{{g_engineering_rps}}</span></b><span>requests/s</span></div>
+        <div><b><span data-team-f="engineering.tps">{{g_engineering_tps}}</span></b><span>tokens/s</span></div>
+        <div><b>20 USD</b><span>daily budget (resets every 24 h)</span></div>
         <div><b>8 &middot; 300</b><span>parallel limit &middot; requests/min limit</span></div>
       </div>
     </div>
     <div data-panel="operations" hidden style="margin-top:8px">
       <div class="strip">
-        <div><b><span class="ph">#.#</span></b><span>requests/s</span></div>
-        <div><b><span class="ph">###</span></b><span>tokens/s</span></div>
-        <div><b><span class="ph">#.####</span> of 5</b><span>USD spent of daily budget</span></div>
+        <div><b><span data-team-f="operations.rps">{{g_operations_rps}}</span></b><span>requests/s</span></div>
+        <div><b><span data-team-f="operations.tps">{{g_operations_tps}}</span></b><span>tokens/s</span></div>
+        <div><b>5 USD</b><span>daily budget (resets every 24 h)</span></div>
         <div><b>2 &middot; 30</b><span>parallel limit &middot; requests/min limit</span></div>
       </div>
     </div>
-    <p class="src" style="margin-top:6px"><span class="pill live">live</span> /console/api/status?view=teams, 5-minute rate</p>
-    <p class="mock-note">Limits and budgets are the real values from <code>chart/llm-platform/values.yaml</code>. Whether the budget resets daily is to be checked against the gateway settings before the build.</p>
+    <p class="src" style="margin-top:6px"><span class="pill build" data-pill>build</span> /console/api/status?view=teams, 5-minute rate; before a live answer: the latest benchmark run of the team</p>
   </section>
 
   <section class="case">
@@ -92,19 +90,18 @@
   <section class="case">
     <h2><small>Results</small></h2>
     <div class="tiles">
-      <div class="tile"><span class="lbl">parallel limit</span><b><span class="ph">#</span> of <span class="ph">#,###</span></b><span class="sub">requests got through for a team limited to 2 parallel</span></div>
-      <div class="tile"><span class="lbl">cache</span><b><span class="ph">#,###</span> of <span class="ph">#,###</span></b><span class="sub">repeated requests answered from cache</span></div>
-      <div class="tile"><span class="lbl">budget</span><b>refused after <span class="ph">##</span></b><span class="sub">requests on a key with 0.001 USD budget; spend recorded <span class="ph">#.#####</span> vs computed <span class="ph">#.#####</span> USD</span></div>
-      <div class="tile"><span class="lbl">requests per minute</span><b><span class="ph">#</span> of <span class="ph">##</span></b><span class="sub">requests in one minute on a key limited to 5 rpm</span></div>
+      <div class="tile"><span class="lbl">parallel limit</span><b>{{pl_ok}} of {{pl_total}}</b><span class="sub">requests got through for a team limited to 2 parallel</span></div>
+      <div class="tile"><span class="lbl">cache</span><b>{{c_hits}} of {{c_total}}</b><span class="sub">repeated requests answered from cache</span></div>
+      <div class="tile"><span class="lbl">budget</span><b>refused after {{b_refused_after}}</b><span class="sub">requests on a key with 0.001 USD budget; spend recorded {{b_recorded}} vs computed {{b_computed}} USD</span></div>
+      <div class="tile"><span class="lbl">requests per minute</span><b>{{rpm_ok}} of {{rpm_sent}}</b><span class="sub">requests in one minute on a key limited to 5 rpm</span></div>
     </div>
-    <p class="src"><span class="pill build">build</span> docs/benchmark-results.json and docs/measurements/budget-drill.json, <span class="ph">YYYY-MM-DD</span></p>
-    <p class="mock-note">Budget and rpm tiles are the new drill C.3 on a temporary key, deleted afterwards.</p>
+    <p class="src"><span class="pill build">build</span> docs/benchmark-results.json and docs/measurements/budget-drill.json, {{g_date}}</p>
   </section>
 
   <section class="case">
     <h2><small>Trade-offs</small></h2>
     <ul>
-      <li>LiteLLM: keys, budgets and accounting out of the box; the gateway adds <span class="ph">##</span> ms per request</li>
+      <li>LiteLLM: keys, budgets and accounting out of the box; its overhead per request was not measured separately (every run goes through it)</li>
       <li>Exact-match cache only: safe, but a reworded question misses it</li>
       <li>Budgets in USD come from an assumed GPU price, not a bill</li>
     </ul>
@@ -123,13 +120,13 @@
   <section class="case">
     <h2><small>Links</small></h2>
     <ul>
-      <li><a href="#runbook-04" target="_blank" rel="noopener">Runbook: gateway errors and team limits</a></li>
-      <li><a href="#benchmark" target="_blank" rel="noopener">Benchmark report: what the gateway adds</a></li>
-      <li><a href="#grafana" target="_blank" rel="noopener">Grafana: gateway row</a></li>
-      <li><a href="#console" target="_blank" rel="noopener">Console: run as a team</a></li>
+      <li><a href="docs/runbooks/04-gateway-errors-and-limits.html" target="_blank" rel="noopener">Runbook: gateway errors and team limits</a></li>
+      <li><a href="docs/benchmark-report.html" target="_blank" rel="noopener">Benchmark report: what the gateway adds</a></li>
+      <li><a href="grafana/" target="_blank" rel="noopener">Grafana: gateway row</a></li>
+      <li><a href="console/" target="_blank" rel="noopener">Console: run as a team</a></li>
     </ul>
   </section>
 </main>
-<script src="mock.js"></script>
+<script src="static/site.js"></script>
 </body>
 </html>

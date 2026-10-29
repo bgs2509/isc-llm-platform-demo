@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Debugging and Delivery</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="static/site.css">
+</head>
+<body>
+<header class="top"><div class="top-in">
+  <a class="brand" href="index.html" target="_blank" rel="noopener">Private LLM platform</a>
+  <nav>
+    <a href="inference.html" target="_blank" rel="noopener">1 Inference</a>
+    <a href="infrastructure.html" target="_blank" rel="noopener">2 Infrastructure</a>
+    <a href="gateway.html" target="_blank" rel="noopener">3 Gateway</a>
+    <a href="rag.html" target="_blank" rel="noopener">4 RAG and agent</a>
+    <a href="observability.html" target="_blank" rel="noopener">5 Observability</a>
+    <a href="delivery.html" target="_blank" rel="noopener" aria-current="page">6 Delivery</a>
+  </nav>
+</div></header>
+
+<main>
+  <section>
+    <p class="eyebrow">Requirement 6 of 6</p>
+    <h1>Debugging, delivery ownership and stakeholders</h1>
+    <div class="kw"><span>debugging</span><span>root cause</span><span>delivery</span><span>runbooks</span><span>handover</span><span>stakeholders</span></div>
+  </section>
+
+  <section class="case">
+    <h2><small>Challenge</small></h2>
+    <ul>
+      <li>Ship on hardware, network and a proxy owned by other people</li>
+      <li>Find root causes across five layers: model, gateway, cluster, network, site</li>
+      <li>Leave a platform another team can run without me</li>
+    </ul>
+  </section>
+
+  <section class="case">
+    <h2><small>Solution</small> incidents from this build</h2>
+    <div class="picker-row">
+      {{incident_chips}}
+    </div>
+    <div class="cards">
+      {{incident_cards}}
+    </div>
+  </section>
+
+  <section class="case">
+    <h2><small>Stakeholders and constraints</small></h2>
+    <div class="tbl"><table>
+      <tr><th>role</th><th>owns</th><th>constraint for this build</th><th>how it was handled</th></tr>
+      <tr><td>GPU host owner</td><td>the machine and the running model</td><td>no restart of the model; no second model in GPU memory</td><td>relay instead of moving the model; fallback moved to "What I'd change"</td></tr>
+      <tr><td>Portal team</td><td>the shared TLS proxy</td><td>changes only through their repository, with their confirmation</td><td>one site block per site; login kept in this project's origin</td></tr>
+      <tr><td>Network admin</td><td>the GPU host's network</td><td>no inbound port</td><td>outbound reverse tunnel</td></tr>
+    </table></div>
+  </section>
+
+  <section class="case">
+    <h2><small>Results</small> delivery checklist</h2>
+    <div class="tiles">
+      <div class="tile"><span class="lbl">tests</span><b>{{tests_total}}</b><span class="sub">console, site and scripts tests, all passing at build</span></div>
+      <div class="tile"><span class="lbl">runbooks</span><b>5</b><span class="sub">one per alert family, linked from the rules</span></div>
+      <div class="tile"><span class="lbl">releases</span><b>{{rel_total}}</b><span class="sub">Helm revisions, {{rel_failed}} failed and rolled forward</span></div>
+      <div class="tile"><span class="lbl">install</span><b>1 command</b><span class="sub"><code>scripts/install.sh</code></span></div>
+      <div class="tile"><span class="lbl">handover</span><b>1 document</b><span class="sub">what the customer team receives and runs</span></div>
+    </div>
+    <p class="src"><span class="pill build">build</span> repository at commit {{input_commit}}</p>
+  </section>
+
+  <section class="case">
+    <h2><small>Trade-offs</small></h2>
+    <ul>
+      <li>One engineer, one host: fast decisions, no second reviewer of the code</li>
+      <li>Incidents are from a demo build, not from customer traffic</li>
+    </ul>
+  </section>
+
+  <section class="case">
+    <h2><small>What I'd change at scale</small></h2>
+    <ul>
+      <li>Incident write-ups as a template in the repository, filled within a day</li>
+      <li>CI on every pull request: tests, <code>helm lint</code>, chart install in a fresh kind cluster</li>
+      <li>A weekly review of alerts that fired, with the team that owns each layer</li>
+    </ul>
+  </section>
+
+  <section class="case">
+    <h2><small>Links</small></h2>
+    <ul>
+      <li><a href="docs/handover.html" target="_blank" rel="noopener">Handover</a></li>
+      <li>Runbooks: <a href="docs/runbooks/01-model-endpoint-down.html" target="_blank" rel="noopener">01</a>, <a href="docs/runbooks/02-slow-answers-or-queue.html" target="_blank" rel="noopener">02</a>, <a href="docs/runbooks/03-kv-cache-full.html" target="_blank" rel="noopener">03</a>, <a href="docs/runbooks/04-gateway-errors-and-limits.html" target="_blank" rel="noopener">04</a>, <a href="docs/runbooks/05-release-upgrade-rollback.html" target="_blank" rel="noopener">05</a></li>
+      <li><a href="readme.html" target="_blank" rel="noopener">Install script</a></li>
+          </ul>
+  </section>
+</main>
+<script src="static/site.js"></script>
+</body>
+</html>
