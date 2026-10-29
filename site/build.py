@@ -119,7 +119,7 @@ def main() -> None:
     OUT.mkdir(parents=True)
     write("style.css", CSS)
     write("index.html", page("Private LLM platform", landing(), 0))
-    pages = [("readme.html", ROOT / "README.md", "README")]
+    pages = [("readme.html", ROOT / "README.md", "README"), ("deploy/README.html", ROOT / "deploy" / "README.md", "publishing")]
     for name in ("architecture", "benchmark-report", "handover"):
         pages.append((f"docs/{name}.html", ROOT / "docs" / f"{name}.md", name))
     for p in sorted((ROOT / "docs" / "runbooks").glob("*.md")):

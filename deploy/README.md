@@ -28,11 +28,27 @@ origin container is separate, so the change to the existing setup is one site bl
 ## Steps
 
 1. GPU host: `helm upgrade ... -f deploy/values-site.yaml` with `publicUrl: https://<host>:9443`.
-2. Web server: copy `deploy/origin/` (with `auth.caddy`) and `site/dist` to a directory, `docker compose up -d`.
-3. GPU host: install the tunnel unit with a key that may open only ports 19500 and 19501.
+2. Web server: `git clone` this repository; on the GPU host run `site/build.py` and `deploy/render.py`, then
+   copy the two git-ignored results (`site/dist` as `deploy/origin/site/`, `deploy/origin/auth.caddy`) with a
+   `tar` pipe; `docker compose up -d` in `deploy/origin/`.
+3. GPU host: a new key for the tunnel only. On the web server its `authorized_keys` line starts with
+   `restrict,port-forwarding,permitlisten="127.0.0.1:19500",permitlisten="127.0.0.1:19501",command="/bin/false"`
+   (options as in `man sshd`); install the unit from the template with `systemctl --user enable --now`.
 4. Existing Caddy: add the block and the variable (`deploy/portal/`), validate, recreate the container.
-5. Verify: `curl -I https://<host>:9443/` returns 200; `/console/` asks for the password and then shows `live`;
-   `/grafana/` shows the dashboard.
+5. Web server firewall: with `ufw` and an input policy of DROP, packets from the portal's Docker network to the
+   docker0 address are dropped (`[UFW BLOCK] ... DPT=19080` in `/var/log/ufw.log`). Allow that one port:
+   `sudo ufw allow from <portal network subnet> to 172.17.0.1 port 19080 proto tcp`.
+6. Verify: `https://<host>:9443/` returns the home page; `/console/` and `/grafana/` answer 401 without the
+   password and the console and the dashboard with it.
+
+## Pitfalls met
+
+1. The origin's site address has no host (`http://:19080`, with `bind` for the address): the portal passes the
+   public name in `Host`, and a site address with a host makes Caddy answer an empty 200 to every path.
+2. The origin's Caddyfile is a single-file bind mount: after `git pull` recreate the container
+   (`docker compose up -d --force-recreate`), a restart keeps the old file.
+3. Checks from the web server itself go over loopback and pass the firewall; check from a container on the
+   portal's network or from outside.
 
 ## Security
 

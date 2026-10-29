@@ -15,6 +15,6 @@ existing OpenAI-compatible model server (vLLM). Packaged as a Helm chart, run on
 
 ## Commands
 
-- Tests: `cd console && python -m pytest`
+- Tests: `cd console && python -m pytest`; site links: `python -m pytest site`
 - Chart checks: `helm lint chart/llm-platform`
 - Install: `scripts/install.sh`
