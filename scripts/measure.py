@@ -40,21 +40,22 @@ def kv_row(params: dict, run: dict) -> dict:
 
 
 def drill_summary(timeline: list[dict], summary: dict, delete_at_s: float, ready_after_s: float | None) -> dict:
-    before = [p["tokens_per_s"] for p in timeline if p["t"] < delete_at_s and p.get("tokens_per_s")]
-    base = sum(before) / len(before) if before else None
-    recovered = None
-    if base:
-        dipped = False
-        for p in timeline:
-            if p["t"] <= delete_at_s:
-                continue
-            v = p.get("tokens_per_s") or 0.0
-            dipped = dipped or v < 0.9 * base
-            if dipped and v >= 0.9 * base:
-                recovered = p["t"] - delete_at_s
-                break
+    """The longest run of zero tokens/s after the delete (tokens/s is a 5 s window that swings on its own)."""
+    best, start = (None, None), None
+    for p in timeline:
+        if p["t"] <= delete_at_s:
+            continue
+        if not p.get("tokens_per_s"):
+            start = p["t"] if start is None else start
+        elif start is not None:
+            if best[0] is None or p["t"] - start > best[1] - best[0]:
+                best = (start, p["t"])
+            start = None
+    silent, answer = best
     return {"requests": summary["requests"], "failed": summary["requests"] - summary["ok"],
-            "baseline_tokens_per_s": base, "recovered_after_s": recovered, "seconds_to_ready": ready_after_s}
+            "no_answer_s": None if silent is None else answer - silent,
+            "recovered_after_s": None if answer is None else answer - delete_at_s,
+            "seconds_to_ready": ready_after_s}
 
 
 def alert_times(samples: list[tuple[float, str]], load_end_s: float) -> dict:

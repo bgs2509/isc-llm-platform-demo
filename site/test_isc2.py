@@ -63,7 +63,7 @@ def fixture_inputs() -> dict:
             {"prompt_words": w, "concurrency": c, "kv_cache_peak_pct": kvp, "waiting_peak": wt, "ttft_p95_s": tt,
              "tokens_per_s": tps} for w, c, kvp, wt, tt, tps in kv]},
         "gateway-drill": {"measured_at": "2026-10-30 09:10", "concurrency": 8, "duration_s": 60, "delete_at_s": 20,
-                          "requests": 40, "failed": 6, "baseline_tokens_per_s": 120.0, "recovered_after_s": 25.0,
+                          "requests": 40, "failed": 6, "no_answer_s": 17.0, "recovered_after_s": 25.0,
                           "seconds_to_ready": 14.0},
         "budget-drill": {"measured_at": "2026-10-30 09:20",
                          "rpm": {"limit_per_min": 5, "sent": 10, "ok": 5, "refused": 5},

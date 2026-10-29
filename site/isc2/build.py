@@ -276,13 +276,12 @@ def values(inputs: dict) -> dict[str, str]:
     v["gw_ready_line"] = f"Back to ready: {n(ready, 0, ' s')}"
     v["gw_failed_line"] = ("Failed requests: " + (f"{gw['failed']:,} of {gw['requests']:,}" if gw else NA))
     if gw is None:
-        v["gw_recover_line"] = f"Throughput back to 90 % of the average before the deletion: {NA}"
-    elif gw.get("recovered_after_s") is None:
-        v["gw_recover_line"] = "Throughput back to 90 % of the average before the deletion: no dip recorded"
+        v["gw_recover_line"] = f"Time without answers: {NA}"
+    elif gw.get("no_answer_s") is None:
+        v["gw_recover_line"] = "Time without answers: none recorded"
     else:
-        v["gw_recover_line"] = (f"Throughput back to 90 % of the average before the deletion "
-                                f"({n(gw['baseline_tokens_per_s'], 0, ' tokens/s')}) within "
-                                f"{n(gw['recovered_after_s'], 0, ' s')}")
+        v["gw_recover_line"] = (f"Time without answers: {n(gw['no_answer_s'], 0, ' s')}; first answer "
+                                f"{n(gw['recovered_after_s'], 0, ' s')} after the deletion")
     v["gw_date"] = day(gw.get("measured_at")) if gw else NA
     v["health_checked"] = "not checked yet"
     v["w2_up"] = "?"

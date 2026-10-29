@@ -16,15 +16,16 @@ def test_kv_row_takes_peaks_from_the_timeline():
                    "ttft_p95_s": 1.5, "tokens_per_s": 120.0}
 
 
-def test_drill_summary_counts_failures_and_recovery():
-    timeline = [{"t": t, "tokens_per_s": v} for t, v in
-                [(5, 100.0), (10, 100.0), (15, 100.0), (21, 20.0), (25, 0.0), (30, 50.0), (35, 95.0), (40, 100.0)]]
-    summary = {"requests": 200, "ok": 190}
-    s = measure.drill_summary(timeline, summary, delete_at_s=20.0, ready_after_s=9.5)
-    assert s["failed"] == 10 and s["requests"] == 200
-    assert s["baseline_tokens_per_s"] == 100.0
-    assert s["recovered_after_s"] == 15.0  # first point at or above 90 % of the baseline after the delete
-    assert s["seconds_to_ready"] == 9.5
+def test_drill_summary_measures_the_longest_silence_after_the_delete():
+    # tokens/s is a 5 s window and swings (205 -> 26 -> 205) on its own; only a run of zeros is an outage.
+    series = [(8, 179), (9, 205), (12, 0), (14, 51), (16, 205), (21, 26), (23, 205), (27, 179), (28, 0), (30, 0),
+              (36, 0), (44, 0), (45, 26), (47, 205), (51, 26), (59, 0), (60, 77)]
+    timeline = [{"t": t, "tokens_per_s": float(v)} for t, v in series]
+    s = measure.drill_summary(timeline, {"requests": 122, "ok": 51}, delete_at_s=20.0, ready_after_s=18.0)
+    assert s["failed"] == 71 and s["requests"] == 122
+    assert s["no_answer_s"] == 17.0  # zeros from 28 s until the first answer at 45 s
+    assert s["recovered_after_s"] == 25.0  # first answer after the silence, counted from the delete
+    assert s["seconds_to_ready"] == 18.0
 
 
 def test_alert_times_from_state_samples():
