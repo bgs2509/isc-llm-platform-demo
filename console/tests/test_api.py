@@ -1,3 +1,4 @@
+import httpx
 from fastapi.testclient import TestClient
 
 from app import main, platform_status
@@ -49,6 +50,9 @@ def test_ask_returns_agent_result(monkeypatch):
         return agent.AgentResult(answer="42", rounds=1, prompt_tokens=3, completion_tokens=2)
 
     monkeypatch.setattr(agent, "run_agent", fake_run)
+    real = httpx.AsyncClient  # a client without a transport loads the system CA file, not needed here
+    monkeypatch.setattr(main.httpx, "AsyncClient",
+                        lambda **kw: real(transport=httpx.MockTransport(lambda r: httpx.Response(200))))
     client = _with_tenant(monkeypatch)
     r = client.post("/api/agent/ask", json={"tenant": "research", "question": "why?"})
     assert r.status_code == 200

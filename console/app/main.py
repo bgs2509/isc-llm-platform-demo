@@ -2,17 +2,19 @@
 from __future__ import annotations
 
 import asyncio
+import functools
 import json
 import os
 from contextlib import asynccontextmanager
 from typing import Literal
 
+import httpx
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
-from . import platform_status
+from . import agent, corpus, platform_status
 from .runner import Runner, Settings
 from .stats import GPU_USD_PER_HOUR
 
@@ -69,6 +71,38 @@ async def config() -> dict:
 @app.get("/api/status")
 async def status(view: Literal["alerts", "teams", "signals", "health"]) -> list | dict:
     return await platform_status.fetch(view, runner.s.prometheus_url)
+
+
+class AskBody(BaseModel):
+    tenant: str
+    question: str = Field(max_length=500)
+
+
+@functools.lru_cache(maxsize=1)
+def search_index() -> corpus.Index:
+    """The blog index, built once on first use."""
+    return corpus.Index([c for a in corpus.load_articles() for c in corpus.chunk(a)])
+
+
+def search_docs(query: str) -> list[dict]:
+    return [{"title": h.chunk.title, "url": h.chunk.url, "text": h.chunk.text}
+            for h in search_index().search(query, k=3)]
+
+
+@app.post("/api/agent/ask")
+async def agent_ask(body: AskBody) -> dict:
+    key = runner.s.tenants.get(body.tenant)
+    if key is None:
+        raise HTTPException(404, "unknown tenant")
+
+    async def status(view: str):
+        return await platform_status.fetch(view, runner.s.prometheus_url)
+
+    async with httpx.AsyncClient(timeout=120.0) as client:
+        result = await agent.run_agent(
+            body.question, client=client, gateway_url=runner.s.gateway_url, model=runner.s.model,
+            key=key, team=body.tenant, search=search_docs, status=status, no_cache=False)
+    return result.to_dict()
 
 
 @app.post("/api/runs")
