@@ -1,4 +1,4 @@
-# llm-platform-demo
+# isc-llm-platform-demo
 
 A small private LLM platform: **one gateway in front of one large model, with per-team keys and limits,
 dashboards, alerts and a web console that proves the numbers.** It runs on a single GPU machine and is

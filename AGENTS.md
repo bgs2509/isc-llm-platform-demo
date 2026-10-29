@@ -1,4 +1,4 @@
-# llm-platform-demo
+# isc-llm-platform-demo
 
 `project_type: dev`
 
