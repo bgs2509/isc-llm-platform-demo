@@ -6,7 +6,8 @@ PURPOSE: fill the HTML templates in site/isc2/templates/ from site/isc2/inputs.j
 INPUTS: `gather()` runs the tests and reads docs/benchmark-results.json and docs/measurements/*.json;
     `render(inputs)` is pure: the same inputs and the same repository files give the same bytes.
 OUTPUTS: `render` returns {relative path: text}; `main` writes them.
-DEPENDS: site/build.py (`md_to_html` of the isc-1 builder), the standard library.
+DEPENDS: site/build.py (`md_to_html` of the isc-1 builder), console/app/platform_status.py (signal expressions),
+    chart/llm-platform/values.yaml (tenant limits), the standard library and httpx (imported by platform_status).
 Usage: python site/isc2/build.py [--from-inputs]   (--from-inputs renders site/isc2/inputs.json without tests)
 """
 import html
@@ -402,12 +403,31 @@ def _alert_lines(alert: dict | None) -> tuple[dict[str, str], float | None]:
             "ad_queue_line": f"Queue when the alert fired: {n(queue, 0, ' requests waiting')}"}, queue
 
 
+def platform_status():
+    """console/app/platform_status.py, loaded as part of the package `console_app` (it imports `.stats`)."""
+    if "console_app.platform_status" not in sys.modules:
+        pkg = ROOT / "console" / "app"
+        spec = importlib.util.spec_from_file_location("console_app", pkg / "__init__.py",
+                                                      submodule_search_locations=[str(pkg)])
+        sys.modules["console_app"] = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(sys.modules["console_app"])
+        importlib.import_module("console_app.platform_status")
+    return sys.modules["console_app.platform_status"]
+
+
+def _signal_expressions() -> dict[str, str]:
+    ps = platform_status()
+    q = ps.SIGNAL_QUERIES
+    return {"sigq_rel": esc(q["reliability"]), "sigq_lat": esc(q["latency"]), "sigq_use": esc(q["usage"]),
+            "sigq_err": esc(q["errors"]), "sigq_cost": esc(ps.COST_ARITHMETIC)}
+
+
 def _observability(c: dict) -> dict[str, str]:
     alert = c["meas"].get("alert-drill")
     s16 = c["runs"]["baseline c=16"]["summary"]
     errs = sum(s16["errors"].values())
     err5 = sum(count for code, count in s16["errors"].items() if code.startswith("5"))
-    v: dict[str, str] = {}
+    v: dict[str, str] = _signal_expressions()
     v["sig_rel"] = n(100 * (1 - err5 / s16["requests"]), 1, " %")
     v["sig_lat"] = n(s16["ttft_p95_s"], 2, " s")
     v["sig_use"] = n(s16["tokens_per_second"], 0)

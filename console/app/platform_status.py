@@ -51,6 +51,10 @@ SIGNAL_QUERIES = {
     "errors": f"100 * {_ERR_SHARE}",
 }
 
+# The cost signal is arithmetic on the usage series (`stats.cost_per_million_tokens`), not a query; the
+# observability page of the site shows this text.
+COST_ARITHMETIC = f"{GPU_USD_PER_HOUR:.2f} USD per hour / (usage in tokens/s * 3600) * 1,000,000"
+
 _COMPARE = re.compile(r"^(?P<left>.+?)\s*(?:>=|<=|==|!=|>|<)\s*-?[\d.]+$")
 _LOGIC = re.compile(r"\b(?:and|or|unless)\b")
 

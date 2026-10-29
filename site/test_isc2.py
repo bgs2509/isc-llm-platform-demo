@@ -3,6 +3,7 @@ tracked pages equal a fresh build.
 
 Run: python -m pytest site
 """
+import html
 import importlib.util
 import json
 import re
@@ -192,6 +193,15 @@ def test_read_tenants_parses_the_block():
     text = "a: 1\ntenants:\n  - name: x\n    maxParallelRequests: 4  # c\n    rpmLimit: 9\n    maxBudgetUsd: 2.5\nimages:\n  y: 1\n"
     assert build.read_tenants_text(text) == [{"name": "x", "maxParallelRequests": 4, "rpmLimit": 9,
                                               "maxBudgetUsd": 2.5}]
+
+
+def test_signal_expressions_are_those_of_platform_status(pages):
+    ps = build.platform_status()
+    shown = {name: html.unescape(m) for name, m in re.findall(
+        r'data-panel="(\w+)"[^>]*><h3>.*?<dt>Metric</dt><dd><code>(.*?)</code>', pages["observability.html"])}
+    expected = {"rel": ps.SIGNAL_QUERIES["reliability"], "lat": ps.SIGNAL_QUERIES["latency"],
+                "use": ps.SIGNAL_QUERIES["usage"], "err": ps.SIGNAL_QUERIES["errors"], "cost": ps.COST_ARITHMETIC}
+    assert shown == expected
 
 
 def test_sparklines_are_not_gated_on_the_live_choice():
