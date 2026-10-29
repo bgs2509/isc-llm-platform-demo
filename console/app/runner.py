@@ -14,6 +14,8 @@ from .loadgen import make_prompt, one_request
 from .stats import RequestResult, parse_prometheus_text, percentile, summarize
 
 WINDOW_S = 5.0
+# A replaced gateway pod: connects hang until the timeout, so connect gets its own short one.
+REQUEST_TIMEOUT_S, CONNECT_TIMEOUT_S, RETRY_PAUSE_S = 180.0, 5.0, 0.5
 
 
 @dataclass
@@ -158,7 +160,8 @@ class Runner:
         p = run["params"]
         deadline = run["t0"] + p["duration_s"]
         limits = httpx.Limits(max_connections=p["concurrency"] + 4)
-        async with httpx.AsyncClient(timeout=httpx.Timeout(180.0), limits=limits) as client:
+        timeout = httpx.Timeout(REQUEST_TIMEOUT_S, connect=CONNECT_TIMEOUT_S)
+        async with httpx.AsyncClient(timeout=timeout, limits=limits) as client:
             async def worker() -> None:
                 while time.perf_counter() < deadline and not self._stop.is_set():
                     prompt = make_prompt(p["shape"], p["prompt_words"])
@@ -169,6 +172,8 @@ class Runner:
                     finally:
                         run["in_flight"] -= 1
                     run["finished"].append((time.perf_counter(), result))
+                    if result.status == 0:  # no connection: do not spin while the gateway is away
+                        await asyncio.sleep(RETRY_PAUSE_S)
 
             await asyncio.gather(*[worker() for _ in range(p["concurrency"])])
         elapsed = max(time.perf_counter() - run["t0"], 1e-9)
