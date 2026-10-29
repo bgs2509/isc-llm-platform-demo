@@ -33,6 +33,7 @@ spec:
             - {name: VLLM_METRICS_URL, value: "{{ include "llm-platform.modelBase" . }}/metrics"}
             - {name: GPU_URL, value: "{{ include "llm-platform.gpuBase" . }}/json"}
             - {name: DATA_DIR, value: /data}
+            - {name: PROMETHEUS_URL, value: "http://prometheus:9090"}
             - name: TENANT_KEYS_JSON
               valueFrom: {secretKeyRef: {name: llm-platform-secrets, key: tenantKeysJson}}
           ports: [{containerPort: 8000}]

@@ -51,6 +51,18 @@ panels = [
           0, 40, unit="s"),
     panel(12, "Firing alerts",
           [('ALERTS{alertstate="firing"}', "{{alertname}} ({{severity}})")], 12, 40, kind="table"),
+    {"id": 13, "type": "row", "title": "RAG agent (latest evaluation run)", "collapsed": False, "panels": [],
+     "gridPos": {"x": 0, "y": 48, "w": 24, "h": 1}},
+    panel(14, "hit@3 (blog questions)", [("rag_eval_hit_at_3", "hit@3")], 0, 49, w=5, h=4,
+          unit="percentunit", kind="stat", maxv=1),
+    panel(15, "Tool accuracy (platform questions)", [("rag_eval_tool_accuracy", "tool accuracy")], 5, 49, w=5, h=4,
+          unit="percentunit", kind="stat", maxv=1),
+    panel(16, "Faithfulness (supported claims)", [("rag_eval_faithfulness", "faithfulness")], 10, 49, w=5, h=4,
+          unit="percentunit", kind="stat", maxv=1),
+    panel(17, "Answer latency p95", [("rag_eval_latency_p95_seconds", "p95")], 15, 49, w=5, h=4,
+          unit="s", kind="stat"),
+    panel(18, "Cost per 1,000 questions", [("rag_eval_usd_per_1k_questions", "USD")], 20, 49, w=4, h=4,
+          unit="currencyUSD", kind="stat"),
 ]
 
 dashboard = {

@@ -25,6 +25,10 @@ data:
           credentials_file: /etc/prometheus/secrets/masterKey
         static_configs:
           - targets: ["litellm:4000"]
+      - job_name: console
+        metrics_path: /metrics
+        static_configs:
+          - targets: ["console:8000"]
 ---
 apiVersion: v1
 kind: ConfigMap
