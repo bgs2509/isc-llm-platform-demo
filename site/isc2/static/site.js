@@ -318,8 +318,10 @@
       }).catch(function () {});
     };
     var signals = function () {
+      var liveD = null;  // the 15-minute series are drawn from it whenever they exist
       getJSON("/status?view=signals").then(function (d) {
         if (!d || d.error) { return null; }
+        liveD = d;
         var usage = d.usage && d.usage.value;
         if (ok(usage) && usage > 0) { return { source: "live", d: d }; }
         return null;
@@ -349,11 +351,14 @@
           all('[data-sig="' + k + '"]').forEach(function (el) { el.textContent = fix(v, fmt[k][0]) + fmt[k][1]; });
           var tile = document.querySelector('[data-sig="' + k + '"]');
           tile = tile && tile.closest(".tile");
-          if (tile && res.source === "live") { setSpark(tile.querySelector("svg.spark"), (d[k].series || []).map(function (p) { return p[1]; })); }
+          var line = liveD && liveD[k] && liveD[k].series;
+          if (tile && line) { setSpark(tile.querySelector("svg.spark"), line.map(function (p) { return p[1]; })); }
         });
         if (ok(d.errors && d.errors.value)) { setLive("w5-err", fix(d.errors.value, 1)); }
         if (ok(d.cost && d.cost.value)) { setLive("w5-cost", fix(d.cost.value, 2)); }
-        if (res.source === "live") { setSpark(document.querySelector('[data-live="w5-spark"]'), (d.usage.series || []).map(function (p) { return p[1]; })); }
+        if (liveD && liveD.usage && liveD.usage.series) {
+          setSpark(document.querySelector('[data-live="w5-spark"]'), liveD.usage.series.map(function (p) { return p[1]; }));
+        }
         setPill(sigBox, res.source === "live" ? "live" : "saved", res.source === "saved" ? res.date : null);
       });
     };
