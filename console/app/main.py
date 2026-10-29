@@ -4,19 +4,23 @@ from __future__ import annotations
 import asyncio
 import functools
 import json
+import logging
 import os
 from contextlib import asynccontextmanager
 from typing import Literal
 
 import httpx
 from fastapi import FastAPI, HTTPException, Request
-from fastapi.responses import StreamingResponse
+from fastapi.responses import Response, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
-from . import agent, corpus, platform_status
+from . import agent, corpus, evaluate, platform_status
 from .runner import Runner, Settings
 from .stats import GPU_USD_PER_HOUR
+
+
+log = logging.getLogger(__name__)
 
 
 def load_settings() -> Settings:
@@ -103,6 +107,63 @@ async def agent_ask(body: AskBody) -> dict:
             body.question, client=client, gateway_url=runner.s.gateway_url, model=runner.s.model,
             key=key, team=body.tenant, search=search_docs, status=status, no_cache=False)
     return result.to_dict()
+
+
+class EvalBody(BaseModel):
+    tenant: str
+
+
+eval_state: dict = {"task": None, "latest": evaluate.load_result(runner.s.data_dir)}
+
+
+async def run_eval_job(team: str, key: str) -> None:
+    """Run the 16 questions with the team key and keep the result (memory and disk)."""
+    questions, snapshots = evaluate.load_eval_set()
+    s = runner.s
+    try:
+        async with httpx.AsyncClient(timeout=120.0) as client:
+            async def ask(question: str, snapshot: dict):
+                async def status(view: str):
+                    return await platform_status.fetch(view, snapshot=snapshot)
+
+                return await agent.run_agent(question, client=client, gateway_url=s.gateway_url, model=s.model,
+                                             key=key, team=team, search=search_docs, status=status, no_cache=True)
+
+            async def judge(context: str, answer: str):
+                return await evaluate.judge_answer(client, s.gateway_url, s.model, key, context, answer)
+
+            result = await evaluate.run_evaluation(
+                questions, snapshots, search_index(), ask, judge, team=team,
+                chunking=evaluate.chunking_comparison(corpus.load_articles(), questions))
+    except Exception as exc:  # the run must never take the console down
+        log.error("[Evaluate][job][FAILED] %s", type(exc).__name__)
+        return
+    eval_state["latest"] = result
+    evaluate.save_result(s.data_dir, result)
+
+
+@app.post("/api/agent/eval")
+async def agent_eval(body: EvalBody) -> dict:
+    key = runner.s.tenants.get(body.tenant)
+    if key is None:
+        raise HTTPException(404, "unknown tenant")
+    task = eval_state["task"]
+    if task is not None and not task.done():
+        raise HTTPException(409, "an evaluation is already running")
+    eval_state["task"] = asyncio.create_task(run_eval_job(body.tenant, key))
+    return {"started": True}
+
+
+@app.get("/api/agent/eval")
+async def agent_eval_result() -> dict:
+    if eval_state["latest"] is None:
+        raise HTTPException(404, "no evaluation has run yet")
+    return eval_state["latest"]
+
+
+@app.get("/metrics")
+async def metrics() -> Response:
+    return Response(evaluate.metrics_text(eval_state["latest"]), media_type="text/plain")
 
 
 @app.post("/api/runs")
