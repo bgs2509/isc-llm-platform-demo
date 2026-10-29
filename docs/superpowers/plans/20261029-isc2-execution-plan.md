@@ -341,3 +341,10 @@ None (the three earlier ones and the documents gap were decided on 2026-10-29: d
    starred and recent lists. Links now open `grafana/d/llm-platform/llm-platform` (`GRAFANA` in `site/build.py`);
    observability signal links open panels 1, 2, 8 by `viewPanel` with their exact titles (commit 5463d84).
 2. Test `_grafana_link_errors` checks both sites against `chart/llm-platform/files/dashboard.json`.
+
+### 2026-10-29 — README shortened, model and host named in full
+
+1. `README.md` cut from 89 to 64 lines: diagram, five components, three key numbers, run, layout (commit 6e9355e).
+2. Prose names the model `qwen38-flash-next-125B` and the host `NVIDIA GB10 (DGX Spark 128G)`; identifiers
+   `qwen38`, `qwen38-lil` and parser flags unchanged; the isc-2 stack diagram frame relaid to fit (commit 2560c26).
+3. Tests: site 31, scripts 16, console 67, all passing.
