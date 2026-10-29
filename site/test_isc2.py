@@ -44,7 +44,8 @@ def _eval_result() -> dict:
         rows.append({"id": f"P{i}", "kind": "platform", "question": f"Platform question {i}?", "answer": "OK.",
                      "steps": [{"tool": "platform_status", "args": {"view": "alerts"}, "result": []}],
                      "sources": [], "latency_s": 3.0, "tokens": 700, "first_tool": "platform_status", "hit": None,
-                     "tool_ok": i != 5, "claims_supported": 1, "claims_total": 2, "judge_error": None})
+                     "tool_ok": i != 5, "claims_supported": 1, "claims_total": 2, "judge_error": None,
+                     "facts_stated": 1, "facts_total": 2})
     # The console stores unix seconds (evaluate.py); 1793350800 = 2026-10-30 09:00 UTC.
     return {"started": 1793350500.0, "finished": 1793350800.0, "team": "research", "rows": rows,
             "summary": {"hit_at_3": 0.8, "tool_accuracy": 5 / 6, "faithfulness": 0.7, "hits": 8, "blog_total": 10,
@@ -159,6 +160,14 @@ def test_local_links_and_assets_resolve(pages, tmp_path):
     assert not missing, missing
     # the anchors the pages link to exist
     assert 'id="eval"' in pages["rag.html"] and 'id="alerts"' in pages["observability.html"]
+
+
+def test_platform_eval_rows_show_expected_facts_and_blog_rows_do_not(pages):
+    html = pages["rag.html"]
+    assert html.count("Expected facts stated: 1 of 2") == 6
+    assert "Expected facts stated: 0 of 0" not in html
+    assert "evalRow" in (HERE / "isc2" / "static" / "site.js").read_text(encoding="utf8")
+    assert "Expected facts stated" in (HERE / "isc2" / "static" / "site.js").read_text(encoding="utf8")
 
 
 def test_tracked_pages_equal_a_fresh_build_from_the_saved_inputs():

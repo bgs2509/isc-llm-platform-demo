@@ -1,14 +1,17 @@
 """Evaluation set and scores of the RAG agent.
 
 PURPOSE: run the 16 questions one at a time, score them, keep the latest result, expose it as Prometheus metrics.
-INPUTS: `console/eval/questions.json` (kind `blog`: `expected_url`; kind `platform`: `expected_tool`,
+INPUTS: (the judge call also gets the row's `expected_facts` and says which the answer states; one call per row)
+    `console/eval/questions.json` (kind `blog`: `expected_url`; kind `platform`: `expected_tool`,
     `snapshot`, `expected_facts`) and `console/eval/snapshots/*.json`; an `ask(question, snapshot)` coroutine
     returning `agent.AgentResult`; a `judge(context, answer)` coroutine returning the claims; the corpus index.
 OUTPUTS: `run_evaluation(...) -> EvalResult` as a dict
     `{started, finished, team, rows=[{id, kind, question, answer, steps, sources, latency_s, prompt_tokens,
-    completion_tokens, first_tool, hit, tool_ok, claims_supported, claims_total, judge_error, error}],
+    completion_tokens, first_tool, hit, tool_ok, claims_supported, claims_total, facts_stated, facts_total,
+    judge_error, error}],
     summary={hit_at_3, tool_accuracy, faithfulness (shares 0..1), hits, blog_total, tool_ok, platform_total,
-    claims_supported, claims_total, latency_p95_s, prompt_tokens, completion_tokens, usd_per_1k_questions},
+    claims_supported, claims_total, facts_stated, facts_total (counts), rows_failed (rows with `error` or
+    `judge_error`), latency_p95_s, prompt_tokens, completion_tokens, usd_per_1k_questions},
     chunking}`, saved to `<data_dir>/eval.json`; `metrics_text(result) -> str` with the gauges
     `rag_eval_hit_at_3`, `rag_eval_tool_accuracy`, `rag_eval_faithfulness`, `rag_eval_latency_p95_seconds`,
     `rag_eval_usd_per_1k_questions`, `rag_eval_finished_timestamp_seconds` ("" before the first run).
@@ -46,11 +49,14 @@ JUDGE_SYSTEM = (
     'supported only if the source text states it. Reply with JSON only: {"claims": [{"claim": "...", '
     '"supported": true}]}'
 )
+FACTS_SYSTEM = (
+    ' Expected facts are also given. For each, say whether the answer states it. Add to the JSON: '
+    '"facts": [{"fact": "<the expected fact, verbatim>", "stated": true}]')
 # A long answer has 20+ claims; 800 tokens cut the JSON of one in the first run (2026-10-29, row B10).
 JUDGE_MAX_TOKENS = 2000
 
 Ask = Callable[[str, dict], Awaitable]
-Judge = Callable[[str, str], Awaitable[list[dict]]]
+Judge = Callable[[str, str, list[str]], Awaitable[tuple[list[dict], list[dict]]]]
 
 
 def load_eval_set(directory: Path = EVAL_DIR) -> tuple[list[dict], dict[str, dict]]:
@@ -59,29 +65,50 @@ def load_eval_set(directory: Path = EVAL_DIR) -> tuple[list[dict], dict[str, dic
     return questions, snapshots
 
 
-def parse_claims(raw: str) -> list[dict]:
-    """The claims from the judge's reply; tolerates a ```json fence; raises ValueError otherwise."""
+def _reply_json(raw: str) -> dict:
     text = raw.strip()
     if text.startswith("```"):
         text = text.split("\n", 1)[-1].rsplit("```", 1)[0]
-    claims = json.loads(text).get("claims") if text.lstrip().startswith("{") else None
-    if not isinstance(claims, list) or not all(
-            isinstance(c, dict) and isinstance(c.get("supported"), bool)
-            and isinstance(c.get("claim"), str) and c["claim"].strip() for c in claims):
+    if not text.lstrip().startswith("{"):
         raise ValueError("judge reply is not the claims JSON")
-    return claims
+    return json.loads(text)
+
+
+def _valid(items, name_key: str, flag_key: str) -> bool:
+    return isinstance(items, list) and all(
+        isinstance(i, dict) and isinstance(i.get(flag_key), bool)
+        and isinstance(i.get(name_key), str) and i[name_key].strip() for i in items)
+
+
+def parse_verdict(raw: str, with_facts: bool = False) -> tuple[list[dict], list[dict]]:
+    """(claims, facts) from the judge's reply; tolerates a ```json fence; raises ValueError otherwise.
+
+    `facts` is required, and checked, only when `with_facts`; otherwise it is `[]`."""
+    reply = _reply_json(raw)
+    claims = reply.get("claims")
+    facts = reply.get("facts") if with_facts else []
+    if not _valid(claims, "claim", "supported") or not _valid(facts, "fact", "stated"):
+        raise ValueError("judge reply is not the claims JSON")
+    return claims, facts
+
+
+def parse_claims(raw: str) -> list[dict]:
+    return parse_verdict(raw)[0]
 
 
 async def judge_answer(client: httpx.AsyncClient, gateway_url: str, model: str, key: str,
-                       context: str, answer: str) -> list[dict]:
+                       context: str, answer: str, facts: list[str] = ()) -> tuple[list[dict], list[dict]]:
+    system, user = JUDGE_SYSTEM, f"Source text:\n{context}\n\nAnswer:\n{answer}"
+    if facts:
+        system += FACTS_SYSTEM
+        user += "\n\nExpected facts:\n" + "\n".join(f"- {f}" for f in facts)
     body = {"model": model, "temperature": 0, "max_tokens": JUDGE_MAX_TOKENS, "cache": {"no-cache": True},
             "chat_template_kwargs": {"enable_thinking": False},
-            "messages": [{"role": "system", "content": JUDGE_SYSTEM},
-                         {"role": "user", "content": f"Source text:\n{context}\n\nAnswer:\n{answer}"}]}
+            "messages": [{"role": "system", "content": system}, {"role": "user", "content": user}]}
     r = await client.post(f"{gateway_url.rstrip('/')}/v1/chat/completions", json=body,
                           headers={"Authorization": f"Bearer {key}"})
     r.raise_for_status()
-    return parse_claims(r.json()["choices"][0]["message"].get("content") or "")
+    return parse_verdict(r.json()["choices"][0]["message"].get("content") or "", with_facts=bool(facts))
 
 
 def _share(part: int, whole: int) -> float:
@@ -91,7 +118,8 @@ def _share(part: int, whole: int) -> float:
 async def _run_row(q: dict, snapshots: dict, index: corpus.Index, ask: Ask, judge: Judge) -> dict:
     row = {"id": q["id"], "kind": q["kind"], "question": q["question"], "answer": "", "steps": [],
            "sources": [], "latency_s": 0.0, "prompt_tokens": 0, "completion_tokens": 0, "first_tool": None,
-           "hit": None, "tool_ok": None, "claims_supported": 0, "claims_total": 0}
+           "hit": None, "tool_ok": None, "claims_supported": 0, "claims_total": 0,
+           "facts_stated": 0, "facts_total": len(q.get("expected_facts") or [])}
     if q["kind"] == "blog":
         row["hit"] = q["expected_url"] in [h.chunk.url for h in index.search(q["question"], k=3)]
     try:
@@ -106,9 +134,10 @@ async def _run_row(q: dict, snapshots: dict, index: corpus.Index, ask: Ask, judg
         row["first_tool"] = res.steps[0]["tool"] if res.steps else None
         context = json.dumps([s["result"] for s in res.steps])
         try:
-            claims = await judge(context, res.answer)
+            claims, facts = await judge(context, res.answer, q.get("expected_facts") or [])
             row["claims_total"] = len(claims)
             row["claims_supported"] = sum(1 for c in claims if c["supported"])
+            row["facts_stated"] = min(sum(1 for f in facts if f["stated"]), row["facts_total"])
         except (httpx.HTTPError, ValueError, KeyError, IndexError, TypeError) as exc:
             row["judge_error"] = str(exc) or type(exc).__name__
     if q["kind"] == "platform":
@@ -143,6 +172,7 @@ async def run_evaluation(questions: list[dict], snapshots: dict, index: corpus.I
         "faithfulness": _share(supported, total),
         "hits": hits, "blog_total": len(blog), "tool_ok": tool_ok, "platform_total": len(platform),
         "claims_supported": supported, "claims_total": total,
+        "facts_stated": sum(r["facts_stated"] for r in rows), "facts_total": sum(r["facts_total"] for r in rows),
         "rows_failed": sum(1 for r in rows if r.get("error") or r.get("judge_error")),
         "latency_p95_s": percentile([r["latency_s"] for r in rows], 95),  # agent time, judge excluded
         "prompt_tokens": sum(r["prompt_tokens"] for r in rows),

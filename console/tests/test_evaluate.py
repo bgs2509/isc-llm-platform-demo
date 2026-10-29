@@ -34,12 +34,13 @@ async def fake_ask(question, snapshot):
                        prompt_tokens=10, completion_tokens=4, latency_s=2.0, rounds=1)
 
 
-async def fake_judge(context, answer):
-    return [{"claim": "c1", "supported": True}, {"claim": "c2", "supported": False}]
+async def fake_judge(context, answer, facts=()):
+    return ([{"claim": "c1", "supported": True}, {"claim": "c2", "supported": False}],
+            [{"fact": f, "stated": f != "missing fact"} for f in facts])
 
 
 async def _run(**kw):
-    return await evaluate.run_evaluation(QUESTIONS, SNAPSHOTS, INDEX, kw.get("ask", fake_ask),
+    return await evaluate.run_evaluation(kw.get("questions", QUESTIONS), SNAPSHOTS, INDEX, kw.get("ask", fake_ask),
                                          kw.get("judge", fake_judge), team="research")
 
 
@@ -70,8 +71,8 @@ async def test_judge_reply_is_parsed_from_json_even_in_a_fence():
         return httpx.Response(200, json=reply)
 
     client = httpx.AsyncClient(transport=httpx.MockTransport(handler))
-    claims = await evaluate.judge_answer(client, "http://gw", "m", "k", "source text", "the answer")
-    assert claims == [{"claim": "c", "supported": True}]
+    claims, facts = await evaluate.judge_answer(client, "http://gw", "m", "k", "source text", "the answer")
+    assert claims == [{"claim": "c", "supported": True}] and facts == []
     body = seen[0]
     assert body["temperature"] == 0 and body["cache"] == {"no-cache": True}
     assert body["chat_template_kwargs"] == {"enable_thinking": False}
@@ -79,7 +80,7 @@ async def test_judge_reply_is_parsed_from_json_even_in_a_fence():
 
 
 async def test_unparsable_judge_reply_counts_zero_claims_and_is_recorded():
-    async def bad_judge(context, answer):
+    async def bad_judge(context, answer, facts=()):
         raise ValueError("judge reply is not JSON")
 
     result = await _run(judge=bad_judge)
@@ -138,7 +139,7 @@ async def test_empty_choices_gives_row_error_not_abort():
     async def ask_empty(question, snapshot):
         raise IndexError("choices")
 
-    async def judge_type(context, answer):
+    async def judge_type(context, answer, facts=()):
         raise TypeError("x")
 
     result = await _run(ask=ask_empty)
@@ -146,6 +147,44 @@ async def test_empty_choices_gives_row_error_not_abort():
     assert result["summary"]["rows_failed"] == 4
     result = await _run(judge=judge_type)
     assert result["summary"]["rows_failed"] == 4 and "judge_error" in result["rows"][0]
+
+
+async def test_expected_facts_are_judged_in_the_same_call():
+    questions = [dict(QUESTIONS[2], expected_facts=["a fact", "missing fact"]), QUESTIONS[0]]
+    seen = []
+
+    async def judge(context, answer, facts=()):
+        seen.append(list(facts))
+        return await fake_judge(context, answer, facts)
+
+    result = await _run(questions=questions, judge=judge)
+    assert seen == [["a fact", "missing fact"], []]
+    row, blog = result["rows"]
+    assert (row["facts_stated"], row["facts_total"]) == (1, 2)
+    assert (blog["facts_stated"], blog["facts_total"]) == (0, 0)
+    assert (result["summary"]["facts_stated"], result["summary"]["facts_total"]) == (1, 2)
+
+
+async def test_judge_request_asks_for_facts_only_when_given():
+    reply = {"choices": [{"message": {"content":
+             '{"claims": [{"claim": "c", "supported": true}], "facts": [{"fact": "f", "stated": true}]}'}}]}
+    seen = []
+
+    def handler(request):
+        seen.append(json.loads(request.content))
+        return httpx.Response(200, json=reply)
+
+    client = httpx.AsyncClient(transport=httpx.MockTransport(handler))
+    claims, facts = await evaluate.judge_answer(client, "http://gw", "m", "k", "src", "ans", ["f"])
+    assert facts == [{"fact": "f", "stated": True}]
+    assert "f" in seen[0]["messages"][-1]["content"] and "facts" in seen[0]["messages"][0]["content"]
+
+
+def test_parse_verdict_requires_facts_when_asked():
+    with pytest.raises(ValueError):
+        evaluate.parse_verdict('{"claims": []}', with_facts=True)
+    with pytest.raises(ValueError):
+        evaluate.parse_verdict('{"claims": [], "facts": [{"fact": "f"}]}', with_facts=True)
 
 
 async def test_rows_failed_counts_only_failed_rows():

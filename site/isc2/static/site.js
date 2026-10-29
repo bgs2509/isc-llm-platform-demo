@@ -255,6 +255,9 @@
       var detail = [h("span", {}, ["First tool: ", h("code", {}, [r.first_tool || "none"])]), src,
                     h("span", {}, ["Claims supported: " + r.claims_supported + " of " + r.claims_total]),
                     h("span", {}, ["Answer: " + (r.answer || "")])];
+      if (r.kind === "platform" && r.facts_total) {
+        detail.splice(3, 0, h("span", {}, ["Expected facts stated: " + r.facts_stated + " of " + r.facts_total]));
+      }
       if (r.judge_error) { detail.push(h("span", {}, ["Judge error: " + r.judge_error])); }
       return h("details", { "class": "row" }, [
         h("summary", {}, [h("span", { "class": "q" }, [r.id + " \u00b7 " + r.question]),

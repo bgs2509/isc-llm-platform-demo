@@ -133,8 +133,8 @@ async def run_eval_job(team: str, key: str) -> None:
                 return await agent.run_agent(question, client=client, gateway_url=s.gateway_url, model=s.model,
                                              key=key, team=team, search=search_docs, status=status, no_cache=True)
 
-            async def judge(context: str, answer: str):
-                return await evaluate.judge_answer(client, s.gateway_url, s.model, key, context, answer)
+            async def judge(context: str, answer: str, facts: list[str]):
+                return await evaluate.judge_answer(client, s.gateway_url, s.model, key, context, answer, facts)
 
             result = await evaluate.run_evaluation(
                 questions, snapshots, search_index(), ask, judge, team=team,

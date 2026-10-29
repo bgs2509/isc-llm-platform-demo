@@ -185,6 +185,8 @@ def _eval_rows(result: dict) -> str:
                   f"<span>Sources cited: {sources}</span>",
                   f"<span>Claims supported: {esc(r.get('claims_supported'))} of {esc(r.get('claims_total'))}</span>",
                   f"<span>Answer: {esc(r.get('answer', ''))}</span>"]
+        if r["kind"] == "platform" and r.get("facts_total"):
+            detail.insert(3, f"<span>Expected facts stated: {esc(r.get('facts_stated'))} of {esc(r['facts_total'])}</span>")
         if r.get("judge_error"):
             detail.append(f"<span>Judge error: {esc(r['judge_error'])}</span>")
         out.append(f'<details class="row"><summary><span class="q">{esc(r["id"])} &middot; {esc(r["question"])}</span>'
