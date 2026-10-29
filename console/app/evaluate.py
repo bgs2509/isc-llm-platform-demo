@@ -46,6 +46,8 @@ JUDGE_SYSTEM = (
     'supported only if the source text states it. Reply with JSON only: {"claims": [{"claim": "...", '
     '"supported": true}]}'
 )
+# A long answer has 20+ claims; 800 tokens cut the JSON of one in the first run (2026-10-29, row B10).
+JUDGE_MAX_TOKENS = 2000
 
 Ask = Callable[[str, dict], Awaitable]
 Judge = Callable[[str, str], Awaitable[list[dict]]]
@@ -71,7 +73,7 @@ def parse_claims(raw: str) -> list[dict]:
 
 async def judge_answer(client: httpx.AsyncClient, gateway_url: str, model: str, key: str,
                        context: str, answer: str) -> list[dict]:
-    body = {"model": model, "temperature": 0, "max_tokens": 800, "cache": {"no-cache": True},
+    body = {"model": model, "temperature": 0, "max_tokens": JUDGE_MAX_TOKENS, "cache": {"no-cache": True},
             "chat_template_kwargs": {"enable_thinking": False},
             "messages": [{"role": "system", "content": JUDGE_SYSTEM},
                          {"role": "user", "content": f"Source text:\n{context}\n\nAnswer:\n{answer}"}]}
