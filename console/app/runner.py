@@ -24,6 +24,7 @@ class Settings:
     vllm_metrics_url: str
     gpu_url: str
     data_dir: str
+    prometheus_url: str = "http://prometheus:9090"
 
 
 class Runner:
@@ -94,6 +95,8 @@ class Runner:
                 "tokens_per_s": tick["run"].get("tokens_per_s"),
                 "ttft_p95_s": tick["run"].get("ttft_p95_s"),
                 "in_flight": tick["run"].get("in_flight"),
+                "kv_cache_pct": tick.get("kv_cache_pct"),
+                "vllm_waiting": tick.get("vllm_waiting"),
             })
         return tick
 

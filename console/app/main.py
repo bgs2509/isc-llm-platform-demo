@@ -12,7 +12,9 @@ from fastapi.responses import StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
+from . import platform_status
 from .runner import Runner, Settings
+from .stats import GPU_USD_PER_HOUR
 
 
 def load_settings() -> Settings:
@@ -23,6 +25,7 @@ def load_settings() -> Settings:
         vllm_metrics_url=os.environ.get("VLLM_METRICS_URL", "http://127.0.0.1:18300/metrics"),
         gpu_url=os.environ.get("GPU_URL", "http://127.0.0.1:18311/json"),
         data_dir=os.environ.get("DATA_DIR", "/data"),
+        prometheus_url=os.environ.get("PROMETHEUS_URL", "http://prometheus:9090"),
     )
 
 
@@ -46,7 +49,7 @@ class RunParams(BaseModel):
     max_tokens: int = Field(128, ge=8, le=2048)
     shape: Literal["unique", "repeated"] = "unique"
     prompt_words: int = Field(60, ge=5, le=2000)
-    gpu_usd_per_hour: float = Field(0.2, ge=0, le=1000)
+    gpu_usd_per_hour: float = Field(GPU_USD_PER_HOUR, ge=0, le=1000)
 
 
 class LabelBody(BaseModel):
@@ -61,6 +64,11 @@ async def healthz() -> dict:
 @app.get("/api/config")
 async def config() -> dict:
     return {"model": runner.s.model, "tenants": sorted(runner.s.tenants)}
+
+
+@app.get("/api/status")
+async def status(view: Literal["alerts", "teams", "signals", "health"]) -> list | dict:
+    return await platform_status.fetch(view, runner.s.prometheus_url)
 
 
 @app.post("/api/runs")

@@ -6,6 +6,9 @@ import re
 from dataclasses import dataclass
 
 
+GPU_USD_PER_HOUR = 0.2  # the one home of the GPU price used by runs, status and evaluation
+
+
 def percentile(values: list[float], p: float) -> float | None:
     """Percentile with linear interpolation, p in [0, 100]; None for an empty list."""
     if not values:
