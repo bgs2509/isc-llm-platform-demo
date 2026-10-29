@@ -219,25 +219,47 @@ def _alert_rows() -> str:
     return "\n      ".join(rows)
 
 
-def values(inputs: dict) -> dict[str, str]:
+def _context(inputs: dict) -> dict:
+    """What several pages share: the benchmark, the measurements, the five levels, the Helm revisions."""
     bench, meas = inputs["benchmark"], inputs["measurements"]
-    runs = _runs(bench)
-    levels = _level_rows(bench)
+    helm = meas.get("helm-history")
+    revs = helm["revisions"] if helm else []
+    return {"inputs": inputs, "bench": bench, "meas": meas, "runs": _runs(bench), "levels": _level_rows(bench),
+            "bench_date": day(bench.get("generated_at")), "revs": revs,
+            "helm_date": day(revs[-1]["updated"]) if revs else NA}
+
+
+def _home(c: dict) -> dict[str, str]:
+    """Footer keys and the home widgets that the browser fills in."""
+    dates = [c["bench_date"]] + [day(m.get("measured_at")) for m in c["meas"].values()]
+    return {"input_commit": esc(c["inputs"]["commit"]), "newest_measurement": max(d for d in dates if d != NA),
+            "bench_date": c["bench_date"], "w2_up": "?", "w5_firing": "?"}
+
+
+def _kv_values(kv: dict | None, last: dict) -> dict[str, str]:
+    rows = kv["rows"] if kv else []
+    v: dict[str, str] = {"kv_date": day(kv.get("measured_at")) if kv else NA}
+    if rows:
+        v["kv_rows"] = "\n        ".join(
+            f'<tr><td>{r["prompt_words"]:,}</td><td class="num">{r["concurrency"]}</td>'
+            f'<td class="num">{n(r["kv_cache_peak_pct"], 0, " %")}</td><td class="num">{n(r["waiting_peak"], 0)}</td>'
+            f'<td class="num">{n(r["ttft_p95_s"], 2, " s")}</td><td class="num">{n(r["tokens_per_s"], 0)}</td></tr>'
+            for r in rows)
+        peak = max(rows, key=lambda r: (r["concurrency"], r["prompt_words"]))
+    else:
+        v["kv_rows"] = f'<tr><td colspan="6">{NA}</td></tr>'
+        peak = None
+    v["strip_running"] = str(peak["concurrency"] if peak else last["c"])
+    v["strip_waiting"] = n(peak["waiting_peak"], 0) if peak else NA
+    v["strip_kv"] = n(peak["kv_cache_peak_pct"], 0) if peak else NA
+    return v
+
+
+def _inference(c: dict) -> dict[str, str]:
+    levels, bench_date = c["levels"], c["bench_date"]
     first, last = levels[0], levels[-1]
-    kv, gw, budget = meas.get("kv-sweep"), meas.get("gateway-drill"), meas.get("budget-drill")
-    alert, helm, ev = meas.get("alert-drill"), meas.get("helm-history"), meas.get("eval")
-    bench_date = day(bench.get("generated_at"))
-    tests = inputs["tests"]
-    v: dict[str, str] = {}
-
-    # footer and common
-    dates = [bench_date] + [day(m.get("measured_at")) for m in meas.values()]
-    v["input_commit"] = esc(inputs["commit"])
-    v["newest_measurement"] = max(d for d in dates if d != NA)
-    v["bench_date"] = bench_date
-
-    # page 1 and home widget 1
     knee_c, knee_gain = _knee(levels)
+    v: dict[str, str] = {}
     v["levels_json"] = esc(json.dumps([{"c": r["c"], "tps": round(r["tps"], 1), "ttft": round(r["ttft"], 3),
                                         "cost": round(r["cost"], 3)} for r in levels], separators=(",", ":")))
     top = max(r["tps"] for r in levels)
@@ -255,50 +277,46 @@ def values(inputs: dict) -> dict[str, str]:
     v["tr_ttft"] = signed(last["ttft"] - first["ttft"], 2, " s")
     gpu = [r["gpu"] for r in levels]
     v["gpu_min"], v["gpu_max"] = f"{min(gpu):.0f}", f"{max(gpu):.0f}"
-    kv_rows = kv["rows"] if kv else []
-    if kv_rows:
-        v["kv_rows"] = "\n        ".join(
-            f'<tr><td>{r["prompt_words"]:,}</td><td class="num">{r["concurrency"]}</td>'
-            f'<td class="num">{n(r["kv_cache_peak_pct"], 0, " %")}</td><td class="num">{n(r["waiting_peak"], 0)}</td>'
-            f'<td class="num">{n(r["ttft_p95_s"], 2, " s")}</td><td class="num">{n(r["tokens_per_s"], 0)}</td></tr>'
-            for r in kv_rows)
-        peak = max(kv_rows, key=lambda r: (r["concurrency"], r["prompt_words"]))
-    else:
-        v["kv_rows"] = f'<tr><td colspan="6">{NA}</td></tr>'
-        peak = None
-    v["kv_date"] = day(kv.get("measured_at")) if kv else NA
-    v["strip_running"] = str(peak["concurrency"] if peak else last["c"])
-    v["strip_waiting"] = n(peak["waiting_peak"], 0) if peak else NA
-    v["strip_kv"] = n(peak["kv_cache_peak_pct"], 0) if peak else NA
+    v.update(_kv_values(c["meas"].get("kv-sweep"), last))
     v["strip_tps"], v["strip_gpu"], v["strip_date"] = n(last["tps"]), n(last["gpu"], 0), bench_date
     v["w1_tps"], v["w1_ttft"] = n(last["tps"]), n(last["ttft"], 2)
     v["w1_running"], v["w1_kv"] = v["strip_running"], v["strip_kv"]
     v["w1_spark"] = spark_path([r["tps"] for r in levels])
+    return v
 
-    # page 2 and home widget 2
-    revs = helm["revisions"] if helm else []
+
+def _gateway_recover_line(gw: dict | None) -> str:
+    if gw is None:
+        return f"Time without answers: {NA}"
+    if gw.get("no_answer_s") is None:
+        return "Time without answers: none recorded"
+    if gw.get("recovered") is False:
+        return (f"Time without answers: at least {n(gw['no_answer_s'], 0, ' s')}; "
+                "not recovered before the run ended")
+    return (f"Time without answers: {n(gw['no_answer_s'], 0, ' s')}; first answer "
+            f"{n(gw['recovered_after_s'], 0, ' s')} after the deletion")
+
+
+def _infrastructure(c: dict) -> dict[str, str]:
+    revs, gw = c["revs"], c["meas"].get("gateway-drill")
+    v: dict[str, str] = {}
     v["helm_rows"] = _helm_rows(revs) if revs else f'<tr><td colspan="3">{NA}</td></tr>'
-    v["helm_date"] = day(revs[-1]["updated"]) if revs else NA
+    v["helm_date"] = c["helm_date"]
     ready = gw.get("seconds_to_ready") if gw else None
     v["gw_fail_s"] = v["tr_gw_s"] = v["w2_gw_ready"] = n(ready, 0, " s")
     v["gw_ready_line"] = f"Back to ready: {n(ready, 0, ' s')}"
-    v["gw_failed_line"] = ("Failed requests: " + (f"{gw['failed']:,} of {gw['requests']:,}" if gw else NA))
-    if gw is None:
-        v["gw_recover_line"] = f"Time without answers: {NA}"
-    elif gw.get("no_answer_s") is None:
-        v["gw_recover_line"] = "Time without answers: none recorded"
-    elif gw.get("recovered") is False:
-        v["gw_recover_line"] = (f"Time without answers: at least {n(gw['no_answer_s'], 0, ' s')}; "
-                                "not recovered before the run ended")
-    else:
-        v["gw_recover_line"] = (f"Time without answers: {n(gw['no_answer_s'], 0, ' s')}; first answer "
-                                f"{n(gw['recovered_after_s'], 0, ' s')} after the deletion")
+    v["gw_failed_line"] = "Failed requests: " + (f"{gw['failed']:,} of {gw['requests']:,}" if gw else NA)
+    v["gw_recover_line"] = _gateway_recover_line(gw)
     v["gw_date"] = day(gw.get("measured_at")) if gw else NA
     v["health_checked"] = "not checked yet"
-    v["w2_up"] = "?"
     v["w2_helm_revs"] = str(len(revs)) if revs else NA
+    return v
 
-    # page 3 and home widget 3: per team the run that shows the team's limits
+
+def _gateway(c: dict) -> dict[str, str]:
+    runs, budget = c["runs"], c["meas"].get("budget-drill")
+    v: dict[str, str] = {}
+    # per team the run that shows the team's limits
     team_run = {"research": "baseline c=16", "engineering": None, "operations": "team limit, operations, c=8"}
     total_tps = 0.0
     for team, name in team_run.items():
@@ -313,16 +331,19 @@ def values(inputs: dict) -> dict[str, str]:
     v["pl_ok"], v["pl_total"] = f"{limit['ok']:,}", f"{limit['requests']:,}"
     v["c_hits"] = v["w3_cache_hits"] = f"{cache['cache_hits']:,}"
     v["c_total"] = v["w3_cache_total"] = f"{cache['ok']:,}"
-    refused = sum(limit["errors"].values())
-    v["w3_refused"] = f"{refused:,} of {limit['requests']:,}"
+    v["w3_refused"] = f"{sum(limit['errors'].values()):,} of {limit['requests']:,}"
     b = budget["budget"] if budget else {}
     rpm = budget["rpm"] if budget else {}
     v["b_refused_after"] = str(b["refused_at_request"]) if b.get("refused_at_request") else NA
     v["b_recorded"], v["b_computed"] = n(b.get("spend_recorded_usd"), 5), n(b.get("spend_computed_usd"), 5)
     v["rpm_ok"], v["rpm_sent"] = (str(rpm["ok"]), str(rpm["sent"])) if rpm else (NA, NA)
-    v["g_date"] = day(budget.get("measured_at")) if budget else bench_date
+    v["g_date"] = day(budget.get("measured_at")) if budget else c["bench_date"]
+    return v
 
-    # page 4 and home widget 4
+
+def _rag(c: dict) -> dict[str, str]:
+    ev = c["meas"].get("eval")
+    v: dict[str, str] = {}
     if ev:
         s, ch = ev["summary"], ev["chunking"]
         v["e_hit"], v["e_tool"] = str(s["hits"]), str(s["tool_ok"])
@@ -339,11 +360,30 @@ def values(inputs: dict) -> dict[str, str]:
         v["eval_rows"] = f"<p>{NA}</p>"
     for k in ("hit", "tool", "claims_ok", "claims_total", "p95", "usd", "date"):
         v[f"w4_{k}"] = re.sub(r" (s|USD)$", "", v[f"e_{k}"])
+    return v
 
-    # page 5 and home widget 5
-    s16 = runs["baseline c=16"]["summary"]
+
+def _alert_lines(alert: dict | None) -> tuple[dict[str, str], float | None]:
+    """The three lines of the alert drill and the queue length when the alert fired."""
+    if not alert:
+        return {"ad_fired_line": f"Fired after: {NA}", "ad_resolved_line": f"Resolved after the load stopped: {NA}",
+                "ad_queue_line": f"Queue when the alert fired: {NA}"}, None
+    fired, resolved = alert.get("fired_after_s"), alert.get("resolved_after_load_end_s")
+    queue = next((a.get("value") for a in alert.get("snapshot_when_firing", {}).get("alerts", [])
+                  if a.get("name") == "ModelQueueBuildingUp"), None)
+    return {"ad_fired_line": (f"Fired after {n(fired, 0, ' s')} of load" if fired is not None
+                              else "Did not fire in this run"),
+            "ad_resolved_line": (f"Resolved {n(resolved, 0, ' s')} after the load stopped" if resolved is not None
+                                 else "Resolved: not recorded"),
+            "ad_queue_line": f"Queue when the alert fired: {n(queue, 0, ' requests waiting')}"}, queue
+
+
+def _observability(c: dict) -> dict[str, str]:
+    alert = c["meas"].get("alert-drill")
+    s16 = c["runs"]["baseline c=16"]["summary"]
     errs = sum(s16["errors"].values())
-    err5 = sum(c for code, c in s16["errors"].items() if code.startswith("5"))
+    err5 = sum(count for code, count in s16["errors"].items() if code.startswith("5"))
+    v: dict[str, str] = {}
     v["sig_rel"] = n(100 * (1 - err5 / s16["requests"]), 1, " %")
     v["sig_lat"] = n(s16["ttft_p95_s"], 2, " s")
     v["sig_use"] = n(s16["tokens_per_second"], 0)
@@ -352,33 +392,32 @@ def values(inputs: dict) -> dict[str, str]:
     v["alert_rows"] = _alert_rows()
     v["alerts_checked"] = "not checked yet"
     v["ad_date"] = day(alert.get("measured_at")) if alert else NA
-    if alert:
-        fired, resolved = alert.get("fired_after_s"), alert.get("resolved_after_load_end_s")
-        queue = next((a.get("value") for a in alert.get("snapshot_when_firing", {}).get("alerts", [])
-                      if a.get("name") == "ModelQueueBuildingUp"), None)
-        v["ad_fired_line"] = (f"Fired after {n(fired, 0, ' s')} of load" if fired is not None
-                              else "Did not fire in this run")
-        v["ad_resolved_line"] = (f"Resolved {n(resolved, 0, ' s')} after the load stopped" if resolved is not None
-                                 else "Resolved: not recorded")
-        v["ad_queue_line"] = f"Queue when the alert fired: {n(queue, 0, ' requests waiting')}"
-    else:
-        v["ad_fired_line"] = f"Fired after: {NA}"
-        v["ad_resolved_line"] = f"Resolved after the load stopped: {NA}"
-        v["ad_queue_line"] = f"Queue when the alert fired: {NA}"
-    v["w5_firing"] = "?"
+    lines, queue = _alert_lines(alert)
+    v.update(lines)
     v["w5_err"] = n(100 * errs / s16["requests"], 1)
     v["w5_queue"] = n(queue, 0) if alert else NA
     v["w5_cost"] = n(s16["usd_per_million_tokens"], 2)
+    return v
 
-    # page 6 and home widget 6
+
+def _delivery(c: dict) -> dict[str, str]:
+    revs = c["revs"]
+    v: dict[str, str] = {}
     v["incident_cards"], v["incident_chips"] = _cards()
-    total = sum(tests.values())
-    v["tests_total"] = v["w6_tests"] = str(total)
-    failed = sum(1 for r in revs if r.get("status") == "failed")
+    v["tests_total"] = v["w6_tests"] = str(sum(c["inputs"]["tests"].values()))
     v["rel_total"] = v["w6_releases"] = str(len(revs)) if revs else NA
-    v["rel_failed"] = str(failed) if revs else NA
+    v["rel_failed"] = str(sum(1 for r in revs if r.get("status") == "failed")) if revs else NA
     v["w6_incidents"] = str(len(INCIDENTS))
-    v["w6_last_deploy"] = v["helm_date"]
+    v["w6_last_deploy"] = c["helm_date"]
+    return v
+
+
+def values(inputs: dict) -> dict[str, str]:
+    """All template keys: one builder per page, in page order."""
+    c = _context(inputs)
+    v: dict[str, str] = {}
+    for page in (_home, _inference, _infrastructure, _gateway, _rag, _observability, _delivery):
+        v.update(page(c))
     return v
 
 
