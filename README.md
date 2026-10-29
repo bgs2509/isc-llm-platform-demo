@@ -20,7 +20,7 @@ packaged as a Helm chart for a local `kind` Kubernetes cluster.
 On one NVIDIA GB10 with a large Qwen model served by vLLM (details and limits in
 [docs/benchmark-report.md](docs/benchmark-report.md)):
 
-1. Output throughput grew **5.2×** when parallel requests grew from 1 to 16 (35.0 → 180.7 tokens/s).
+1. Output throughput grew **5.2x** when parallel requests grew from 1 to 16 (35.0 -> 180.7 tokens/s).
 2. Cost per million output tokens fell **81 %** at the same time (base: 1 request; assumed GPU price 0.20 USD/hour).
 3. `nvidia-smi` GPU utilization stayed at 88–91 % in every run, so it cannot show this difference.
 4. Team limits worked: a team limited to 2 parallel requests got 2 of 5,969 requests through.

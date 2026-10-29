@@ -24,10 +24,10 @@ rows = []
 for r in sweep:
     s, p = r["summary"], r["params"]
     c = p["concurrency"]
-    errs = ", ".join(f"{k}×{v}" for k, v in s["errors"].items()) or "0"
+    errs = ", ".join(f"{k}x{v}" for k, v in s["errors"].items()) or "0"
     rows.append(
         f"| {c} | {s['ok']} | {errs} | {f(s['tokens_per_second'])} | "
-        f"{s['tokens_per_second'] / base['tokens_per_second']:.1f}× | {f(s['tokens_per_second'] / c)} | "
+        f"{s['tokens_per_second'] / base['tokens_per_second']:.1f}x | {f(s['tokens_per_second'] / c)} | "
         f"{f(s['ttft_p50_s'], 2)} / {f(s['ttft_p95_s'], 2)} | {f(s['latency_p95_s'])} | "
         f"{f(s['gpu_util_avg'], 0)} | {f(s['usd_per_million_tokens'], 2)} |")
 
@@ -55,7 +55,7 @@ gateway with a team key, so the numbers include the gateway.
 
 Measured per run: output tokens per second (completed tokens divided by run time), time to first token
 (p50 and p95), request latency (p95), GPU utilization from `nvidia-smi` (average over the run), and the cost
-per 1 million output tokens, computed as GPU price per hour ÷ (tokens per second × 3600) × 1,000,000 with an
+per 1 million output tokens, computed as GPU price per hour / (tokens per second x 3600) x 1,000,000 with an
 assumed GPU price of **{price:.2f} USD per hour** (a demo assumption, editable in the console).
 
 ## Result 1: more parallel requests, much cheaper tokens
@@ -64,10 +64,10 @@ assumed GPU price of **{price:.2f} USD per hour** (a demo assumption, editable i
 |---|---|---|---|---|---|---|---|---|---|
 """ + "\n".join(rows) + f"""
 
-1. **Throughput grows {top['tokens_per_second'] / base['tokens_per_second']:.1f}×** when concurrency grows from 1 to 16
-   ({f(base['tokens_per_second'])} → {f(top['tokens_per_second'])} output tokens/s). The server batches
+1. **Throughput grows {top['tokens_per_second'] / base['tokens_per_second']:.1f}x** when concurrency grows from 1 to 16
+   ({f(base['tokens_per_second'])} -> {f(top['tokens_per_second'])} output tokens/s). The server batches
    parallel requests, so each extra request adds output at little extra cost.
-2. **Cost per million output tokens falls by {cost_drop:.0f} %** ({f(base['usd_per_million_tokens'], 2)} → {f(top['usd_per_million_tokens'], 2)} USD;
+2. **Cost per million output tokens falls by {cost_drop:.0f} %** ({f(base['usd_per_million_tokens'], 2)} -> {f(top['usd_per_million_tokens'], 2)} USD;
    base: concurrency 1, price assumption above).
 3. **The price is latency.** Time to first token p95 rises from {f(base['ttft_p95_s'], 2)} to {f(top['ttft_p95_s'], 2)} s
    and each stream slows from {f(base['tokens_per_second'])} to {f(top['tokens_per_second'] / 16)} tokens/s.

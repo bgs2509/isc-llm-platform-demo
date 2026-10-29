@@ -13,23 +13,23 @@ gateway with a team key, so the numbers include the gateway.
 
 Measured per run: output tokens per second (completed tokens divided by run time), time to first token
 (p50 and p95), request latency (p95), GPU utilization from `nvidia-smi` (average over the run), and the cost
-per 1 million output tokens, computed as GPU price per hour ÷ (tokens per second × 3600) × 1,000,000 with an
+per 1 million output tokens, computed as GPU price per hour / (tokens per second x 3600) x 1,000,000 with an
 assumed GPU price of **0.20 USD per hour** (a demo assumption, editable in the console).
 
 ## Result 1: more parallel requests, much cheaper tokens
 
 | Concurrency | OK requests | Refused | Output tokens/s | vs concurrency 1 | Tokens/s per request | TTFT p50 / p95, s | Latency p95, s | GPU util avg, % | USD per 1M tokens |
 |---|---|---|---|---|---|---|---|---|---|
-| 1 | 9 | 0 | 35.0 | 1.0× | 35.0 | 0.36 / 0.36 | 3.9 | 89 | 1.59 |
-| 2 | 14 | 0 | 55.5 | 1.6× | 27.8 | 0.45 / 0.64 | 5.1 | 91 | 1.00 |
-| 4 | 23 | 0 | 86.2 | 2.5× | 21.5 | 0.52 / 0.77 | 6.8 | 88 | 0.64 |
-| 8 | 32 | 0 | 128.0 | 3.7× | 16.0 | 0.82 / 1.18 | 9.0 | 90 | 0.43 |
-| 16 | 49 | 429×3 | 180.7 | 5.2× | 11.3 | 1.14 / 2.82 | 12.0 | 90 | 0.31 |
+| 1 | 9 | 0 | 35.0 | 1.0x | 35.0 | 0.36 / 0.36 | 3.9 | 89 | 1.59 |
+| 2 | 14 | 0 | 55.5 | 1.6x | 27.8 | 0.45 / 0.64 | 5.1 | 91 | 1.00 |
+| 4 | 23 | 0 | 86.2 | 2.5x | 21.5 | 0.52 / 0.77 | 6.8 | 88 | 0.64 |
+| 8 | 32 | 0 | 128.0 | 3.7x | 16.0 | 0.82 / 1.18 | 9.0 | 90 | 0.43 |
+| 16 | 49 | 429x3 | 180.7 | 5.2x | 11.3 | 1.14 / 2.82 | 12.0 | 90 | 0.31 |
 
-1. **Throughput grows 5.2×** when concurrency grows from 1 to 16
-   (35.0 → 180.7 output tokens/s). The server batches
+1. **Throughput grows 5.2x** when concurrency grows from 1 to 16
+   (35.0 -> 180.7 output tokens/s). The server batches
    parallel requests, so each extra request adds output at little extra cost.
-2. **Cost per million output tokens falls by 81 %** (1.59 → 0.31 USD;
+2. **Cost per million output tokens falls by 81 %** (1.59 -> 0.31 USD;
    base: concurrency 1, price assumption above).
 3. **The price is latency.** Time to first token p95 rises from 0.36 to 2.82 s
    and each stream slows from 35.0 to 11.3 tokens/s.
