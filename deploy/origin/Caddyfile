@@ -20,6 +20,14 @@ http://:19080 {
 		import /run/secrets/auth.caddy
 		reverse_proxy 127.0.0.1:19501
 	}
+	# isc-2: the whole site behind the login. A named matcher keeps its place among the handle blocks,
+	# so the console and Grafana blocks above still win for their paths on this host too.
+	@isc2 host {$ISC2_DOMAIN}
+	handle @isc2 {
+		import /run/secrets/auth.caddy
+		root * /srv/isc2
+		file_server
+	}
 	handle {
 		root * /srv/site
 		file_server

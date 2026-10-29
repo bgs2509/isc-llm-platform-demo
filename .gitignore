@@ -13,4 +13,5 @@ deploy/site.env
 deploy/.site-credentials
 deploy/Caddyfile.site
 deploy/origin/auth.caddy
+deploy/origin/.env
 /corpus/

@@ -9,10 +9,13 @@ services:
     network_mode: host
     mem_limit: 64m
     memswap_limit: 64m
+    environment:
+      ISC2_DOMAIN: ${ISC2_DOMAIN:?set ISC2_DOMAIN in deploy/origin/.env (git-ignored)}
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - ./auth.caddy:/run/secrets/auth.caddy:ro
       - ./site:/srv/site:ro
+      - ./site-isc2:/srv/isc2:ro
     healthcheck:
       test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://172.17.0.1:19080/index.html"]
       interval: 15s
