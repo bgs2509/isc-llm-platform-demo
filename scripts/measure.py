@@ -26,7 +26,8 @@ HELM = os.environ.get("HELM", os.path.expanduser("~/bin/helm"))
 NS = "llm-platform"
 GATEWAY_PORT = 14000  # local end of the port-forward to the gateway
 INPUT_USD_PER_TOKEN, OUTPUT_USD_PER_TOKEN = 0.15e-6, 0.60e-6  # chart values.yaml pricing
-KV_SWEEP = [(200, 4), (500, 8), (1000, 8), (1000, 16), (2000, 16)]  # (prompt words, parallel requests)
+RUN_GRACE_S = 120  # how long past its duration a console run may take to be stored
+KV_SWEEP =[(200, 4), (500, 8), (1000, 8), (1000, 16), (2000, 16)]  # (prompt words, parallel requests)
 
 
 # ---- pure summaries (tested) -------------------------------------------------
@@ -102,11 +103,14 @@ def run_console(base: str, params: dict) -> dict:
     status, started = http(base + "/api/runs", "POST", full)
     if status != 200:
         raise SystemExit(f"run not started: HTTP {status}")
-    while True:
+    deadline = time.monotonic() + full["duration_s"] + RUN_GRACE_S
+    while time.monotonic() < deadline:
         time.sleep(3)
+        # 404 is normal until the run has finished: the runner stores it at the end
         _, run = http(base + f"/api/runs/{started['id']}")
         if run.get("summary"):
             return run
+    raise SystemExit(f"run {started['id']} did not finish within {full['duration_s'] + RUN_GRACE_S} s")
 
 
 def kubectl(*args: str) -> str:
@@ -127,6 +131,11 @@ def gateway():
         yield f"http://127.0.0.1:{GATEWAY_PORT}"
     finally:
         pf.terminate()
+        try:
+            pf.wait(timeout=5)
+        except subprocess.TimeoutExpired:
+            pf.kill()
+            pf.wait()
 
 
 def chat(gw: str, key: str, words: int, max_tokens: int) -> tuple[int, dict]:
@@ -195,6 +204,7 @@ def measure_budget(base: str, yes: bool) -> None:
     master = secret("masterKey")
     with gateway() as gw:
         keys = []
+        deleted = True
         try:
             rpm_key = _drill_key(gw, master, rpm_limit=5, max_budget=1.0)
             keys.append(rpm_key)
@@ -215,12 +225,17 @@ def measure_budget(base: str, yes: bool) -> None:
             recorded = info.get("info", {}).get("spend")
         finally:
             if keys:
-                http(gw + "/key/delete", "POST", {"keys": keys}, master)
-    save("budget-drill", {"rpm": {"limit_per_min": 5, "sent": 10, "ok": rpm_status.count(200),
+                deleted = http(gw + "/key/delete", "POST", {"keys": keys}, master)[0] == 200
+    save("budget-drill", {"keys_deleted": deleted,
+                          "rpm": {"limit_per_min": 5, "sent": 10, "ok": rpm_status.count(200),
                                   "refused": len(rpm_status) - rpm_status.count(200)},
                           "budget": {"max_budget_usd": 0.001, "ok": ok, "refused_at_request": refused_at,
                                      "spend_recorded_usd": recorded,
                                      "spend_computed_usd": expected_spend(prompt_t, completion_t)}})
+    if not deleted:
+        print("WARNING: the temporary drill keys were NOT deleted; delete them by key_alias 'drill-*' in the "
+              "gateway", flush=True)
+        raise SystemExit(1)
 
 
 def measure_alert(base: str, yes: bool) -> None:
