@@ -1697,7 +1697,7 @@
       }
     ]
   },
-  "commit": "021ac27",
+  "commit": "6fa6852",
   "measurements": {
     "alert-drill": {
       "fired_after_s": 68.6,
@@ -2987,9 +2987,29 @@
       "tenant": "research"
     }
   },
+  "tenants": [
+    {
+      "maxBudgetUsd": 50,
+      "maxParallelRequests": 16,
+      "name": "research",
+      "rpmLimit": 600
+    },
+    {
+      "maxBudgetUsd": 20,
+      "maxParallelRequests": 8,
+      "name": "engineering",
+      "rpmLimit": 300
+    },
+    {
+      "maxBudgetUsd": 5,
+      "maxParallelRequests": 2,
+      "name": "operations",
+      "rpmLimit": 30
+    }
+  ],
   "tests": {
-    "console": 58,
-    "scripts": 5,
-    "site": 12
+    "console": 67,
+    "scripts": 16,
+    "site": 21
   }
 }
