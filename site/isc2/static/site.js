@@ -263,7 +263,7 @@
         h("div", {}, detail)]);
     };
     getJSON("/agent/eval").then(function (d) {
-      var s = d.summary, ch = d.chunking, date = (d.finished || d.started || "").slice(0, 16);
+      var s = d.summary, ch = d.chunking, date = d.finished ? new Date(d.finished * 1000).toISOString().slice(0, 16).replace("T", " ") + " UTC" : "";
       var map = {
         "eval-hit": String(s.hits), "eval-tool": String(s.tool_ok), "eval-claims-ok": String(s.claims_supported),
         "eval-claims-total": String(s.claims_total), "eval-p95": fix(s.latency_p95_s, 1) + " s",

@@ -16,6 +16,7 @@ import re
 import shutil
 import subprocess
 import sys
+import time
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
@@ -113,6 +114,11 @@ def signed(x: float, nd: int, unit: str) -> str:
 
 def day(stamp: str | None) -> str:
     return stamp[:10] if stamp else NA
+
+
+def when(unix_s: float | None) -> str:
+    """UTC minute of a console timestamp (the evaluation stores unix seconds)."""
+    return time.strftime("%Y-%m-%d %H:%M UTC", time.gmtime(unix_s)) if unix_s else NA
 
 
 def link(href: str, label: str) -> str:
@@ -317,7 +323,7 @@ def values(inputs: dict) -> dict[str, str]:
         v["e_hit"], v["e_tool"] = str(s["hits"]), str(s["tool_ok"])
         v["e_claims_ok"], v["e_claims_total"] = str(s["claims_supported"]), str(s["claims_total"])
         v["e_p95"], v["e_usd"] = n(s["latency_p95_s"], 1, " s"), n(s["usd_per_1k_questions"], 2, " USD")
-        v["e_date"] = (ev.get("finished") or ev.get("measured_at") or NA)[:16]
+        v["e_date"] = when(ev.get("finished"))
         v["ch_kind_chunks"], v["ch_kind_hits"] = str(ch["kind"]["chunks"]), f"{ch['kind']['hits']} of {ch['blog_total']}"
         v["ch_fixed_chunks"], v["ch_fixed_hits"] = str(ch["fixed"]["chunks"]), f"{ch['fixed']['hits']} of {ch['blog_total']}"
         v["eval_rows"] = _eval_rows(ev)

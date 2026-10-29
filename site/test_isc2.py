@@ -45,7 +45,8 @@ def _eval_result() -> dict:
                      "steps": [{"tool": "platform_status", "args": {"view": "alerts"}, "result": []}],
                      "sources": [], "latency_s": 3.0, "tokens": 700, "first_tool": "platform_status", "hit": None,
                      "tool_ok": i != 5, "claims_supported": 1, "claims_total": 2, "judge_error": None})
-    return {"started": "2026-10-30 10:00", "finished": "2026-10-30 10:05", "team": "research", "rows": rows,
+    # The console stores unix seconds (evaluate.py); 1793350800 = 2026-10-30 09:00 UTC.
+    return {"started": 1793350500.0, "finished": 1793350800.0, "team": "research", "rows": rows,
             "summary": {"hit_at_3": 0.8, "tool_accuracy": 5 / 6, "faithfulness": 0.7, "hits": 8, "blog_total": 10,
                         "tool_ok": 5, "platform_total": 6, "claims_supported": 28, "claims_total": 40,
                         "latency_p95_s": 4.2, "prompt_tokens": 9000, "completion_tokens": 2000,
