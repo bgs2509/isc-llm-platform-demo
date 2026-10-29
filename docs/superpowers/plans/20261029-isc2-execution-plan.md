@@ -1,7 +1,7 @@
 # isc-2 site and RAG agent — execution plan
 
 Status (2026-10-29): mockups approved by the owner (as is); plan approved by the owner (do-feature step 10,
-2026-10-29, in session). Next: Phase 0. Replaces `20261029-rag-agent-plan.md` and `20261029-isc2-site-plan.md` (see git history).
+2026-10-29, in session). Phase 0 done (log below). Next: Phase A. Replaces `20261029-rag-agent-plan.md` and `20261029-isc2-site-plan.md` (see git history).
 
 Inputs:
 
@@ -34,6 +34,10 @@ Phase D); `helm lint chart/llm-platform`.
 10. The documents the isc-2 pages link to (README, architecture, benchmark report, handover, 5 runbooks,
     publishing) are built into isc-2 too (task E.3); the 14 non-ASCII signs in them (`×` 10, `→` 3, `÷` 1)
     are replaced in the source files (task E.0). [owner]
+11. Evaluation requests carry `"cache": {"no-cache": true}` (LiteLLM per-request cache control,
+    docs.litellm.ai/docs/proxy/caching_controls); `POST /api/agent/ask` keeps the gateway cache. Reason: the
+    gateway cache answered a repeated request in 0.02 s and its key ignores `chat_template_kwargs` (Phase 0
+    log), so a second evaluation run would report cached latency. [auto-selected]
 
 ## Rules for every task
 
@@ -113,6 +117,8 @@ C.1 Tests `console/tests/test_agent.py` (fake gateway with scripted replies):
     3. The model keeps asking for tools -> after 3 rounds the request goes without `tools`; `rounds == 3`.
     4. Malformed tool arguments -> the tool result is `{"error": ...}`; the loop continues.
     5. Every request carries `temperature: 0` and `chat_template_kwargs.enable_thinking: false`.
+    6. With `no_cache=True` (used by the evaluation) every request carries `cache: {"no-cache": true}`;
+       without it (used by `ask`) no `cache` field is sent.
 C.2 Implement `agent.py`; route `POST /api/agent/ask` with tests: unknown tenant 404, question over
     500 characters 422, success returns the `AgentResult` fields. Commit.
 C.3 Evaluation set: `console/eval/questions.json` (16 questions: 10 blog with `expected_url`; 6 platform with
@@ -242,4 +248,22 @@ None (the three earlier ones and the documents gap were decided on 2026-10-29: d
 
 ## Log
 
-(filled during execution)
+### 2026-10-29 — Phase 0 done
+
+1. 0.2 vLLM `qwen38-lil` launch flags (read with `docker inspect`, no restart): `--max-num-seqs 16`,
+   `--max-model-len 262144`, `--kv-cache-dtype fp8`, `--gpu-memory-utilization 0.734`,
+   `--enable-auto-tool-choice --tool-call-parser qwen3_coder`, `--reasoning-parser qwen3`.
+2. 0.3 With 16 slots one team cannot make `waiting > 4`; the alert drill (D.4) runs research at 16 parallel
+   (console run) plus engineering at 8 (drill script): 24 requests, up to 8 waiting. No stop needed.
+3. FP8 KV cache is already on: remove "FP8 KV cache" from page 1 "What I'd change" in E.1.
+4. 0.1 Gateway spike from the console pod (namespace `llm-platform`, `~/bin/kubectl` on spark-1), team
+   `research`, `temperature 0`:
+   1. `tools` + `enable_thinking: false` -> 200, `finish_reason: tool_calls`, one call `search_docs` with
+      argument `query`, no content, no reasoning, 0.99 s, 304 tokens.
+   2. Fresh prompt, `enable_thinking: false` -> 200, `content` only (296 characters), no
+      `reasoning_content`, 1.43 s.
+   3. Default (thinking on) -> message has `reasoning_content` (321 characters) next to `content`.
+   4. Same prompt again without the flag -> 0.02 s, identical body: a gateway cache hit; the cache key ignores
+      `chat_template_kwargs` (decision 11). With `cache: {"no-cache": true}` -> 1.51 s (model called).
+5. Candidate for the sixth incident card (page 6, layer model/gateway): the exact-match cache returned an
+   answer made with thinking on/off settings different from the request's.
