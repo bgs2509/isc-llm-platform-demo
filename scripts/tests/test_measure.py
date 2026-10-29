@@ -28,6 +28,19 @@ def test_drill_summary_measures_the_longest_silence_after_the_delete():
     assert s["seconds_to_ready"] == 18.0
 
 
+def test_drill_summary_zeros_until_the_last_point_are_an_unrecovered_outage():
+    series = [(10, 100), (21, 0), (30, 0), (40, 0)]
+    timeline = [{"t": t, "tokens_per_s": float(v)} for t, v in series]
+    s = measure.drill_summary(timeline, {"requests": 10, "ok": 4}, delete_at_s=20.0, ready_after_s=None)
+    assert (s["no_answer_s"], s["recovered_after_s"], s["recovered"]) == (19.0, None, False)
+
+
+def test_drill_summary_marks_a_recovered_outage():
+    timeline = [{"t": t, "tokens_per_s": float(v)} for t, v in [(21, 0), (30, 0), (35, 50)]]
+    s = measure.drill_summary(timeline, {"requests": 10, "ok": 4}, delete_at_s=20.0, ready_after_s=None)
+    assert s["recovered"] is True and s["no_answer_s"] == 14.0
+
+
 def test_alert_times_from_state_samples():
     samples = [(0.0, "inactive"), (40.0, "pending"), (100.0, "firing"), (160.0, "firing"), (190.0, "inactive")]
     assert measure.alert_times(samples, load_end_s=150.0) == {"fired_after_s": 100.0,

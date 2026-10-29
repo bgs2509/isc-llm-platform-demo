@@ -170,6 +170,13 @@ def test_platform_eval_rows_show_expected_facts_and_blog_rows_do_not(pages):
     assert "Expected facts stated" in (HERE / "isc2" / "static" / "site.js").read_text(encoding="utf8")
 
 
+def test_gateway_line_says_when_the_outage_lasted_to_the_end_of_the_run():
+    inputs = fixture_inputs()
+    inputs["measurements"]["gateway-drill"].update(no_answer_s=40.0, recovered_after_s=None, recovered=False)
+    html = build.render(inputs)["infrastructure.html"]
+    assert "Time without answers: at least 40 s; not recovered before the run ended" in html
+
+
 def test_sparklines_are_not_gated_on_the_live_choice():
     # no JavaScript test runner in the repo: a source check that the series are drawn from the signals reply
     js = (HERE / "isc2" / "static" / "site.js").read_text(encoding="utf8")

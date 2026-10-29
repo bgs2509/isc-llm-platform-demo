@@ -287,6 +287,9 @@ def values(inputs: dict) -> dict[str, str]:
         v["gw_recover_line"] = f"Time without answers: {NA}"
     elif gw.get("no_answer_s") is None:
         v["gw_recover_line"] = "Time without answers: none recorded"
+    elif gw.get("recovered") is False:
+        v["gw_recover_line"] = (f"Time without answers: at least {n(gw['no_answer_s'], 0, ' s')}; "
+                                "not recovered before the run ended")
     else:
         v["gw_recover_line"] = (f"Time without answers: {n(gw['no_answer_s'], 0, ' s')}; first answer "
                                 f"{n(gw['recovered_after_s'], 0, ' s')} after the deletion")

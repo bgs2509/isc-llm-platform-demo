@@ -51,11 +51,15 @@ def drill_summary(timeline: list[dict], summary: dict, delete_at_s: float, ready
             if best[0] is None or p["t"] - start > best[1] - best[0]:
                 best = (start, p["t"])
             start = None
+    last = timeline[-1]["t"] if timeline else None
+    recovered = True
+    if start is not None and last > start:  # zeros until the last point: the outage lasted to the end of the run
+        best, recovered = (start, last), False
     silent, answer = best
     return {"requests": summary["requests"], "failed": summary["requests"] - summary["ok"],
             "no_answer_s": None if silent is None else answer - silent,
-            "recovered_after_s": None if answer is None else answer - delete_at_s,
-            "seconds_to_ready": ready_after_s}
+            "recovered_after_s": answer - delete_at_s if answer is not None and recovered else None,
+            "recovered": recovered, "seconds_to_ready": ready_after_s}
 
 
 def alert_times(samples: list[tuple[float, str]], load_end_s: float) -> dict:
