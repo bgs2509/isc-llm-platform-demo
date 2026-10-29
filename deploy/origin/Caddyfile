@@ -3,7 +3,9 @@
 	auto_https off
 }
 
-http://172.17.0.1:19080 {
+# Any Host: the portal Caddy passes the public name, and a site address with a host would answer
+# an empty 200 to it. The listening address is limited by bind, not by the site address.
+http://:19080 {
 	bind 172.17.0.1
 	encode zstd gzip
 	redir /console /console/ 301
