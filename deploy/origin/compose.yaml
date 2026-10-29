@@ -1,0 +1,20 @@
+# Origin of the public demo site, run on the web server next to (not inside) the existing portal.
+# It serves the static pages and, behind a password, the console and Grafana that arrive through a
+# reverse SSH tunnel on the web server's loopback (19500, 19501). It listens only on the docker0
+# address, so it is reachable from other containers on the host and not from the internet.
+services:
+  isc1-origin:
+    image: caddy:2.11.4-alpine
+    restart: unless-stopped
+    network_mode: host
+    mem_limit: 64m
+    memswap_limit: 64m
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./auth.caddy:/run/secrets/auth.caddy:ro
+      - ./site:/srv/site:ro
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://172.17.0.1:19080/index.html"]
+      interval: 15s
+      timeout: 3s
+      retries: 3

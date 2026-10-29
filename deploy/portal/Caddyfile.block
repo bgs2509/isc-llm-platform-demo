@@ -1,0 +1,8 @@
+# Add to the Caddyfile of the existing portal, next to the other site blocks.
+# The portal's Caddy terminates TLS (certificate over port 80) and passes everything to the origin.
+{$ISC1_DOMAIN}:{$HTTPS_PORT} {
+	import acme_issuers
+	reverse_proxy host.docker.internal:19080 {
+		flush_interval -1
+	}
+}

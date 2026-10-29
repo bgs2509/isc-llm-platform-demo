@@ -1,0 +1,5 @@
+# Changes to the `caddy` service of the portal's compose.yaml (two lines):
+#   environment:
+#     ISC1_DOMAIN: ${ISC1_DOMAIN:?}          # the new variable, defined where DOMAIN etc. are defined
+#   extra_hosts:
+#     - "host.docker.internal:host-gateway"   # lets the container reach the origin on the host
