@@ -2,9 +2,10 @@
 control), then extract console/corpus/blog/*.md (front matter title, url, author, date, kind; body with
 headings and lists) and print per-article structure statistics used to choose the chunking method.
 
-Usage: python3 scripts/build_blog_corpus.py [fetch|extract|all]   (default: all)
+Usage: python3 scripts/build_blog_corpus.py [fetch|extract|all]   (default: all; exit 1 if a download failed)
 Needs beautifulsoup4 for the extract step (host-side tool, not a console dependency).
 """
+import argparse
 import json
 import re
 import sys
@@ -28,13 +29,16 @@ def get(url: str) -> bytes:
         return resp.read()
 
 
-def fetch() -> None:
-    """Download the blog index and every article linked from it (existing non-empty files are kept)."""
+def fetch() -> int:
+    """Download the blog index and every article linked from it (existing non-empty files are kept).
+
+    Returns the number of failed downloads."""
     HTML_DIR.mkdir(parents=True, exist_ok=True)
     index = HTML_DIR / "_index.html"
     if not index.exists() or index.stat().st_size == 0:
         index.write_bytes(get(SITE + "/blog"))
     paths = sorted(set(re.findall(r"/blog/[a-z0-9$.%-]+", index.read_text(encoding="utf8"))))
+    failed = 0
     for p in paths:
         out = HTML_DIR / (p.removeprefix("/blog/").replace("$", "S") + ".html")
         if out.exists() and out.stat().st_size > 0:
@@ -44,8 +48,10 @@ def fetch() -> None:
             print("ok", p)
         except OSError as exc:
             print("FAILED", p, exc)
+            failed += 1
         time.sleep(1)
-    print(len(list(HTML_DIR.glob("*.html"))), "files in", HTML_DIR)
+    print(len(list(HTML_DIR.glob("*.html"))), "files in", HTML_DIR, "|", failed, "failed")
+    return failed
 
 
 def walk(el, out: list[str]) -> None:
@@ -140,9 +146,21 @@ def extract() -> None:
     print({k: sum(r[5] == k for r in rows) for k in ("case", "sections", "plain")})
 
 
-if __name__ == "__main__":
-    step = sys.argv[1] if len(sys.argv) > 1 else "all"
-    if step in ("fetch", "all"):
-        fetch()
+def parse_args(argv: list[str]) -> str:
+    ap = argparse.ArgumentParser(description="Fetch the blog and extract it to markdown.")
+    ap.add_argument("step", nargs="?", default="all", choices=("fetch", "extract", "all"))
+    return ap.parse_args(argv).step
+
+
+def main(argv: list[str]) -> int:
+    step = parse_args(argv)
+    if step in ("fetch", "all") and fetch():
+        print("download failures: corpus incomplete, rerun fetch", file=sys.stderr)
+        return 1
     if step in ("extract", "all"):
         extract()
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv[1:]))
