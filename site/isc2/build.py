@@ -313,9 +313,33 @@ def _infrastructure(c: dict) -> dict[str, str]:
     return v
 
 
+def read_tenants_text(text: str) -> list[dict]:
+    """The `tenants:` list of values.yaml (a flat list of name: value maps); no YAML library needed."""
+    tenants: list[dict] = []
+    lines = text.split("\n")
+    for line in lines[lines.index("tenants:") + 1:]:
+        if line.strip() and not line.startswith(" "):
+            break
+        m = re.match(r"\s*(?:- )?(\w+):\s*([^#\s]+)", line)
+        if not m:
+            continue
+        key, raw = m.groups()
+        if key == "name":
+            tenants.append({})
+        tenants[-1][key] = raw if key == "name" else (float(raw) if "." in raw else int(raw))
+    return tenants
+
+
+def read_tenants(values_yaml: Path) -> list[dict]:
+    return read_tenants_text(values_yaml.read_text(encoding="utf8"))
+
+
 def _gateway(c: dict) -> dict[str, str]:
     runs, budget = c["runs"], c["meas"].get("budget-drill")
     v: dict[str, str] = {}
+    for t in c["inputs"]["tenants"]:
+        v[f"g_{t['name']}_budget"] = f"{t['maxBudgetUsd']:g}"
+        v[f"g_{t['name']}_limits"] = f"{t['maxParallelRequests']} &middot; {t['rpmLimit']}"
     # per team the run that shows the team's limits
     team_run = {"research": "baseline c=16", "engineering": None, "operations": "team limit, operations, c=8"}
     total_tps = 0.0
@@ -500,7 +524,8 @@ def gather(root: Path = ROOT, python: str = sys.executable) -> dict:
     measurements = {p.stem: json.loads(p.read_text(encoding="utf8")) for p in sorted(meas_dir.glob("*.json"))} \
         if meas_dir.exists() else {}
     bench = json.loads((root / "docs" / "benchmark-results.json").read_text(encoding="utf8"))
-    return {"commit": commit, "tests": tests, "benchmark": bench, "measurements": measurements}
+    return {"commit": commit, "tests": tests, "benchmark": bench, "measurements": measurements,
+            "tenants": read_tenants(root / "chart" / "llm-platform" / "values.yaml")}
 
 
 def main(out: Path = OUT, from_inputs: bool = False) -> None:

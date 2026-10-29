@@ -87,7 +87,7 @@ def fixture_inputs() -> dict:
         "eval": _eval_result(),
     }
     return {"commit": "abc1234", "tests": {"console": 120, "site": 9, "scripts": 12}, "benchmark": bench,
-            "measurements": measurements}
+            "measurements": measurements, "tenants": build.read_tenants(ROOT / "chart" / "llm-platform" / "values.yaml")}
 
 
 @pytest.fixture(scope="module")
@@ -118,7 +118,8 @@ def test_no_character_outside_ascii(pages):
     assert not {k: v for k, v in bad.items() if v}
     # a site built before the measurements exist is still ASCII and says so
     empty = build.render({"commit": "abc1234", "tests": {"console": 1, "site": 1, "scripts": 1},
-                          "benchmark": fixture_inputs()["benchmark"], "measurements": {}})
+                          "benchmark": fixture_inputs()["benchmark"], "measurements": {},
+                          "tenants": fixture_inputs()["tenants"]})
     assert all(ord(c) < 128 for text in empty.values() for c in text)
     assert "not measured yet" in empty["inference.html"]
 
@@ -175,6 +176,22 @@ def test_gateway_line_says_when_the_outage_lasted_to_the_end_of_the_run():
     inputs["measurements"]["gateway-drill"].update(no_answer_s=40.0, recovered_after_s=None, recovered=False)
     html = build.render(inputs)["infrastructure.html"]
     assert "Time without answers: at least 40 s; not recovered before the run ended" in html
+
+
+def test_tenant_limits_on_the_gateway_page_are_those_of_values_yaml(pages):
+    text = (ROOT / "chart" / "llm-platform" / "values.yaml").read_text(encoding="utf8")
+    block = text.split("\ntenants:\n", 1)[1].split("\n\n", 1)[0]
+    found = re.findall(r"- name: (\w+)\s+maxParallelRequests: (\d+)\s+rpmLimit: (\d+)\s+maxBudgetUsd: (\d+)", block)
+    assert len(found) == 3
+    for name, parallel, rpm, budget in found:
+        panel = re.search(rf'data-panel="{name}".*?</div>\s*</div>', pages["gateway.html"], re.S).group(0)
+        assert f"<b>{budget} USD</b>" in panel and f"<b>{parallel} &middot; {rpm}</b>" in panel
+
+
+def test_read_tenants_parses_the_block():
+    text = "a: 1\ntenants:\n  - name: x\n    maxParallelRequests: 4  # c\n    rpmLimit: 9\n    maxBudgetUsd: 2.5\nimages:\n  y: 1\n"
+    assert build.read_tenants_text(text) == [{"name": "x", "maxParallelRequests": 4, "rpmLimit": 9,
+                                              "maxBudgetUsd": 2.5}]
 
 
 def test_sparklines_are_not_gated_on_the_live_choice():

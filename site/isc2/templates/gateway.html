@@ -37,24 +37,24 @@
       <div class="strip">
         <div><b><span data-team-f="research.rps">{{g_research_rps}}</span></b><span>requests/s</span></div>
         <div><b><span data-team-f="research.tps">{{g_research_tps}}</span></b><span>tokens/s</span></div>
-        <div><b>50 USD</b><span>daily budget (resets every 24 h)</span></div>
-        <div><b>16 &middot; 600</b><span>parallel limit &middot; requests/min limit</span></div>
+        <div><b>{{g_research_budget}} USD</b><span>daily budget (resets every 24 h)</span></div>
+        <div><b>{{g_research_limits}}</b><span>parallel limit &middot; requests/min limit</span></div>
       </div>
     </div>
     <div data-panel="engineering" hidden style="margin-top:8px">
       <div class="strip">
         <div><b><span data-team-f="engineering.rps">{{g_engineering_rps}}</span></b><span>requests/s</span></div>
         <div><b><span data-team-f="engineering.tps">{{g_engineering_tps}}</span></b><span>tokens/s</span></div>
-        <div><b>20 USD</b><span>daily budget (resets every 24 h)</span></div>
-        <div><b>8 &middot; 300</b><span>parallel limit &middot; requests/min limit</span></div>
+        <div><b>{{g_engineering_budget}} USD</b><span>daily budget (resets every 24 h)</span></div>
+        <div><b>{{g_engineering_limits}}</b><span>parallel limit &middot; requests/min limit</span></div>
       </div>
     </div>
     <div data-panel="operations" hidden style="margin-top:8px">
       <div class="strip">
         <div><b><span data-team-f="operations.rps">{{g_operations_rps}}</span></b><span>requests/s</span></div>
         <div><b><span data-team-f="operations.tps">{{g_operations_tps}}</span></b><span>tokens/s</span></div>
-        <div><b>5 USD</b><span>daily budget (resets every 24 h)</span></div>
-        <div><b>2 &middot; 30</b><span>parallel limit &middot; requests/min limit</span></div>
+        <div><b>{{g_operations_budget}} USD</b><span>daily budget (resets every 24 h)</span></div>
+        <div><b>{{g_operations_limits}}</b><span>parallel limit &middot; requests/min limit</span></div>
       </div>
     </div>
     <p class="src" style="margin-top:6px"><span class="pill build" data-pill>build</span> /console/api/status?view=teams, 5-minute rate; before a live answer: the latest benchmark run of the team</p>
