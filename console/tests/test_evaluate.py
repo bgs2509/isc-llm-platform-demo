@@ -125,7 +125,38 @@ def test_question_files_load():
     assert len(questions) == 16 and set(snapshots) == {"idle", "overload"}
 
 
-@pytest.mark.parametrize("raw", ["not json", '{"claims": "x"}', '{"claims": [{"claim": "c"}]}'])
+@pytest.mark.parametrize("raw", [
+    "not json", '{"claims": "x"}', '{"claims": [{"claim": "c"}]}',
+    '{"claims": [{"supported": true}]}', '{"claims": [{"claim": "", "supported": true}]}',
+    '{"claims": [{"claim": 5, "supported": true}]}'])
 def test_bad_judge_shapes_raise(raw):
     with pytest.raises(ValueError):
         evaluate.parse_claims(raw)
+
+
+async def test_empty_choices_gives_row_error_not_abort():
+    async def ask_empty(question, snapshot):
+        raise IndexError("choices")
+
+    async def judge_type(context, answer):
+        raise TypeError("x")
+
+    result = await _run(ask=ask_empty)
+    assert all(r["error"] == "IndexError" for r in result["rows"])
+    assert result["summary"]["rows_failed"] == 4
+    result = await _run(judge=judge_type)
+    assert result["summary"]["rows_failed"] == 4 and "judge_error" in result["rows"][0]
+
+
+async def test_rows_failed_counts_only_failed_rows():
+    assert (await _run())["summary"]["rows_failed"] == 0
+
+
+def test_save_is_atomic_and_failure_is_logged(tmp_path, caplog):
+    evaluate.save_result(str(tmp_path), {"a": 1})
+    assert [p.name for p in tmp_path.iterdir()] == ["eval.json"]
+    blocker = tmp_path / "file"
+    blocker.write_text("x")
+    with caplog.at_level("WARNING"):
+        evaluate.save_result(str(blocker), {"a": 1})
+    assert "[Evaluate][save][SAVE_FAILED]" in caplog.text

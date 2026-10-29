@@ -66,7 +66,8 @@ def parse_claims(raw: str) -> list[dict]:
         text = text.split("\n", 1)[-1].rsplit("```", 1)[0]
     claims = json.loads(text).get("claims") if text.lstrip().startswith("{") else None
     if not isinstance(claims, list) or not all(
-            isinstance(c, dict) and isinstance(c.get("supported"), bool) for c in claims):
+            isinstance(c, dict) and isinstance(c.get("supported"), bool)
+            and isinstance(c.get("claim"), str) and c["claim"].strip() for c in claims):
         raise ValueError("judge reply is not the claims JSON")
     return claims
 
@@ -95,7 +96,7 @@ async def _run_row(q: dict, snapshots: dict, index: corpus.Index, ask: Ask, judg
         row["hit"] = q["expected_url"] in [h.chunk.url for h in index.search(q["question"], k=3)]
     try:
         res = await ask(q["question"], snapshots[q.get("snapshot", "idle")])
-    except (httpx.HTTPError, ValueError, KeyError) as exc:
+    except (httpx.HTTPError, ValueError, KeyError, IndexError, TypeError) as exc:
         row["error"] = type(exc).__name__
         log.warning("[Evaluate][row][ASK_ERROR] id=%s %s", q["id"], type(exc).__name__)
         res = None
@@ -108,7 +109,7 @@ async def _run_row(q: dict, snapshots: dict, index: corpus.Index, ask: Ask, judg
             claims = await judge(context, res.answer)
             row["claims_total"] = len(claims)
             row["claims_supported"] = sum(1 for c in claims if c["supported"])
-        except (httpx.HTTPError, ValueError, KeyError) as exc:
+        except (httpx.HTTPError, ValueError, KeyError, IndexError, TypeError) as exc:
             row["judge_error"] = str(exc) or type(exc).__name__
     if q["kind"] == "platform":
         row["tool_ok"] = row["first_tool"] == q["expected_tool"]
@@ -142,6 +143,7 @@ async def run_evaluation(questions: list[dict], snapshots: dict, index: corpus.I
         "faithfulness": _share(supported, total),
         "hits": hits, "blog_total": len(blog), "tool_ok": tool_ok, "platform_total": len(platform),
         "claims_supported": supported, "claims_total": total,
+        "rows_failed": sum(1 for r in rows if r.get("error") or r.get("judge_error")),
         "latency_p95_s": percentile([r["latency_s"] for r in rows], 95),  # agent time, judge excluded
         "prompt_tokens": sum(r["prompt_tokens"] for r in rows),
         "completion_tokens": sum(r["completion_tokens"] for r in rows),
@@ -173,9 +175,12 @@ def load_result(data_dir: str) -> dict | None:
 
 
 def save_result(data_dir: str, result: dict) -> None:
+    """Atomic write (temp file + rename); a failure is logged, the console keeps the result in memory."""
     try:
         os.makedirs(data_dir, exist_ok=True)
-        with open(os.path.join(data_dir, "eval.json"), "w", encoding="utf8") as f:
+        tmp = os.path.join(data_dir, "eval.json.tmp")
+        with open(tmp, "w", encoding="utf8") as f:
             json.dump(result, f)
-    except OSError:
-        pass  # the console keeps the result in memory
+        os.replace(tmp, os.path.join(data_dir, "eval.json"))
+    except OSError as exc:
+        log.warning("[Evaluate][save][SAVE_FAILED] %s", type(exc).__name__)
