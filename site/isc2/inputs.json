@@ -1697,7 +1697,7 @@
       }
     ]
   },
-  "commit": "f2fabc2",
+  "commit": "2ac96e5",
   "measurements": {
     "alert-drill": {
       "fired_after_s": 68.6,
@@ -3047,6 +3047,6 @@
   "tests": {
     "console": 67,
     "scripts": 16,
-    "site": 21
+    "site": 30
   }
 }

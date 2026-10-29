@@ -1,68 +1,55 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>README</title><link rel="icon" href="data:,"><link rel="stylesheet" href="style.css"></head><body><div class="top"><div><b>Private LLM platform</b><a href="index.html">Overview</a><a href="docs/architecture.html">Architecture</a><a href="docs/benchmark-report.html">Benchmark report</a><a href="docs/handover.html">Handover</a><a href="console/">Console</a><a href="grafana/d/llm-platform/llm-platform">Grafana: LLM platform</a></div></div><main><h1>isc-llm-platform-demo</h1>
 <p>A small private LLM platform: <strong>one gateway in front of one large model, with per-team keys and limits,
-dashboards, alerts and a web console that proves the numbers.</strong> It runs on a single GPU machine and is
-packaged as a Helm chart for a local <code>kind</code> Kubernetes cluster.</p>
-<h2>What you get</h2>
+dashboards, alerts and a web console that proves the numbers.</strong> One GPU machine, a Helm chart, a local
+<code>kind</code> cluster.</p>
+<pre><code> Teams (one key each)
+ [research]    [engineering]    [operations]
+        \            |             /
+         v           v            v
+   +--------------------------------------------+
+   | Gateway (LiteLLM): keys, budgets, limits,  |
+   | cache, token and cost accounting           |
+   +------------------+-------------------------+
+                      v
+          Relay (host) -&gt; vLLM server (GPU host)
+                      |
+   +------------------+------------------+
+   v                                     v
+ Prometheus  &lt;----  nvidia-smi exporter (host)
+   |   alert rules (6)
+   v
+ Grafana dashboard        Console: load tests, live charts, RAG agent
+</code></pre>
+<h2>What it is made of</h2>
 <ol>
-<li><strong>Team gateway</strong> (LiteLLM): one key per team, parallel and per-minute limits, spend budgets, response
-   cache, token and cost accounting.</li>
-<li><strong>Observability</strong>: Prometheus (model server, GPU, gateway), 6 alert rules, a 12-panel Grafana dashboard.</li>
-<li><strong>Console</strong>: start a load test as any team, watch tokens per second, time to first token, GPU use, KV cache
-   and queue update every second, save runs, compare "before" and "after".</li>
-<li><strong>RAG agent</strong> in the console: answers about the client firm's public blog (BM25 search) and about the
-   running platform (Prometheus), through the gateway as a team, with a 16-question evaluation set.</li>
-<li><strong>Runbooks and handover</strong> for operating it, and a <strong>benchmark report</strong> with measured numbers.</li>
+<li><strong>Gateway</strong> (LiteLLM): per-team keys, parallel and per-minute limits, budgets, cache, cost accounting.</li>
+<li><strong>Observability</strong>: Prometheus, 6 alert rules, a 12-panel Grafana dashboard.</li>
+<li><strong>Console</strong>: load tests as any team, live tokens per second, time to first token, GPU and queue.</li>
+<li><strong>RAG agent</strong>: answers about the client firm's public blog and the running platform.</li>
+<li><strong>Docs</strong>: <a href="docs/architecture.html">architecture</a>, <a href="docs/benchmark-report.html">benchmark report</a>,
+   <a href="docs/handover.html">handover and limits</a>, <a href="deploy/README.html">publishing</a>.</li>
 </ol>
-<h2>Measured results</h2>
-<p>On one NVIDIA GB10 with a large Qwen model served by vLLM (details and limits in
-<a href="docs/benchmark-report.html">docs/benchmark-report.md</a>):</p>
+<h2>Key numbers</h2>
+<p>On one NVIDIA GB10 with a Qwen model on vLLM (<a href="docs/benchmark-report.html">details</a>):</p>
 <ol>
-<li>Output throughput grew <strong>5.2x</strong> when parallel requests grew from 1 to 16 (35.0 -&gt; 180.7 tokens/s).</li>
-<li>Cost per million output tokens fell <strong>81 %</strong> at the same time (base: 1 request; assumed GPU price 0.20 USD/hour).</li>
-<li><code>nvidia-smi</code> GPU utilization stayed at 88–91 % in every run, so it cannot show this difference.</li>
-<li>Team limits worked: a team limited to 2 parallel requests got 2 of 5,969 requests through.</li>
-<li>RAG agent evaluation (2026-10-29, <code>docs/measurements/eval.json</code>): the expected article in the top 3 for
-   9 of 10 blog questions, the right tool for 6 of 6 platform questions, 162 of 164 answer claims supported
-   by the retrieved text, 8 of 8 expected platform facts stated, answer latency p95 10.3 s, 0.67 USD per
-   1,000 questions.</li>
-<li>Drills (<code>docs/measurements/</code>): a deleted gateway pod was ready again after 18 s (17 s without answers);
-   the queue alert fired after 69 s of overload and cleared 14 s after it.</li>
+<li>Output throughput <strong>5.2x</strong> from 1 to 16 parallel requests (35.0 -&gt; 180.7 tokens/s).</li>
+<li>Cost per million output tokens <strong>-81 %</strong> at 16 parallel requests (base: 1 request).</li>
+<li>Team limits hold: a team limited to 2 parallel requests got 2 of 5,969 requests through.</li>
 </ol>
-<h2>How it fits together</h2>
-<p>See <a href="docs/architecture.html">docs/architecture.md</a>. The model server (vLLM) runs as a plain container on the
-GPU host; everything else runs in the cluster. Two small host helpers in <code>tools/</code> connect them.</p>
 <h2>Run it</h2>
-<p>Prerequisites: Docker, a GPU host with an OpenAI-compatible vLLM server, <code>kind</code>, <code>kubectl</code>, <code>helm</code>.</p>
 <pre><code class="language-bash">kind create cluster --config cluster/kind-cluster.yaml
 python3 tools/model_forward.py 172.23.0.1 18310 127.0.0.1 18300 &amp;   # relay to the model server
 python3 tools/gpu_exporter.py 172.23.0.1 18311 &amp;                    # GPU readings for Prometheus
 scripts/install.sh                                                  # build, load images, helm install
 </code></pre>
-<p>Then open the console at <code>http://127.0.0.1:18500</code> and Grafana at <code>http://127.0.0.1:18501/grafana/</code>
-(use an SSH tunnel from another computer). Edit <code>chart/llm-platform/values.yaml</code> for the model name, the host
-address of your cluster network, team limits and prices.</p>
-<h2>Publish</h2>
-<p><code>site/build.py</code> (isc-1) and <code>site/isc2/build.py</code> (isc-2) build two static sites from this README, <code>docs/</code>
-and the measurements into <code>deploy/origin/</code>; the pages are tracked in git and reach the web server by
-<code>git pull</code>. <code>deploy/</code> also has the origin container, the reverse-proxy block and the tunnel unit (see
-<a href="deploy/README.html">deploy/README.md</a>).</p>
-<h2>Tests</h2>
-<pre><code class="language-bash">(cd console &amp;&amp; python -m pip install -r requirements-dev.txt &amp;&amp; python -m pytest)
-python -m pytest site            # links, page rules, tracked pages equal a fresh build
-python -m pytest scripts/tests   # measurement summaries
-helm lint chart/llm-platform
-</code></pre>
+<p>Console: <code>http://127.0.0.1:18500</code>, Grafana: <code>http://127.0.0.1:18501/grafana/</code>.</p>
 <h2>Layout</h2>
 <pre><code>chart/llm-platform/   Helm chart
-console/              console (FastAPI + plain JavaScript), RAG agent, corpus, evaluation set, tests
+console/              console, RAG agent, corpus, evaluation set, tests
 tools/                host helpers (relay, GPU exporter)
-scripts/              install, benchmark, measurements, report and dashboard generators
-site/                 site builders (isc-1 in build.py, isc-2 in isc2/)
-deploy/               publishing: origin container with the built pages, proxy block, tunnel unit
+scripts/              install, benchmark, measurements, generators
+site/                 static site builders
+deploy/               publishing
 docs/                 architecture, runbooks, handover, benchmark report, measurements
 cluster/              kind cluster configuration
-</code></pre>
-<h2>Honest limits</h2>
-<p>One node and one model; the model runs outside Kubernetes, so GPU scheduling by Kubernetes is not shown;
-benchmark numbers are one 30-second run per setting on a shared GPU; chargeback rates and GPU price are
-demo values. See <a href="docs/handover.html">docs/handover.md</a>.</p></main></body></html>
+</code></pre></main></body></html>
