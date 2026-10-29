@@ -15,6 +15,31 @@ _spec.loader.exec_module(build)
 PROXIED = {"console", "grafana"}
 
 
+def test_an_interrupted_build_leaves_the_old_site_untouched(tmp_path):
+    out = tmp_path / "site"
+    out.mkdir()
+    (out / "old.html").write_text("old")
+
+    def broken(directory):
+        (directory / "half.html").write_text("half")
+        raise RuntimeError("interrupted")
+
+    try:
+        build.publish_dir(out, broken)
+    except RuntimeError:
+        pass
+    assert [p.name for p in out.iterdir()] == ["old.html"]
+    assert [p.name for p in tmp_path.iterdir()] == ["site"]  # no half-written sibling left
+
+
+def test_a_finished_build_replaces_the_old_site(tmp_path):
+    out = tmp_path / "site"
+    out.mkdir()
+    (out / "old.html").write_text("old")
+    build.publish_dir(out, lambda d: (d / "new.html").write_text("new"))
+    assert [p.name for p in out.iterdir()] == ["new.html"] and [p.name for p in tmp_path.iterdir()] == ["site"]
+
+
 def test_local_links_resolve(tmp_path):
     build.main(tmp_path)
     missing = []

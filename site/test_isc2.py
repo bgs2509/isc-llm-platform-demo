@@ -204,6 +204,17 @@ def test_signal_expressions_are_those_of_platform_status(pages):
     assert shown == expected
 
 
+def test_isc2_main_swaps_the_site_in_whole(tmp_path, monkeypatch):
+    out = tmp_path / "site-isc2"
+    out.mkdir()
+    (out / "stale.html").write_text("stale")
+    monkeypatch.setattr(build, "gather", fixture_inputs)
+    monkeypatch.setattr(build, "INPUTS", tmp_path / "inputs.json")
+    build.main(out)
+    assert not (out / "stale.html").exists() and (out / "index.html").exists()
+    assert sorted(p.name for p in tmp_path.iterdir()) == ["inputs.json", "site-isc2"]
+
+
 def test_sparklines_are_not_gated_on_the_live_choice():
     # no JavaScript test runner in the repo: a source check that the series are drawn from the signals reply
     js = (HERE / "isc2" / "static" / "site.js").read_text(encoding="utf8")

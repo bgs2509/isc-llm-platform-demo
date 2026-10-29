@@ -14,7 +14,6 @@ import html
 import importlib.util
 import json
 import re
-import shutil
 import subprocess
 import sys
 import time
@@ -555,12 +554,14 @@ def main(out: Path = OUT, from_inputs: bool = False) -> None:
         inputs = gather()
         INPUTS.write_text(json.dumps(inputs, indent=2, sort_keys=True, ensure_ascii=True) + "\n", encoding="utf8")
     pages = render(inputs)
-    if out.exists():
-        shutil.rmtree(out)
-    for rel, text in pages.items():
-        p = out / rel
-        p.parent.mkdir(parents=True, exist_ok=True)
-        p.write_text(text, encoding="utf8")
+
+    def fill(directory: Path) -> None:
+        for rel, text in pages.items():
+            p = directory / rel
+            p.parent.mkdir(parents=True, exist_ok=True)
+            p.write_text(text, encoding="utf8")
+
+    isc1.publish_dir(out, fill)
     print("built", len(pages), "files into", out)
 
 

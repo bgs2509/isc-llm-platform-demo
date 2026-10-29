@@ -7,6 +7,7 @@ Usage: python site/build.py
 """
 import html
 import json
+import os
 import re
 import shutil
 from pathlib import Path
@@ -114,19 +115,35 @@ and the report are open.</p>
 """
 
 
+def publish_dir(out: Path, fill) -> None:
+    """Run `fill(directory)` on a sibling directory, then swap it for `out`; an error leaves `out` as it was."""
+    tmp = out.with_name(out.name + ".new")
+    shutil.rmtree(tmp, ignore_errors=True)
+    tmp.mkdir(parents=True)
+    try:
+        fill(tmp)
+        if out.exists():
+            shutil.rmtree(out)
+        os.replace(tmp, out)
+    except BaseException:
+        shutil.rmtree(tmp, ignore_errors=True)
+        raise
+
+
 def main(out: Path = OUT) -> None:
-    if out.exists():
-        shutil.rmtree(out)
-    out.mkdir(parents=True)
-    write(out, "style.css", CSS)
-    write(out, "index.html", page("Private LLM platform", landing(), 0))
     pages = [("readme.html", ROOT / "README.md", "README"), ("deploy/README.html", ROOT / "deploy" / "README.md", "publishing")]
     for name in ("architecture", "benchmark-report", "handover"):
         pages.append((f"docs/{name}.html", ROOT / "docs" / f"{name}.md", name))
     for p in sorted((ROOT / "docs" / "runbooks").glob("*.md")):
         pages.append((f"docs/runbooks/{p.stem}.html", p, p.stem))
-    for rel, src, title in pages:
-        write(out, rel, page(title, md_to_html(src), rel.count("/")))
+
+    def fill(directory: Path) -> None:
+        write(directory, "style.css", CSS)
+        write(directory, "index.html", page("Private LLM platform", landing(), 0))
+        for rel, src, title in pages:
+            write(directory, rel, page(title, md_to_html(src), rel.count("/")))
+
+    publish_dir(out, fill)
     print("built", len(pages) + 1, "pages into", out)
 
 
