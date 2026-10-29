@@ -324,3 +324,13 @@ None (the three earlier ones and the documents gap were decided on 2026-10-29: d
    `/console/api/status?view=health`, `/console/api/agent/eval`, `/grafana/` answer 200; isc-1 still 200
    without a login.
 3. This branch fast-forwarded into `main`; spark-1 and vpn-2 clones back on `main`.
+
+### 2026-10-29 — Pages readable in 2 seconds (owner request, /best-approach variant 2, link rule "a")
+
+1. Home: title, stack line and a clickable platform diagram replace the role/work-sample paragraph; topic pages
+   open with their title, three points and the same diagram (own block highlighted), end with prev/next.
+2. One title list (`TOPICS` in `site/isc2/build.py`) feeds menu, cards, headings, tab titles and prev/next.
+3. Links between site pages open in the same tab; tools, documents and external addresses in a new tab
+   (spec rules 3, 6, 7 updated). Tests: site and scripts 45, all passing. External review (step 12) skipped
+   on the owner's "do it fast". Case sections below the intro not shortened.
+4. To publish: on vpn-2 `git pull --ff-only` and recreate the origin (`deploy/README.md`).

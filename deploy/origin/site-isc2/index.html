@@ -9,92 +9,78 @@
 </head>
 <body>
 <header class="top"><div class="top-in">
-  <a class="brand" href="index.html" target="_blank" rel="noopener">Private LLM platform</a>
+  <a class="brand" href="index.html">Private LLM platform</a>
   <nav>
-    <a href="inference.html" target="_blank" rel="noopener">1 Inference</a>
-    <a href="infrastructure.html" target="_blank" rel="noopener">2 Infrastructure</a>
-    <a href="gateway.html" target="_blank" rel="noopener">3 Gateway</a>
-    <a href="rag.html" target="_blank" rel="noopener">4 RAG and agent</a>
-    <a href="observability.html" target="_blank" rel="noopener">5 Observability</a>
-    <a href="delivery.html" target="_blank" rel="noopener">6 Delivery</a>
+    <a href="inference.html">vLLM inference</a>
+    <a href="infrastructure.html">Kubernetes and operations</a>
+    <a href="gateway.html">LiteLLM gateway</a>
+    <a href="rag.html">RAG agent</a>
+    <a href="observability.html">Observability</a>
+    <a href="delivery.html">Delivery</a>
   </nav>
 </div></header>
 
 <main>
-  <section class="hero">
-    <p class="eyebrow">Senior AI Infrastructure / LLM Inference Engineer &middot; work sample</p>
-    <h1>One GPU host, one model, three teams, measured end to end</h1>
-    <p>A private LLM platform I designed, built and operate: vLLM on an NVIDIA GB10, a LiteLLM gateway with team
-      keys and limits, Prometheus and Grafana, a RAG agent with an evaluation set, a load-test console.
-      Each card below is one mandatory requirement of the role, with its live number.</p>
-    <p class="src" style="margin-top:10px">
-      <span class="pill live">live</span> updates every 2 s while load runs
-      <span class="pill saved">saved run</span> latest run, with its date
-      <span class="pill build">build</span> measured at build time
-    </p>
+  <section class="intro">
+    <h1>Private LLM platform</h1>
+    <p class="stackline">Qwen &middot; vLLM &middot; NVIDIA GB10 (DGX Spark) &middot; Kubernetes (kind + Helm) &middot; LiteLLM &middot; Prometheus + Grafana</p>
+    <ul class="tldr">
+      <li>3 teams share one model through one gateway with keys and limits</li>
+      <li>Every number below is measured, live or from a saved run</li>
+      <li>One-command install, 5 runbooks, 6 incidents written up</li>
+    </ul>
+    <figure class="stack"><svg viewBox="0 0 760 240" role="group" aria-label="Platform diagram"><defs><marker id="arr" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L8 4L0 8z"/></marker></defs><rect class="team" x="10" y="50" width="110" height="46" rx="7"/><text class="lbl" x="22" y="70">3 teams</text><text class="sub" x="22" y="87">OpenAI API</text><path class="flow" d="M120 73H178"/><path class="flow" d="M250 112V98"/><path class="flow" d="M480 73H568"/><path class="flow dash" d="M480 135H548"/><a href="infrastructure.html" class="node" aria-label="Kubernetes and operations"><rect class="frame" x="150" y="12" width="356" height="164" rx="10"/><text class="cap" x="164" y="34">Kubernetes (kind + Helm)</text></a><a href="inference.html" class="node" aria-label="vLLM inference"><rect class="frame" x="550" y="12" width="200" height="164" rx="10"/><text class="cap" x="564" y="34">GPU host: NVIDIA GB10</text><text class="sub" x="564" y="130">model server outside</text><text class="sub" x="564" y="146">the cluster</text></a><a href="gateway.html" class="node" aria-label="LiteLLM gateway"><rect class="box" x="180" y="50" width="300" height="46" rx="7"/><text class="lbl" x="192" y="70">LiteLLM gateway</text><text class="sub" x="192" y="87">team keys, limits, cache</text></a><a href="rag.html" class="node" aria-label="RAG agent"><rect class="box" x="180" y="112" width="140" height="46" rx="7"/><text class="lbl" x="192" y="132">RAG agent</text><text class="sub" x="192" y="149">tools, evaluation set</text></a><a href="observability.html" class="node" aria-label="Observability"><rect class="box" x="340" y="112" width="140" height="46" rx="7"/><text class="lbl" x="352" y="132">Prometheus + Grafana</text><text class="sub" x="352" y="149">6 alert rules</text></a><a href="inference.html" class="node" aria-label="vLLM inference"><rect class="box" x="570" y="50" width="160" height="46" rx="7"/><text class="lbl" x="582" y="70">vLLM</text><text class="sub" x="582" y="87">Qwen, 16 parallel slots</text></a><a href="delivery.html" class="node" aria-label="Delivery"><rect class="box" x="10" y="192" width="740" height="40" rx="7"/><text class="lbl" x="24" y="217">Delivery</text><text class="sub" x="100" y="217">one-command install, tests, 5 runbooks, incident write-ups</text></a></svg></figure>
   </section>
 
-  <section class="widgets" aria-label="Six requirements">
-    <a class="widget" href="inference.html" target="_blank" rel="noopener">
-      <span class="req">Requirement 1 &middot; LLM inference on GPU</span>
-      <h2>vLLM throughput and latency</h2>
+  <section class="widgets" aria-label="Pages">
+    <a class="widget" href="inference.html">
+      <h2>vLLM inference</h2>
       <span class="big"><span data-live="w1-tps">180.7</span><span class="unit">tokens/s</span></span>
       <span class="row"><span>TTFT p95 <span data-live="w1-ttft">2.82</span> s</span><span>running <span data-live="w1-running">16</span> of 16 slots</span><span>KV cache <span data-live="w1-kv">64</span> %</span></span>
       <svg class="spark" data-live="w1-spark" viewBox="0 0 100 34" preserveAspectRatio="none" aria-hidden="true"><path d="M0 30 L25 26 L50 21 L75 13 L100 4"/></svg>
-      <span class="src"><span class="pill build" data-pill>build</span> /console/api/stream</span>
-      <span class="go">Concurrency 1 &rarr; 16, KV cache and queue &rarr;</span>
+      <span class="src"><span class="pill build" data-pill>build</span></span>
     </a>
 
-    <a class="widget" href="infrastructure.html" target="_blank" rel="noopener">
-      <span class="req">Requirement 2 &middot; GPU, Kubernetes, operations</span>
-      <h2>Platform health</h2>
+    <a class="widget" href="infrastructure.html">
+      <h2>Kubernetes and operations</h2>
       <span class="big"><span data-live="w2-up">?</span> of 5 <span class="unit">dependencies up</span></span>
-      <span class="row"><span>model</span><span>GPU exporter</span><span>gateway</span><span>Prometheus</span><span>console</span></span>
       <span class="row"><span>Helm revisions 9</span><span>gateway pod back in 18 s</span></span>
-      <span class="src"><span class="pill build" data-pill>build</span> /console/api/status?view=health</span>
-      <span class="go">Two-host diagram, failure drill &rarr;</span>
+      <span class="src"><span class="pill build" data-pill>build</span></span>
     </a>
 
-    <a class="widget" href="gateway.html" target="_blank" rel="noopener">
-      <span class="req">Requirement 3 &middot; AI gateway and routing</span>
-      <h2>Per-team traffic through LiteLLM</h2>
-      <span class="row"><span>research <span data-live="w3-research">1.41 req/s</span></span><span>engineering <span data-live="w3-engineering">not measured yet</span></span><span>operations <span data-live="w3-operations">0.10 req/s</span></span></span>
+    <a class="widget" href="gateway.html">
+      <h2>LiteLLM gateway</h2>
       <span class="big"><span data-live="w3-tps">194</span><span class="unit">tokens/s, all teams</span></span>
-      <span class="row"><span>cache hits 1,133 of 1,148</span><span>requests refused by limits 5,967 of 5,969</span></span>
-      <span class="src"><span class="pill build" data-pill>build</span> /console/api/status?view=teams</span>
-      <span class="go">Keys, quotas, rate limits, cache, cost &rarr;</span>
+      <span class="row"><span>research <span data-live="w3-research">1.41 req/s</span></span><span>engineering <span data-live="w3-engineering">not measured yet</span></span><span>operations <span data-live="w3-operations">0.10 req/s</span></span></span>
+      <span class="row"><span>cache hits 1,133 of 1,148</span><span>refused by limits 5,967 of 5,969</span></span>
+      <span class="src"><span class="pill build" data-pill>build</span></span>
     </a>
 
-    <a class="widget" href="rag.html" target="_blank" rel="noopener">
-      <span class="req">Requirement 4 &middot; RAG, agents, APIs</span>
-      <h2>RAG agent evaluation</h2>
-      <span class="row"><span>hit@3 <span data-live="w4-hit">9</span> of 10</span><span>tool accuracy <span data-live="w4-tool">6</span> of 6</span><span>faithfulness <span data-live="w4-claims-ok">162</span> of <span data-live="w4-claims-total">164</span> claims</span></span>
+    <a class="widget" href="rag.html">
+      <h2>RAG agent</h2>
       <span class="big"><span data-live="w4-p95">10.3</span><span class="unit">s answer p95</span></span>
+      <span class="row"><span>hit@3 <span data-live="w4-hit">9</span> of 10</span><span>tool accuracy <span data-live="w4-tool">6</span> of 6</span><span>faithfulness <span data-live="w4-claims-ok">162</span> of <span data-live="w4-claims-total">164</span> claims</span></span>
       <span class="row"><span><span data-live="w4-usd">0.67</span> USD per 1,000 questions</span><span>run <span data-live="w4-date">2026-10-29 13:30 UTC</span></span></span>
-      <span class="src"><span class="pill saved">saved run</span> /console/api/agent/eval</span>
-      <span class="go">Ask the agent, 16-question board &rarr;</span>
+      <span class="src"><span class="pill saved">saved run</span></span>
     </a>
 
-    <a class="widget" href="observability.html" target="_blank" rel="noopener">
-      <span class="req">Requirement 5 &middot; Observability</span>
-      <h2>Alert rules</h2>
-      <span class="big"><span data-live="w5-firing">?</span> of 6 <span class="unit">rules firing</span></span>
+    <a class="widget" href="observability.html">
+      <h2>Observability</h2>
+      <span class="big"><span data-live="w5-firing">?</span> of 6 <span class="unit">alert rules firing</span></span>
       <span class="row"><span>error rate <span data-live="w5-err">5.8</span> %</span><span>queue <span data-live="w5-queue">7</span> requests</span><span><span data-live="w5-cost">0.31</span> USD per 1M tokens</span></span>
       <svg class="spark" data-live="w5-spark" viewBox="0 0 100 34" preserveAspectRatio="none" aria-hidden="true"><path d=""/></svg>
-      <span class="src"><span class="pill build" data-pill>build</span> /console/api/status?view=alerts</span>
-      <span class="go">Signal map, alert drill &rarr;</span>
+      <span class="src"><span class="pill build" data-pill>build</span></span>
     </a>
 
-    <a class="widget" href="delivery.html" target="_blank" rel="noopener">
-      <span class="req">Requirement 6 &middot; Debugging, delivery, stakeholders</span>
-      <h2>Delivered and handed over</h2>
-      <span class="row"><span>104 tests passing</span><span>5 runbooks</span><span>9 releases</span></span>
+    <a class="widget" href="delivery.html">
+      <h2>Delivery</h2>
       <span class="big">6<span class="unit">incidents fixed and written up</span></span>
-      <span class="row"><span>one-command install</span><span>last deploy 2026-10-29</span></span>
-      <span class="src"><span class="pill build">build</span> repository at build time</span>
-      <span class="go">Incident cards, delivery checklist &rarr;</span>
+      <span class="row"><span>104 tests passing</span><span>5 runbooks</span><span>9 releases</span></span>
+      <span class="row"><span>last deploy 2026-10-29</span></span>
+      <span class="src"><span class="pill build">build</span></span>
     </a>
   </section>
+  <p class="src"><span class="pill live">live</span> updates every 2 s while load runs <span class="pill saved">saved run</span> latest run, with its date <span class="pill build">build</span> measured at build time</p>
 
   <section class="case">
     <h2>Tools</h2>
