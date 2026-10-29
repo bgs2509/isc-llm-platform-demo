@@ -26,7 +26,7 @@ approved: "2026-10-29, owner, in session: home = 6 interactive widgets (variant 
 
 ## Home page
 
-Title, one line of the stack (Qwen, vLLM, NVIDIA GB10 (DGX Spark), Kubernetes (kind + Helm), LiteLLM,
+Title, one line of the stack (qwen38-flash-next-125B, vLLM, NVIDIA GB10 (DGX Spark 128G), Kubernetes (kind + Helm), LiteLLM,
 Prometheus + Grafana), three points, the platform diagram; then six widgets, one per mandatory requirement of the
 role, each headed by its page title, showing its live or latest number and opening its page.
 

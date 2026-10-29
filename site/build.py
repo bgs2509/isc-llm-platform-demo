@@ -82,7 +82,7 @@ def landing() -> str:
     drop = (1 - s16["usd_per_million_tokens"] / s1["usd_per_million_tokens"]) * 100
     return f"""
 <h1>One gateway, one large model, several teams</h1>
-<p class="lead">A small private LLM platform running on a single NVIDIA GB10 machine: per-team keys and limits,
+<p class="lead">A small private LLM platform running on a single NVIDIA GB10 (DGX Spark 128G) machine: per-team keys and limits,
 dashboards, alerts and a console that proves the numbers. Everything below was measured on the real model.</p>
 <div class="grid">
   <div class="stat"><b>{speedup:.1f}×</b><span>output tokens/s going from 1 to 16 parallel requests ({s1['tokens_per_second']:.1f} → {s16['tokens_per_second']:.1f})</span></div>

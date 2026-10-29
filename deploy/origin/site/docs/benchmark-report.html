@@ -1,7 +1,7 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>benchmark-report</title><link rel="icon" href="data:,"><link rel="stylesheet" href="../style.css"></head><body><div class="top"><div><b>Private LLM platform</b><a href="../index.html">Overview</a><a href="../docs/architecture.html">Architecture</a><a href="../docs/benchmark-report.html">Benchmark report</a><a href="../docs/handover.html">Handover</a><a href="../console/">Console</a><a href="../grafana/d/llm-platform/llm-platform">Grafana: LLM platform</a></div></div><main><h1>Benchmark report</h1>
 <p>Generated 2026-10-28 21:10:20 by <code>scripts/make_report.py</code> from <code>docs/benchmark-results.json</code>.</p>
 <h2>What was measured</h2>
-<p>One large model (a Qwen3.8 Flash Next build, served by vLLM on one NVIDIA GB10 GPU with unified memory)
+<p>One large model (qwen38-flash-next-125B, served by vLLM on one NVIDIA GB10 (DGX Spark 128G) GPU with unified memory)
 shared by several teams through the gateway. Each run lasts 30 seconds;
 every request is a streamed chat completion with a unique prompt of about
 60 words and a limit of 128 output tokens;

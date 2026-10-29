@@ -1,6 +1,6 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Private LLM platform</title><link rel="icon" href="data:,"><link rel="stylesheet" href="style.css"></head><body><div class="top"><div><b>Private LLM platform</b><a href="index.html">Overview</a><a href="docs/architecture.html">Architecture</a><a href="docs/benchmark-report.html">Benchmark report</a><a href="docs/handover.html">Handover</a><a href="console/">Console</a><a href="grafana/d/llm-platform/llm-platform">Grafana: LLM platform</a></div></div><main>
 <h1>One gateway, one large model, several teams</h1>
-<p class="lead">A small private LLM platform running on a single NVIDIA GB10 machine: per-team keys and limits,
+<p class="lead">A small private LLM platform running on a single NVIDIA GB10 (DGX Spark 128G) machine: per-team keys and limits,
 dashboards, alerts and a console that proves the numbers. Everything below was measured on the real model.</p>
 <div class="grid">
   <div class="stat"><b>5.2×</b><span>output tokens/s going from 1 to 16 parallel requests (35.0 → 180.7)</span></div>

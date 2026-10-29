@@ -15,7 +15,7 @@
     <h1>{{title}}</h1>
     <div class="kw"><span>vLLM</span><span>GPU</span><span>latency</span><span>throughput</span><span>concurrency</span><span>KV cache</span></div>
     <ul class="tldr">
-      <li>One Qwen model on one NVIDIA GB10, served by vLLM</li>
+      <li>One model, qwen38-flash-next-125B, on one NVIDIA GB10 (DGX Spark 128G), served by vLLM</li>
       <li>Load test at concurrency 1 to 16: where throughput stops growing</li>
       <li>KV cache and queue watched live on every run</li>
     </ul>
@@ -36,7 +36,7 @@
   <section class="case">
     <h2><small>Challenge</small></h2>
     <ul>
-      <li>One GPU host (NVIDIA GB10), one large Qwen model, several teams sending requests at the same time</li>
+      <li>One GPU host, NVIDIA GB10 (DGX Spark 128G), one large model (qwen38-flash-next-125B), several teams sending requests at the same time</li>
       <li>Find the concurrency where throughput stops growing and latency starts to hurt</li>
       <li>Know when the KV cache, not compute, becomes the limit</li>
     </ul>

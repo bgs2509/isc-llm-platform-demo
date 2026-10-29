@@ -35,7 +35,7 @@ dashboards, alerts and a web console that proves the numbers.** One GPU machine,
 
 ## Key numbers
 
-On one NVIDIA GB10 with a Qwen model on vLLM ([details](docs/benchmark-report.md)):
+On one NVIDIA GB10 (DGX Spark 128G) with qwen38-flash-next-125B on vLLM ([details](docs/benchmark-report.md)):
 
 1. Output throughput **5.2x** from 1 to 16 parallel requests (35.0 -> 180.7 tokens/s).
 2. Cost per million output tokens **-81 %** at 16 parallel requests (base: 1 request).

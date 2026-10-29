@@ -46,7 +46,7 @@ Generated {data['generated_at']} by `scripts/make_report.py` from `docs/benchmar
 
 ## What was measured
 
-One large model (a Qwen3.8 Flash Next build, served by vLLM on one NVIDIA GB10 GPU with unified memory)
+One large model (qwen38-flash-next-125B, served by vLLM on one NVIDIA GB10 (DGX Spark 128G) GPU with unified memory)
 shared by several teams through the gateway. Each run lasts {sweep[0]['params']['duration_s']} seconds;
 every request is a streamed chat completion with a unique prompt of about
 {sweep[0]['params']['prompt_words']} words and a limit of {sweep[0]['params']['max_tokens']} output tokens;

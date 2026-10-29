@@ -1697,7 +1697,7 @@
       }
     ]
   },
-  "commit": "2ac96e5",
+  "commit": "6e9355e",
   "measurements": {
     "alert-drill": {
       "fired_after_s": 68.6,

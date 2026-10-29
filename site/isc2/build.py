@@ -501,7 +501,7 @@ _BLOCKS = {
     "gateway": (180, 50, 300, 46, "LiteLLM gateway", "team keys, limits, cache"),
     "rag": (180, 112, 140, 46, "RAG agent", "tools, evaluation set"),
     "observability": (340, 112, 140, 46, "Prometheus + Grafana", "6 alert rules"),
-    "inference": (570, 50, 160, 46, "vLLM", "Qwen, 16 parallel slots"),
+    "inference": (562, 50, 180, 46, "vLLM", "qwen38-flash-next-125B"),
 }
 
 
@@ -518,9 +518,11 @@ def stack(current: str) -> str:
                '<text class="cap" x="164" y="34">Kubernetes (kind + Helm)</text>'),
         _block("inference", current,
                '<rect class="frame" x="550" y="12" width="200" height="164" rx="10"/>'
-               '<text class="cap" x="564" y="34">GPU host: NVIDIA GB10</text>'
-               '<text class="sub" x="564" y="130">model server outside</text>'
-               '<text class="sub" x="564" y="146">the cluster</text>'),
+               '<text class="cap" x="564" y="34">GPU host</text>'
+               '<text class="sub" x="564" y="118">NVIDIA GB10</text>'
+               '<text class="sub" x="564" y="134">(DGX Spark 128G)</text>'
+               '<text class="sub" x="564" y="154">model server outside</text>'
+               '<text class="sub" x="564" y="170">the cluster</text>'),
     ]
     for slug, (x, y, w, h, label, sub) in _BLOCKS.items():
         parts.append(_block(slug, current,
@@ -538,7 +540,7 @@ def stack(current: str) -> str:
             '<rect class="team" x="10" y="50" width="110" height="46" rx="7"/>'
             '<text class="lbl" x="22" y="70">3 teams</text><text class="sub" x="22" y="87">OpenAI API</text>'
             '<path class="flow" d="M120 73H178"/><path class="flow" d="M250 112V98"/>'
-            '<path class="flow" d="M480 73H568"/><path class="flow dash" d="M480 135H548"/>'
+            '<path class="flow" d="M480 73H560"/><path class="flow dash" d="M480 135H548"/>'
             + "".join(parts) + '</svg></figure>')
 
 
