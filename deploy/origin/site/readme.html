@@ -9,6 +9,8 @@ packaged as a Helm chart for a local <code>kind</code> Kubernetes cluster.</p>
 <li><strong>Observability</strong>: Prometheus (model server, GPU, gateway), 6 alert rules, a 12-panel Grafana dashboard.</li>
 <li><strong>Console</strong>: start a load test as any team, watch tokens per second, time to first token, GPU use, KV cache
    and queue update every second, save runs, compare "before" and "after".</li>
+<li><strong>RAG agent</strong> in the console: answers about the client firm's public blog (BM25 search) and about the
+   running platform (Prometheus), through the gateway as a team, with a 16-question evaluation set.</li>
 <li><strong>Runbooks and handover</strong> for operating it, and a <strong>benchmark report</strong> with measured numbers.</li>
 </ol>
 <h2>Measured results</h2>
@@ -19,6 +21,11 @@ packaged as a Helm chart for a local <code>kind</code> Kubernetes cluster.</p>
 <li>Cost per million output tokens fell <strong>81 %</strong> at the same time (base: 1 request; assumed GPU price 0.20 USD/hour).</li>
 <li><code>nvidia-smi</code> GPU utilization stayed at 88–91 % in every run, so it cannot show this difference.</li>
 <li>Team limits worked: a team limited to 2 parallel requests got 2 of 5,969 requests through.</li>
+<li>RAG agent evaluation (2026-10-29, <code>docs/measurements/eval.json</code>): the expected article in the top 3 for
+   9 of 10 blog questions, the right tool for 6 of 6 platform questions, 157 of 158 answer claims supported
+   by the retrieved text, answer latency p95 8.8 s, 0.63 USD per 1,000 questions.</li>
+<li>Drills (<code>docs/measurements/</code>): a deleted gateway pod was ready again after 18 s (17 s without answers);
+   the queue alert fired after 69 s of overload and cleared 14 s after it.</li>
 </ol>
 <h2>How it fits together</h2>
 <p>See <a href="docs/architecture.html">docs/architecture.md</a>. The model server (vLLM) runs as a plain container on the
@@ -34,21 +41,24 @@ scripts/install.sh                                                  # build, loa
 (use an SSH tunnel from another computer). Edit <code>chart/llm-platform/values.yaml</code> for the model name, the host
 address of your cluster network, team limits and prices.</p>
 <h2>Publish</h2>
-<p><code>site/build.py</code> builds a static site from this README, <code>docs/</code> and the benchmark results; <code>deploy/</code> has the
-reverse-proxy block, the tunnel unit and a publish script (see <a href="deploy/README.html">deploy/README.md</a>).</p>
+<p><code>site/build.py</code> (isc-1) and <code>site/isc2/build.py</code> (isc-2) build two static sites from this README, <code>docs/</code>
+and the measurements into <code>deploy/origin/</code>; the pages are tracked in git and reach the web server by
+<code>git pull</code>. <code>deploy/</code> also has the origin container, the reverse-proxy block and the tunnel unit (see
+<a href="deploy/README.html">deploy/README.md</a>).</p>
 <h2>Tests</h2>
 <pre><code class="language-bash">(cd console &amp;&amp; python -m pip install -r requirements-dev.txt &amp;&amp; python -m pytest)
-python -m pytest site            # every local link of the built site resolves
+python -m pytest site            # links, page rules, tracked pages equal a fresh build
+python -m pytest scripts/tests   # measurement summaries
 helm lint chart/llm-platform
 </code></pre>
 <h2>Layout</h2>
 <pre><code>chart/llm-platform/   Helm chart
-console/              console (FastAPI + plain JavaScript) and its tests
+console/              console (FastAPI + plain JavaScript), RAG agent, corpus, evaluation set, tests
 tools/                host helpers (relay, GPU exporter)
-scripts/              install, benchmark, report and dashboard generators
-site/                 static site builder
-deploy/               publishing templates (reverse proxy, tunnel, publish script)
-docs/                 architecture, runbooks, handover, benchmark report
+scripts/              install, benchmark, measurements, report and dashboard generators
+site/                 site builders (isc-1 in build.py, isc-2 in isc2/)
+deploy/               publishing: origin container with the built pages, proxy block, tunnel unit
+docs/                 architecture, runbooks, handover, benchmark report, measurements
 cluster/              kind cluster configuration
 </code></pre>
 <h2>Honest limits</h2>

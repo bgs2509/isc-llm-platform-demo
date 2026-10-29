@@ -1,7 +1,9 @@
 # isc-2 site and RAG agent — execution plan
 
 Status (2026-10-29): mockups approved by the owner (as is); plan approved by the owner (do-feature step 10,
-2026-10-29, in session). Phase 0 done (log below). Next: Phase A. Replaces `20261029-rag-agent-plan.md` and `20261029-isc2-site-plan.md` (see git history).
+2026-10-29, in session). Phases 0, A-E and G done; F done up to the portal: F.2 (portal block) is on the
+portal branch `feat/branch-isc2-site` and waits for the owner to merge it and run `remote-deploy.sh edge`;
+F.4 (check from outside) follows that. Log below. Replaces `20261029-rag-agent-plan.md` and `20261029-isc2-site-plan.md` (see git history).
 
 Inputs:
 
@@ -267,3 +269,35 @@ None (the three earlier ones and the documents gap were decided on 2026-10-29: d
       `chat_template_kwargs` (decision 11). With `cache: {"no-cache": true}` -> 1.51 s (model called).
 5. Candidate for the sixth incident card (page 6, layer model/gateway): the exact-match cache returned an
    answer made with thinking on/off settings different from the request's.
+
+### 2026-10-29 — Phases A-G (owner away, all confirmations given in advance; --auto-approve)
+
+1. A: corpus 36 articles (case 14, sections 7, plain 15); `chunk` 73 chunks, `chunk_fixed` 94.
+2. B: status views alerts, teams, signals, health; GPU price constant in `stats.py`.
+3. C: agent, evaluation, routes; C.3 set written by the controller (10 blog, 6 platform); C.6 chart and
+   dashboard row. C.7 deploy on spark-1 (Helm revision 9; the spark-1 clone now tracks this work branch,
+   pushed to GitHub; `main` untouched). Live checks: health all `up`; one ask per tool answered.
+4. Fixes found live (each with a test): reliability signal empty without 5xx series (`or vector(0)`);
+   judge JSON cut at 800 tokens (now 2,000); console INFO logs dropped under uvicorn; load runs never
+   recovered after a gateway pod was replaced (connect timeout was the 180 s request timeout; now 5 s, and a
+   0.5 s pause after a connection error) — found by drill D.2, confirmed by an experiment in the console pod.
+5. D: all six measurements in `docs/measurements/` (one script `scripts/measure.py` instead of five files).
+   Gateway drill summary changed to "seconds without answers" (tokens/s is a swinging 5 s window). The
+   synthetic overload snapshot was replaced by the capture of drill D.4 (KV cache 0.59, not 0.95), and the
+   expected facts of P2, P3, P5, P6 follow it. Final evaluation: hit@3 9 of 10, tools 6 of 6, 157 of 158
+   claims, p95 8.76 s, 0.63 USD per 1,000 questions.
+6. E: templates moved from `docs/superpowers/mockups/isc2/` to `site/isc2/templates/` (the mockups folder
+   is gone; git history keeps it). Build-time numbers from the measurements; evaluation dates are unix
+   seconds (fixed in builder and site.js). E.5 (browser check of live widgets) not done: no browser on
+   `file://` here; the routes the widgets call answer 200 through the origin with the login.
+7. F.0, F.1 done; F.3 on vpn-2: clone switched to this work branch, the old tar copy of isc-1 kept as
+   `deploy/origin/site.tar-copy-2026-10-29/`, `deploy/origin/.env` holds `ISC2_DOMAIN`; origin recreated.
+   Checked on vpn-2 with Host headers: isc-1 `/` 200 without login, console and Grafana 401; isc-2 every
+   path 401 without login, 13 of 13 paths 200 with it (pages, documents, console API, Grafana).
+8. F.2 portal: branch `feat/branch-isc2-site` (commit 56a7dec) adds the block and the variable, and repairs
+   the deploy tests the isc-1 change had left red (113 of 113 pass). Not merged and not deployed: this
+   session may not merge or push to a master branch. Full portal suite: 663 passed, 1 failed
+   (`test_explain_numbers`, unrelated data test, red before this change).
+9. Owner steps left: merge the portal branch into its master and push; on vpn-2 add `ISC2_DOMAIN` to
+   `~/.isuzu-secrets/web.env` and run `remote-deploy.sh edge`; merge this work branch into `main` (spark-1 and
+   vpn-2 clones can then return to `main`); check https://isc-2.178-208-78-85.sslip.io:9443/ from outside.

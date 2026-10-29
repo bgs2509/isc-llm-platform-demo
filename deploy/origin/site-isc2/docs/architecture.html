@@ -56,11 +56,25 @@ the numbers.</p>
 <li><strong>Relay and GPU exporter</strong> (host processes, <code>tools/</code>) connect the cluster to the host: the model server
    listens only on the host loopback, so a small TCP relay passes traffic from the cluster network, and a
    tiny exporter turns <code>nvidia-smi</code> readings into Prometheus metrics.</li>
-<li><strong>Prometheus</strong> scrapes the model server, the GPU exporter and the gateway every 5 seconds and evaluates
-   the alert rules in <code>chart/llm-platform/templates/prometheus-config.yaml</code>.</li>
-<li><strong>Grafana</strong> shows one provisioned dashboard (12 panels), read-only for anonymous viewers.</li>
+<li><strong>Prometheus</strong> scrapes the model server, the GPU exporter, the gateway and the console every 5 seconds and
+   evaluates the alert rules in <code>chart/llm-platform/templates/prometheus-config.yaml</code>.</li>
+<li><strong>Grafana</strong> shows one provisioned dashboard (12 panels plus a "RAG agent" row of 5), read-only for
+   anonymous viewers.</li>
 <li><strong>Console</strong> (FastAPI and a plain JavaScript page) starts load tests through the gateway as a chosen team,
    streams live numbers once a second, saves runs and compares two of them.</li>
+<li><strong>RAG agent</strong> (in the console, <code>console/app/agent.py</code>) answers one question with two tools chosen by the
+   model: <code>search_docs</code> (BM25 over 36 articles of the client firm's public blog, <code>console/app/corpus.py</code>) and
+   <code>platform_status</code> (alerts or per-team traffic from Prometheus, <code>console/app/platform_status.py</code>). It calls
+   the model through the gateway with a team key, so its tokens and spend count per team like any request.</li>
+<li><strong>Evaluation set</strong> (<code>console/eval/</code>, <code>console/app/evaluate.py</code>): 16 questions (10 about the blog, 6 about
+   the platform on two recorded Prometheus snapshots); scores hit@3, tool accuracy, faithfulness (claims
+   checked by the same model as judge), answer latency p95 and cost per 1,000 questions, exported on
+   <code>/metrics</code> for Prometheus.</li>
+<li><strong>Status API</strong> (<code>GET /api/status?view=alerts|teams|signals|health</code>): the only way the two demo sites read
+   live platform data; the browser never talks to Prometheus or Kubernetes.</li>
+<li><strong>Demo sites</strong>: isc-1 (<code>site/build.py</code>, open documents) and isc-2 (<code>site/isc2/build.py</code>, six pages, one
+    per requirement of the role, whole site behind a login). Both are built into <code>deploy/origin/</code> and tracked
+    in git; the origin container serves them by host name (<code>deploy/README.md</code>).</li>
 </ol>
 <h2>Decisions and trade-offs</h2>
 <ol>
@@ -80,6 +94,13 @@ the numbers.</p>
 <li><strong>Costs are arithmetic, not billing.</strong> The cost per million tokens in the console is the GPU price per hour
    divided by the measured tokens per hour; the price is an assumption the user can edit. The gateway's
    per-team spend uses fixed chargeback rates from <code>values.yaml</code>.</li>
+<li><strong>BM25 instead of embeddings.</strong> No second model fits in GPU memory next to the served one, so retrieval is
+   lexical (standard library, no vector store). Chunking follows the kind of text (a case study stays whole,
+   a long article splits by section); on the 10 blog questions it found the expected article in the top 3
+   for 9 of 10, the same as fixed 250-word windows (<code>docs/measurements/eval.json</code>).</li>
+<li><strong>The evaluation bypasses the gateway cache.</strong> The cache key ignores <code>chat_template_kwargs</code>, and a repeated
+   question would come back in 0.02 s; evaluation requests send <code>cache: {"no-cache": true}</code> so latency and
+   cost are measured, while questions asked on the site may use the cache.</li>
 </ol>
 <h2>Security notes</h2>
 <ol>
@@ -93,6 +114,9 @@ the numbers.</p>
 <li>Alertmanager (or the customer's paging tool) behind the existing alert rules.</li>
 <li>Single sign-on in front of the console and Grafana; keys in the customer's secret store.</li>
 <li>Per-team quotas tuned from the benchmark report instead of the demo values.</li>
+<li>Fallback to a second model and model pools per team (needs GPU memory for a second model).</li>
+<li>Dense retrieval through an embedding model behind the same gateway; a judge from another model family.</li>
+<li>OpenTelemetry traces from the gateway (its <code>otel</code> callback) to follow one request across services.</li>
 </ol></section></main>
 </body>
 </html>

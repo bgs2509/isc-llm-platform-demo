@@ -36,6 +36,18 @@ origin container is separate, so the change to the existing setup is one site bl
 <li>Verify: <code>https://&lt;host&gt;:9443/</code> returns the home page; <code>/console/</code> and <code>/grafana/</code> answer 401 without the
    password and the console and the dashboard with it.</li>
 </ol>
+<h2>The second site (isc-2)</h2>
+<ol>
+<li>Pages: <code>python site/isc2/build.py</code> writes <code>deploy/origin/site-isc2/</code> (tracked); the origin mounts it at
+   <code>/srv/isc2</code>.</li>
+<li>Origin: <code>@isc2 host {$ISC2_DOMAIN}</code> serves those pages behind the same login file; the <code>/console/*</code> and
+   <code>/grafana/*</code> blocks come first, so the live widgets reach the console with the login the browser already
+   holds. <code>ISC2_DOMAIN</code> is read from <code>deploy/origin/.env</code> (git-ignored) on the web server.</li>
+<li>Portal: one more block <code>{$ISC2_DOMAIN}:{$HTTPS_PORT}</code> to the same origin port and the variable
+   <code>ISC2_DOMAIN</code> in the portal's <code>web.env</code> (portal repository, branch <code>feat/branch-isc2-site</code>).</li>
+<li>Check without the portal, on the web server: <code>curl -H 'Host: &lt;isc-2 host&gt;' http://172.17.0.1:19080/</code>
+   answers 401, and 200 with the login; the same with the isc-1 host answers 200 without it.</li>
+</ol>
 <h2>Pitfalls met</h2>
 <ol>
 <li>The origin's site address has no host (<code>http://:19080</code>, with <code>bind</code> for the address): the portal passes the

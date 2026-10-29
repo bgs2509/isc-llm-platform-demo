@@ -13,7 +13,9 @@ packaged as a Helm chart for a local `kind` Kubernetes cluster.
 2. **Observability**: Prometheus (model server, GPU, gateway), 6 alert rules, a 12-panel Grafana dashboard.
 3. **Console**: start a load test as any team, watch tokens per second, time to first token, GPU use, KV cache
    and queue update every second, save runs, compare "before" and "after".
-4. **Runbooks and handover** for operating it, and a **benchmark report** with measured numbers.
+4. **RAG agent** in the console: answers about the client firm's public blog (BM25 search) and about the
+   running platform (Prometheus), through the gateway as a team, with a 16-question evaluation set.
+5. **Runbooks and handover** for operating it, and a **benchmark report** with measured numbers.
 
 ## Measured results
 
@@ -24,6 +26,11 @@ On one NVIDIA GB10 with a large Qwen model served by vLLM (details and limits in
 2. Cost per million output tokens fell **81 %** at the same time (base: 1 request; assumed GPU price 0.20 USD/hour).
 3. `nvidia-smi` GPU utilization stayed at 88–91 % in every run, so it cannot show this difference.
 4. Team limits worked: a team limited to 2 parallel requests got 2 of 5,969 requests through.
+5. RAG agent evaluation (2026-10-29, `docs/measurements/eval.json`): the expected article in the top 3 for
+   9 of 10 blog questions, the right tool for 6 of 6 platform questions, 157 of 158 answer claims supported
+   by the retrieved text, answer latency p95 8.8 s, 0.63 USD per 1,000 questions.
+6. Drills (`docs/measurements/`): a deleted gateway pod was ready again after 18 s (17 s without answers);
+   the queue alert fired after 69 s of overload and cleared 14 s after it.
 
 ## How it fits together
 
@@ -47,14 +54,17 @@ address of your cluster network, team limits and prices.
 
 ## Publish
 
-`site/build.py` builds a static site from this README, `docs/` and the benchmark results; `deploy/` has the
-reverse-proxy block, the tunnel unit and a publish script (see [deploy/README.md](deploy/README.md)).
+`site/build.py` (isc-1) and `site/isc2/build.py` (isc-2) build two static sites from this README, `docs/`
+and the measurements into `deploy/origin/`; the pages are tracked in git and reach the web server by
+`git pull`. `deploy/` also has the origin container, the reverse-proxy block and the tunnel unit (see
+[deploy/README.md](deploy/README.md)).
 
 ## Tests
 
 ```bash
 (cd console && python -m pip install -r requirements-dev.txt && python -m pytest)
-python -m pytest site            # every local link of the built site resolves
+python -m pytest site            # links, page rules, tracked pages equal a fresh build
+python -m pytest scripts/tests   # measurement summaries
 helm lint chart/llm-platform
 ```
 
@@ -62,12 +72,12 @@ helm lint chart/llm-platform
 
 ```
 chart/llm-platform/   Helm chart
-console/              console (FastAPI + plain JavaScript) and its tests
+console/              console (FastAPI + plain JavaScript), RAG agent, corpus, evaluation set, tests
 tools/                host helpers (relay, GPU exporter)
-scripts/              install, benchmark, report and dashboard generators
-site/                 static site builder
-deploy/               publishing templates (reverse proxy, tunnel, publish script)
-docs/                 architecture, runbooks, handover, benchmark report
+scripts/              install, benchmark, measurements, report and dashboard generators
+site/                 site builders (isc-1 in build.py, isc-2 in isc2/)
+deploy/               publishing: origin container with the built pages, proxy block, tunnel unit
+docs/                 architecture, runbooks, handover, benchmark report, measurements
 cluster/              kind cluster configuration
 ```
 

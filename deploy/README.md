@@ -41,6 +41,18 @@ origin container is separate, so the change to the existing setup is one site bl
 6. Verify: `https://<host>:9443/` returns the home page; `/console/` and `/grafana/` answer 401 without the
    password and the console and the dashboard with it.
 
+## The second site (isc-2)
+
+1. Pages: `python site/isc2/build.py` writes `deploy/origin/site-isc2/` (tracked); the origin mounts it at
+   `/srv/isc2`.
+2. Origin: `@isc2 host {$ISC2_DOMAIN}` serves those pages behind the same login file; the `/console/*` and
+   `/grafana/*` blocks come first, so the live widgets reach the console with the login the browser already
+   holds. `ISC2_DOMAIN` is read from `deploy/origin/.env` (git-ignored) on the web server.
+3. Portal: one more block `{$ISC2_DOMAIN}:{$HTTPS_PORT}` to the same origin port and the variable
+   `ISC2_DOMAIN` in the portal's `web.env` (portal repository, branch `feat/branch-isc2-site`).
+4. Check without the portal, on the web server: `curl -H 'Host: <isc-2 host>' http://172.17.0.1:19080/`
+   answers 401, and 200 with the login; the same with the isc-1 host answers 200 without it.
+
 ## Pitfalls met
 
 1. The origin's site address has no host (`http://:19080`, with `bind` for the address): the portal passes the

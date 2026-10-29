@@ -26,10 +26,16 @@
 <li><strong>Helm chart</strong> <code>chart/llm-platform</code> &#8212; gateway (LiteLLM) with Postgres, Prometheus with 6 alert rules,
    Grafana with a 12-panel dashboard, the load-test console, and a job that creates the team keys.</li>
 <li><strong>Host helpers</strong> in <code>tools/</code> &#8212; a relay from the cluster network to the model server and an <code>nvidia-smi</code> exporter.</li>
-<li><strong>Console</strong> <code>console/</code> &#8212; load tests, live charts, saved runs, before/after comparison; 8 unit tests.</li>
+<li><strong>Console</strong> <code>console/</code> &#8212; load tests, live charts, saved runs, before/after comparison, the RAG agent
+   (<code>POST /api/agent/ask</code>), its evaluation (<code>/api/agent/eval</code>, <code>/metrics</code>) and the status API used by the
+   sites (<code>/api/status</code>); 58 unit tests.</li>
 <li><strong>Runbooks</strong> <code>docs/runbooks/</code> &#8212; five procedures for the five alert groups and for upgrades.</li>
 <li><strong>Benchmark report</strong> <code>docs/benchmark-report.md</code> &#8212; measured throughput, latency and cost per million tokens.</li>
+<li><strong>Measurements</strong> <code>docs/measurements/</code> &#8212; KV cache sweep, gateway pod drill, budget and rate-limit drill,
+   alert drill, Helm history, latest evaluation; written by <code>scripts/measure.py</code>.</li>
 <li><strong>Architecture</strong> <code>docs/architecture.md</code> &#8212; components, decisions, what changes at scale.</li>
+<li><strong>Two demo sites</strong> &#8212; isc-1 (<code>site/build.py</code>) and isc-2 (<code>site/isc2/build.py</code>), built pages in
+   <code>deploy/origin/</code>; publishing in <code>deploy/README.md</code>.</li>
 </ol>
 <h2>Access</h2>
 <table>
@@ -61,10 +67,20 @@
 <h2>Operating</h2>
 <ol>
 <li>Install or update: <code>scripts/install.sh</code> (builds the console image, loads images, runs <code>helm upgrade --install</code>).</li>
-<li>Check health: <code>kubectl -n llm-platform get pods</code>; Prometheus targets <code>vllm</code>, <code>gpu</code>, <code>gateway</code> must be <code>up</code>.</li>
+<li>Check health: <code>kubectl -n llm-platform get pods</code>; Prometheus targets <code>vllm</code>, <code>gpu</code>, <code>gateway</code>, <code>console</code>
+   must be <code>up</code> (also <code>curl http://127.0.0.1:18500/api/status?view=health</code>).</li>
 <li>Alerts: see <code>docs/runbooks/</code> (each alert annotation names its runbook). Alerts are evaluated by Prometheus;
    routing them to a pager needs Alertmanager, which is not included.</li>
 <li>Host processes (<code>tools/model_forward.py</code>, <code>tools/gpu_exporter.py</code>) do not start after a reboot of the host.</li>
+<li>Run the evaluation (about 2 minutes, 16 questions plus one judge call each, as the team research):
+   <code>curl -X POST http://127.0.0.1:18500/api/agent/eval -H 'Content-Type: application/json'
+   -d '{"tenant": "research"}'</code>, then <code>GET /api/agent/eval</code>; Grafana row "RAG agent" shows the scores.</li>
+<li>Re-measure for the sites (GPU load in total about 7 minutes, the gateway pod is deleted once):
+   <code>scripts/measure.py kv|gateway|budget|alert|helm|eval</code> on the GPU host; each step prints its load first.</li>
+<li>Rebuild the sites after a change of a document or a measurement: <code>python site/build.py</code> (isc-1) and
+   <code>python site/isc2/build.py</code> (isc-2; runs all tests first and stops on a failure); commit the pages,
+   push, then on the web server <code>git pull --ff-only</code> and recreate the origin container
+   (<code>deploy/README.md</code>). <code>python -m pytest site</code> fails while tracked pages differ from a fresh build.</li>
 </ol>
 <h2>Who owns what</h2>
 <ol>
@@ -79,6 +95,7 @@
 <li>Priority scheduling is not enabled on the model server.</li>
 <li>Benchmark numbers come from one run per setting on a shared GPU.</li>
 <li>Demo chargeback rates and GPU price are placeholders.</li>
+<li>The evaluation judge is the model under test; the 16 questions were written by us from the corpus.</li>
 </ol>
 <h2>Next steps for a real customer</h2>
 <ol>
