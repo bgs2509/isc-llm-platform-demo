@@ -41,9 +41,14 @@ python3 tools/gpu_exporter.py 172.23.0.1 18311 &                    # GPU readin
 scripts/install.sh                                                  # build, load images, helm install
 ```
 
-Then open the console at `http://127.0.0.1:18500` and Grafana at `http://127.0.0.1:18501`
+Then open the console at `http://127.0.0.1:18500` and Grafana at `http://127.0.0.1:18501/grafana/`
 (use an SSH tunnel from another computer). Edit `chart/llm-platform/values.yaml` for the model name, the host
 address of your cluster network, team limits and prices.
+
+## Publish
+
+`site/build.py` builds a static site from this README, `docs/` and the benchmark results; `deploy/` has the
+reverse-proxy block, the tunnel unit and a publish script (see [deploy/README.md](deploy/README.md)).
 
 ## Tests
 
@@ -59,6 +64,8 @@ chart/llm-platform/   Helm chart
 console/              console (FastAPI + plain JavaScript) and its tests
 tools/                host helpers (relay, GPU exporter)
 scripts/              install, benchmark, report and dashboard generators
+site/                 static site builder
+deploy/               publishing templates (reverse proxy, tunnel, publish script)
 docs/                 architecture, runbooks, handover, benchmark report
 cluster/              kind cluster configuration
 ```

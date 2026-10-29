@@ -39,6 +39,10 @@ images:
   console: llm-platform-console:0.1.0
   curl: curlimages/curl:latest
 
+# Address under which the console and Grafana are reached from outside. Grafana is served under the
+# sub-path /grafana/ so that one reverse proxy can publish console and Grafana on one site.
+publicUrl: http://127.0.0.1:18501
+
 nodePorts:
   console: 30500   # mapped to the host by cluster/kind-cluster.yaml
   grafana: 30501

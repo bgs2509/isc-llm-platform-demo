@@ -17,7 +17,7 @@ What the customer team receives and how to run it.
 | What | Where |
 |---|---|
 | Console | `http://127.0.0.1:18500` on the host (SSH tunnel from elsewhere) |
-| Grafana | `http://127.0.0.1:18501`, dashboard "LLM platform" |
+| Grafana | `http://127.0.0.1:18501/grafana/`, dashboard "LLM platform" |
 | Team keys | Secret `llm-platform-secrets`, entries `key-research`, `key-engineering`, `key-operations` |
 | Gateway admin | master key in the same Secret, entry `masterKey` |
 

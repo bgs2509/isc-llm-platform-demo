@@ -8,3 +8,8 @@ tools/*.log
 console/data/
 benchmark.log
 install.log
+deploy/values-site.yaml
+deploy/site.env
+deploy/.site-credentials
+site/dist/
+deploy/Caddyfile.site

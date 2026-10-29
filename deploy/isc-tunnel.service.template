@@ -1,0 +1,15 @@
+# systemd user unit on the GPU host: publishes the console and Grafana to the web server
+# through a reverse SSH tunnel. Replace {{SSH_TARGET}} (user@web-server).
+[Unit]
+Description=Reverse tunnel from the GPU host to the public web server
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+ExecStart=/usr/bin/ssh -N -o ExitOnForwardFailure=yes -o ServerAliveInterval=30 -o ServerAliveCountMax=3 \
+  -R 127.0.0.1:19500:127.0.0.1:18500 -R 127.0.0.1:19501:127.0.0.1:18501 {{SSH_TARGET}}
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=default.target

@@ -56,6 +56,8 @@ spec:
             - {name: GF_AUTH_ANONYMOUS_ENABLED, value: "true"}
             - {name: GF_AUTH_ANONYMOUS_ORG_ROLE, value: Viewer}
             - {name: GF_ANALYTICS_REPORTING_ENABLED, value: "false"}
+            - {name: GF_SERVER_ROOT_URL, value: {{ printf "%s/grafana/" (trimSuffix "/" .Values.publicUrl) | quote }}}
+            - {name: GF_SERVER_SERVE_FROM_SUB_PATH, value: "true"}
             - {name: GF_ANALYTICS_CHECK_FOR_UPDATES, value: "false"}
           ports: [{containerPort: 3000}]
           readinessProbe:

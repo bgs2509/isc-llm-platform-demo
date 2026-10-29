@@ -1,7 +1,7 @@
 LLM platform installed in namespace {{ .Release.Namespace }}.
 
   Console:  http://127.0.0.1:18500   (load tests, live charts, before/after comparison)
-  Grafana:  http://127.0.0.1:18501   (dashboard "LLM platform", anonymous viewer)
+  Grafana:  http://127.0.0.1:18501/grafana/   (dashboard "LLM platform", anonymous viewer)
   Gateway:  kubectl -n {{ .Release.Namespace }} port-forward svc/litellm 4000:4000
 
 These are host ports of the machine that runs the kind cluster; from another computer use an

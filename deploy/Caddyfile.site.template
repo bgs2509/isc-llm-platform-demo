@@ -1,0 +1,29 @@
+# Site block for the public demo (Caddy 2). Render it with deploy/render.py; see deploy/README.md.
+# The live console and Grafana arrive through a reverse SSH tunnel on 127.0.0.1:19500 and :19501.
+{{SITE_ADDRESS}} {
+	encode zstd gzip
+	header {
+		X-Content-Type-Options nosniff
+		Referrer-Policy no-referrer
+	}
+	redir /console /console/ 301
+	redir /grafana /grafana/ 301
+	handle_path /console/* {
+		basic_auth {
+			{{USER}} {{HASH}}
+		}
+		reverse_proxy 127.0.0.1:19500 {
+			flush_interval -1
+		}
+	}
+	handle /grafana/* {
+		basic_auth {
+			{{USER}} {{HASH}}
+		}
+		reverse_proxy 127.0.0.1:19501
+	}
+	handle {
+		root * {{WEB_ROOT}}
+		file_server
+	}
+}
