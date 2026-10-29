@@ -1,0 +1,47 @@
+{
+  "measured_at": "2026-10-29 15:10",
+  "runs_s": 30,
+  "tenant": "research",
+  "rows": [
+    {
+      "prompt_words": 200,
+      "concurrency": 4,
+      "kv_cache_peak_pct": 14.784394250513344,
+      "waiting_peak": 0.0,
+      "ttft_p95_s": 1.0739547388395294,
+      "tokens_per_s": 90.98669395985509
+    },
+    {
+      "prompt_words": 500,
+      "concurrency": 8,
+      "kv_cache_peak_pct": 29.5687885010267,
+      "waiting_peak": 3.0,
+      "ttft_p95_s": 2.5804714634316044,
+      "tokens_per_s": 113.55669902586446
+    },
+    {
+      "prompt_words": 1000,
+      "concurrency": 8,
+      "kv_cache_peak_pct": 29.5687885010267,
+      "waiting_peak": 5.0,
+      "ttft_p95_s": 4.457665373035707,
+      "tokens_per_s": 98.49433459426572
+    },
+    {
+      "prompt_words": 1000,
+      "concurrency": 16,
+      "kv_cache_peak_pct": 59.13757700205339,
+      "waiting_peak": 13.0,
+      "ttft_p95_s": 9.025035255891272,
+      "tokens_per_s": 124.11471649936317
+    },
+    {
+      "prompt_words": 2000,
+      "concurrency": 16,
+      "kv_cache_peak_pct": 64.06570841889116,
+      "waiting_peak": 14.0,
+      "ttft_p95_s": 16.861594046233222,
+      "tokens_per_s": 82.05952277928486
+    }
+  ]
+}

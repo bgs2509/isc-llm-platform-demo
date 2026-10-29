@@ -1,0 +1,206 @@
+{
+  "measured_at": "2026-10-29 15:28",
+  "load_s": 150,
+  "parallel": {
+    "research": 16,
+    "engineering": 8
+  },
+  "fired_after_s": 68.6,
+  "resolved_after_load_end_s": 14.099999999999994,
+  "samples": [
+    [
+      3.3,
+      "inactive"
+    ],
+    [
+      8.3,
+      "pending"
+    ],
+    [
+      13.4,
+      "pending"
+    ],
+    [
+      18.4,
+      "pending"
+    ],
+    [
+      23.4,
+      "pending"
+    ],
+    [
+      28.5,
+      "pending"
+    ],
+    [
+      33.5,
+      "pending"
+    ],
+    [
+      38.5,
+      "pending"
+    ],
+    [
+      43.5,
+      "pending"
+    ],
+    [
+      48.5,
+      "pending"
+    ],
+    [
+      53.6,
+      "pending"
+    ],
+    [
+      58.6,
+      "pending"
+    ],
+    [
+      63.6,
+      "pending"
+    ],
+    [
+      68.6,
+      "firing"
+    ],
+    [
+      73.7,
+      "firing"
+    ],
+    [
+      78.7,
+      "firing"
+    ],
+    [
+      83.7,
+      "firing"
+    ],
+    [
+      88.8,
+      "firing"
+    ],
+    [
+      93.8,
+      "firing"
+    ],
+    [
+      98.8,
+      "firing"
+    ],
+    [
+      103.8,
+      "firing"
+    ],
+    [
+      108.9,
+      "firing"
+    ],
+    [
+      113.9,
+      "firing"
+    ],
+    [
+      118.9,
+      "firing"
+    ],
+    [
+      123.9,
+      "firing"
+    ],
+    [
+      129.0,
+      "firing"
+    ],
+    [
+      134.0,
+      "firing"
+    ],
+    [
+      139.0,
+      "firing"
+    ],
+    [
+      144.0,
+      "firing"
+    ],
+    [
+      149.0,
+      "firing"
+    ],
+    [
+      154.1,
+      "firing"
+    ],
+    [
+      159.1,
+      "firing"
+    ],
+    [
+      164.1,
+      "inactive"
+    ]
+  ],
+  "snapshot_when_firing": {
+    "alerts": [
+      {
+        "name": "ModelEndpointDown",
+        "state": "inactive",
+        "query": "up{job=\"vllm\"} == 0",
+        "value": 1.0
+      },
+      {
+        "name": "ModelQueueBuildingUp",
+        "state": "firing",
+        "query": "sum(vllm:num_requests_waiting) > 4",
+        "value": 7.0
+      },
+      {
+        "name": "TimeToFirstTokenSlow",
+        "state": "pending",
+        "query": "histogram_quantile(0.95, sum by (le) (rate(vllm:time_to_first_token_seconds_bucket[5m]))) > 5",
+        "value": 17.61904761904762
+      },
+      {
+        "name": "KvCacheNearlyFull",
+        "state": "inactive",
+        "query": "max(vllm:kv_cache_usage_perc) > 0.9",
+        "value": 0.5913757700205339
+      },
+      {
+        "name": "GatewayErrorRateHigh",
+        "state": "inactive",
+        "query": "sum(rate(litellm_proxy_failed_requests_metric_total[5m])) / clamp_min(sum(rate(litellm_proxy_total_requests_metric_total[5m])), 0.001) > 0.05",
+        "value": 0.01931300389818363
+      },
+      {
+        "name": "GpuUnderusedUnderLoad",
+        "state": "inactive",
+        "query": "avg_over_time(gpu_utilization_percent[2m]) < 30 and sum(vllm:num_requests_running) > 4",
+        "value": null
+      }
+    ],
+    "teams": [
+      {
+        "team": "research",
+        "requests_per_s": 0.21744294108151735,
+        "tokens_per_s": 108.32203389830508
+      },
+      {
+        "team": "drill-3fb274",
+        "requests_per_s": 0.0,
+        "tokens_per_s": 0.0
+      },
+      {
+        "team": "drill-bb6467",
+        "requests_per_s": 0.093250125,
+        "tokens_per_s": 10.561631208333333
+      },
+      {
+        "team": "engineering",
+        "requests_per_s": 0.08103733333333334,
+        "tokens_per_s": 55.832203939393935
+      }
+    ]
+  }
+}

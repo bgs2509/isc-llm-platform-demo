@@ -1,0 +1,16 @@
+{
+  "measured_at": "2026-10-29 15:24",
+  "rpm": {
+    "limit_per_min": 5,
+    "sent": 10,
+    "ok": 5,
+    "refused": 5
+  },
+  "budget": {
+    "max_budget_usd": 0.001,
+    "ok": 28,
+    "refused_at_request": 29,
+    "spend_recorded_usd": 0.0010359,
+    "spend_computed_usd": 0.0010359
+  }
+}

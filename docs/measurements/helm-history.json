@@ -1,0 +1,77 @@
+{
+  "measured_at": "2026-10-29 15:33",
+  "revisions": [
+    {
+      "revision": 1,
+      "updated": "2026-10-28T21:01:49.689121885+03:00",
+      "status": "superseded",
+      "chart": "llm-platform-0.1.0",
+      "app_version": "0.1.0",
+      "description": "Install complete"
+    },
+    {
+      "revision": 2,
+      "updated": "2026-10-28T21:04:56.330748169+03:00",
+      "status": "superseded",
+      "chart": "llm-platform-0.1.0",
+      "app_version": "0.1.0",
+      "description": "Upgrade complete"
+    },
+    {
+      "revision": 3,
+      "updated": "2026-10-28T21:15:36.222441499+03:00",
+      "status": "superseded",
+      "chart": "llm-platform-0.1.0",
+      "app_version": "0.1.0",
+      "description": "Upgrade complete"
+    },
+    {
+      "revision": 4,
+      "updated": "2026-10-28T21:16:49.981849611+03:00",
+      "status": "superseded",
+      "chart": "llm-platform-0.1.0",
+      "app_version": "0.1.0",
+      "description": "Upgrade complete"
+    },
+    {
+      "revision": 5,
+      "updated": "2026-10-29T10:31:30.398513386+03:00",
+      "status": "superseded",
+      "chart": "llm-platform-0.1.0",
+      "app_version": "0.1.0",
+      "description": "Upgrade complete"
+    },
+    {
+      "revision": 6,
+      "updated": "2026-10-29T10:34:06.986453966+03:00",
+      "status": "superseded",
+      "chart": "llm-platform-0.1.0",
+      "app_version": "0.1.0",
+      "description": "Upgrade complete"
+    },
+    {
+      "revision": 7,
+      "updated": "2026-10-29T12:39:34.629615078+03:00",
+      "status": "failed",
+      "chart": "llm-platform-0.1.0",
+      "app_version": "0.1.0",
+      "description": "Upgrade \"llm-platform\" failed: server-side apply failed for object llm-platform/console apps/v1, Kind=Deployment: Deployment.apps \"console\" is invalid: spec.strategy.rollingUpdate: Forbidden: may not be specified when strategy `type` is 'Recreate'"
+    },
+    {
+      "revision": 8,
+      "updated": "2026-10-29T12:40:04.29274335+03:00",
+      "status": "superseded",
+      "chart": "llm-platform-0.1.0",
+      "app_version": "0.1.0",
+      "description": "Upgrade complete"
+    },
+    {
+      "revision": 9,
+      "updated": "2026-10-29T14:55:11.086683784+03:00",
+      "status": "deployed",
+      "chart": "llm-platform-0.1.0",
+      "app_version": "0.1.0",
+      "description": "Upgrade complete"
+    }
+  ]
+}

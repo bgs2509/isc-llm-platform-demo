@@ -1,0 +1,11 @@
+{
+  "measured_at": "2026-10-29 15:23",
+  "concurrency": 8,
+  "duration_s": 60,
+  "delete_at_s": 20,
+  "requests": 120,
+  "failed": 72,
+  "no_answer_s": 16.587563514709473,
+  "recovered_after_s": 24.777886867523193,
+  "seconds_to_ready": 17.992031574249268
+}
