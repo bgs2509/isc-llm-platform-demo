@@ -61,3 +61,47 @@ def test_ask_returns_agent_result(monkeypatch):
     assert set(body) == {"answer", "steps", "sources", "prompt_tokens", "completion_tokens", "latency_s",
                          "rounds"}
     assert seen == {"question": "why?", "key": "k-research", "no_cache": False}
+
+
+def test_eval_result_is_404_before_the_first_run(monkeypatch):
+    monkeypatch.setitem(main.eval_state, "latest", None)
+    assert TestClient(main.app).get("/api/agent/eval").status_code == 404
+
+
+def test_eval_start_unknown_tenant_404():
+    assert TestClient(main.app).post("/api/agent/eval", json={"tenant": "nobody"}).status_code == 404
+
+
+def test_eval_start_is_409_while_one_runs(monkeypatch):
+    class Running:
+        def done(self):
+            return False
+
+    monkeypatch.setitem(main.eval_state, "task", Running())
+    client = _with_tenant(monkeypatch)
+    assert client.post("/api/agent/eval", json={"tenant": "research"}).status_code == 409
+
+
+async def test_eval_start_runs_the_job_in_the_background(monkeypatch):
+    monkeypatch.setitem(main.eval_state, "task", None)
+    seen = []
+
+    async def fake_job(team, key):
+        seen.append((team, key))
+
+    monkeypatch.setattr(main, "run_eval_job", fake_job)
+    monkeypatch.setitem(main.runner.s.tenants, "research", "k-research")
+    assert await main.agent_eval(main.EvalBody(tenant="research")) == {"started": True}
+    await main.eval_state["task"]
+    assert seen == [("research", "k-research")]
+
+
+def test_metrics_is_empty_then_filled(monkeypatch):
+    client = TestClient(main.app)
+    monkeypatch.setitem(main.eval_state, "latest", None)
+    r = client.get("/metrics")
+    assert r.status_code == 200 and r.text == "" and r.headers["content-type"].startswith("text/plain")
+    monkeypatch.setitem(main.eval_state, "latest", {"finished": 1.0, "summary": {
+        "hit_at_3": 0.9, "tool_accuracy": 1.0, "faithfulness": 0.8, "latency_p95_s": 3.5,
+        "usd_per_1k_questions": 0.12}})
+    assert "rag_eval_hit_at_3 0.9" in client.get("/metrics").text
