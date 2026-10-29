@@ -105,3 +105,9 @@ def test_metrics_is_empty_then_filled(monkeypatch):
         "hit_at_3": 0.9, "tool_accuracy": 1.0, "faithfulness": 0.8, "latency_p95_s": 3.5,
         "usd_per_1k_questions": 0.12}})
     assert "rag_eval_hit_at_3 0.9" in client.get("/metrics").text
+
+
+def test_console_modules_log_at_info():
+    import logging
+    assert logging.getLogger("app.agent").isEnabledFor(logging.INFO)
+    assert logging.getLogger("app.evaluate").isEnabledFor(logging.INFO)

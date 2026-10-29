@@ -21,6 +21,10 @@ from .stats import GPU_USD_PER_HOUR
 
 
 log = logging.getLogger(__name__)
+# uvicorn configures only its own loggers; the console's log anchors are INFO lines on stderr.
+logging.getLogger("app").setLevel(logging.INFO)
+if not logging.getLogger().handlers:
+    logging.basicConfig(format="%(levelname)s %(name)s %(message)s")
 
 
 def load_settings() -> Settings:
