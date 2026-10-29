@@ -334,3 +334,10 @@ None (the three earlier ones and the documents gap were decided on 2026-10-29: d
    (spec rules 3, 6, 7 updated). Tests: site and scripts 45, all passing. External review (step 12) skipped
    on the owner's "do it fast". Case sections below the intro not shortened.
 4. To publish: on vpn-2 `git pull --ff-only` and recreate the origin (`deploy/README.md`).
+
+### 2026-10-29 — Grafana links fixed (owner report: "Grafana shows nothing")
+
+1. Cause: every site link opened `grafana/`, Grafana's home page, which for anonymous viewers holds only empty
+   starred and recent lists. Links now open `grafana/d/llm-platform/llm-platform` (`GRAFANA` in `site/build.py`);
+   observability signal links open panels 1, 2, 8 by `viewPanel` with their exact titles (commit 5463d84).
+2. Test `_grafana_link_errors` checks both sites against `chart/llm-platform/files/dashboard.json`.

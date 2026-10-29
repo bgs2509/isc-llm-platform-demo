@@ -181,6 +181,35 @@ def test_topic_page_marks_itself_in_the_diagram_and_links_its_neighbours(pages, 
     assert '<nav class="pager"' in text and "Requirement" not in text.split("</h1>")[0]
 
 
+def _grafana_link_errors(pages: dict) -> list:
+    """Grafana links open the provisioned dashboard (its root page is an empty home for anonymous viewers);
+    a link to one panel carries that panel's exact title, a link to the dashboard names the dashboard."""
+    board = json.loads((ROOT / "chart" / "llm-platform" / "files" / "dashboard.json").read_text(encoding="utf8"))
+    titles = {p["id"]: p["title"] for p in board["panels"]}
+    bad = []
+    for rel, text in pages.items():
+        for href, inner in re.findall(r'<a\b[^>]*href="(?:\.\./)*grafana/([^"]*)"[^>]*>(.*?)</a>', text, flags=re.S):
+            label = html.unescape(re.sub(r"<[^>]+>", "", inner)).strip()
+            m = re.fullmatch(rf"d/{board['uid']}/[a-z-]+(?:\?viewPanel=(\d+))?", html.unescape(href))
+            if not m:
+                bad.append((rel, href, "not the dashboard"))
+            elif m.group(1) and label != titles.get(int(m.group(1))):
+                bad.append((rel, href, label))
+            elif not m.group(1) and board["title"] not in label:
+                bad.append((rel, href, label))
+    return bad
+
+
+def test_isc2_grafana_links_open_the_dashboard_and_name_its_panels(pages):
+    assert not _grafana_link_errors(pages)
+
+
+def test_isc1_grafana_links_open_the_dashboard(tmp_path):
+    build.isc1.main(tmp_path)
+    pages = {p.relative_to(tmp_path).as_posix(): p.read_text(encoding="utf8") for p in tmp_path.rglob("*.html")}
+    assert not _grafana_link_errors(pages)
+
+
 def test_local_links_and_assets_resolve(pages, tmp_path):
     _write(pages, tmp_path)
     out = tmp_path.resolve()

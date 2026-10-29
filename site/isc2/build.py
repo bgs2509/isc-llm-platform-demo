@@ -555,7 +555,7 @@ def pager(current: str) -> str:
 
 
 def page_values(name: str) -> dict[str, str]:
-    vals = {"header": header(name), "title": esc(TITLE[name]), "stack": stack(name),
+    vals = {"header": header(name), "title": esc(TITLE[name]), "stack": stack(name), "grafana": isc1.GRAFANA,
             **{f"title_{slug}": esc(t) for slug, t in TOPICS}}
     if name != "index":
         vals["pager"] = pager(name)
