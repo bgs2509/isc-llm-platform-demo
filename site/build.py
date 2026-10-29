@@ -44,9 +44,11 @@ th,td{border-bottom:1px solid var(--line);padding:6px 10px;text-align:left;verti
 footer{color:var(--muted);font-size:13px;margin-top:48px}
 """
 
+# The provisioned dashboard; Grafana's own root page is an empty home for anonymous viewers.
+GRAFANA = "grafana/d/llm-platform/llm-platform"
 NAV = [("Overview", "index.html"), ("Architecture", "docs/architecture.html"),
        ("Benchmark report", "docs/benchmark-report.html"), ("Handover", "docs/handover.html"),
-       ("Console", "console/"), ("Grafana", "grafana/")]
+       ("Console", "console/"), ("Grafana: LLM platform", GRAFANA)]
 
 
 def page(title: str, body: str, depth: int) -> str:
@@ -91,7 +93,7 @@ dashboards, alerts and a console that proves the numbers. Everything below was m
 <h2>Explore</h2>
 <div class="cards">
   <a class="card" href="console/"><b>Live console <span class="tag">password</span></b><span>Start a load test as a team, watch tokens per second, latency, GPU and queue move, compare before and after.</span></a>
-  <a class="card" href="grafana/"><b>Grafana dashboard <span class="tag">password</span></b><span>12 panels from Prometheus: model, GPU and gateway, with 6 alert rules behind it.</span></a>
+  <a class="card" href="{GRAFANA}"><b>Grafana dashboard LLM platform <span class="tag">password</span></b><span>12 panels from Prometheus: model, GPU and gateway, with 6 alert rules behind it.</span></a>
   <a class="card" href="docs/benchmark-report.html"><b>Benchmark report</b><span>Throughput, latency and cost per million tokens from 1 to 16 parallel requests; what the gateway adds.</span></a>
   <a class="card" href="docs/architecture.html"><b>Architecture</b><span>Components, decisions and trade-offs, and what changes at customer scale.</span></a>
   <a class="card" href="docs/handover.html"><b>Handover</b><span>What a customer team receives and how to operate it.</span></a>

@@ -1,4 +1,4 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Private LLM platform</title><link rel="icon" href="data:,"><link rel="stylesheet" href="style.css"></head><body><div class="top"><div><b>Private LLM platform</b><a href="index.html">Overview</a><a href="docs/architecture.html">Architecture</a><a href="docs/benchmark-report.html">Benchmark report</a><a href="docs/handover.html">Handover</a><a href="console/">Console</a><a href="grafana/">Grafana</a></div></div><main>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Private LLM platform</title><link rel="icon" href="data:,"><link rel="stylesheet" href="style.css"></head><body><div class="top"><div><b>Private LLM platform</b><a href="index.html">Overview</a><a href="docs/architecture.html">Architecture</a><a href="docs/benchmark-report.html">Benchmark report</a><a href="docs/handover.html">Handover</a><a href="console/">Console</a><a href="grafana/d/llm-platform/llm-platform">Grafana: LLM platform</a></div></div><main>
 <h1>One gateway, one large model, several teams</h1>
 <p class="lead">A small private LLM platform running on a single NVIDIA GB10 machine: per-team keys and limits,
 dashboards, alerts and a console that proves the numbers. Everything below was measured on the real model.</p>
@@ -11,7 +11,7 @@ dashboards, alerts and a console that proves the numbers. Everything below was m
 <h2>Explore</h2>
 <div class="cards">
   <a class="card" href="console/"><b>Live console <span class="tag">password</span></b><span>Start a load test as a team, watch tokens per second, latency, GPU and queue move, compare before and after.</span></a>
-  <a class="card" href="grafana/"><b>Grafana dashboard <span class="tag">password</span></b><span>12 panels from Prometheus: model, GPU and gateway, with 6 alert rules behind it.</span></a>
+  <a class="card" href="grafana/d/llm-platform/llm-platform"><b>Grafana dashboard LLM platform <span class="tag">password</span></b><span>12 panels from Prometheus: model, GPU and gateway, with 6 alert rules behind it.</span></a>
   <a class="card" href="docs/benchmark-report.html"><b>Benchmark report</b><span>Throughput, latency and cost per million tokens from 1 to 16 parallel requests; what the gateway adds.</span></a>
   <a class="card" href="docs/architecture.html"><b>Architecture</b><span>Components, decisions and trade-offs, and what changes at customer scale.</span></a>
   <a class="card" href="docs/handover.html"><b>Handover</b><span>What a customer team receives and how to operate it.</span></a>
