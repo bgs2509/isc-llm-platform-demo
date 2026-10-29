@@ -58,7 +58,9 @@ origin container is separate, so the change to the existing setup is one site bl
 1. The origin's site address has no host (`http://:19080`, with `bind` for the address): the portal passes the
    public name in `Host`, and a site address with a host makes Caddy answer an empty 200 to every path.
 2. The origin's Caddyfile is a single-file bind mount: after `git pull` recreate the container
-   (`docker compose up -d --force-recreate`), a restart keeps the old file.
+   (`docker compose up -d --force-recreate`), a restart keeps the old file. The page directories are
+   bind mounts too: a `git checkout` of another branch can recreate `site/` or `site-isc2/`, and the
+   running container keeps the deleted one (seen 2026-10-29: isc-1 answered 404); recreate it then too.
 3. Checks from the web server itself go over loopback and pass the firewall; check from a container on the
    portal's network or from outside.
 
