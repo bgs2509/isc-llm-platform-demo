@@ -1,9 +1,8 @@
 # isc-2 site and RAG agent — execution plan
 
 Status (2026-10-29): mockups approved by the owner (as is); plan approved by the owner (do-feature step 10,
-2026-10-29, in session). Phases 0, A-E and G done; F done up to the portal: F.2 (portal block) is on the
-portal branch `feat/branch-isc2-site` and waits for the owner to merge it and run `remote-deploy.sh edge`;
-F.4 (check from outside) follows that. Log below. Replaces `20261029-rag-agent-plan.md` and `20261029-isc2-site-plan.md` (see git history).
+2026-10-29, in session). All phases 0 and A-G done, review (step 12) done; isc-2 is live at
+https://isc-2.178-208-78-85.sslip.io:9443/ (2026-10-29 16:36). Log below. Replaces `20261029-rag-agent-plan.md` and `20261029-isc2-site-plan.md` (see git history).
 
 Inputs:
 
@@ -314,3 +313,14 @@ None (the three earlier ones and the documents gap were decided on 2026-10-29: d
 2. Tests after the fixes: console 67, site and scripts 38, all passing.
 3. Evaluation after redeploy (2026-10-29 16:30): hit@3 9 of 10, tools 6 of 6, 162 of 164 claims, 8 of 8
    expected facts, 0 failed rows, p95 10.3 s, 0.67 USD per 1,000 questions.
+
+### 2026-10-29 — Owner steps done on the owner's request; F.4
+
+1. Portal: `master` fast-forwarded to `feat/branch-isc2-site` (ab285eb..56a7dec, no merge commit); vpn-2:
+   `ISC2_DOMAIN` added to `~/.isuzu-secrets/web.env`, portal clone pulled, `remote-deploy.sh edge` (caddy
+   healthy).
+2. F.4 from outside: https://isc-2.178-208-78-85.sslip.io:9443/ has a valid certificate and answers 401
+   without the login; with it `/`, `rag.html`, `delivery.html`, `docs/handover.html`,
+   `/console/api/status?view=health`, `/console/api/agent/eval`, `/grafana/` answer 200; isc-1 still 200
+   without a login.
+3. This branch fast-forwarded into `main`; spark-1 and vpn-2 clones back on `main`.
