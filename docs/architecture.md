@@ -52,7 +52,8 @@ the numbers.
    the model through the gateway with a team key, so its tokens and spend count per team like any request.
 8. **Evaluation set** (`console/eval/`, `console/app/evaluate.py`): 16 questions (10 about the blog, 6 about
    the platform on two recorded Prometheus snapshots); scores hit@3, tool accuracy, faithfulness (claims
-   checked by the same model as judge), answer latency p95 and cost per 1,000 questions, exported on
+   checked by the same model as judge), expected platform facts stated, answer latency p95 and cost per
+   1,000 questions, exported on
    `/metrics` for Prometheus.
 9. **Status API** (`GET /api/status?view=alerts|teams|signals|health`): the only way the two demo sites read
    live platform data; the browser never talks to Prometheus or Kubernetes.

@@ -9,7 +9,7 @@ What the customer team receives and how to run it.
 2. **Host helpers** in `tools/` — a relay from the cluster network to the model server and an `nvidia-smi` exporter.
 3. **Console** `console/` — load tests, live charts, saved runs, before/after comparison, the RAG agent
    (`POST /api/agent/ask`), its evaluation (`/api/agent/eval`, `/metrics`) and the status API used by the
-   sites (`/api/status`); 58 unit tests.
+   sites (`/api/status`); 67 unit tests.
 4. **Runbooks** `docs/runbooks/` — five procedures for the five alert groups and for upgrades.
 5. **Benchmark report** `docs/benchmark-report.md` — measured throughput, latency and cost per million tokens.
 6. **Measurements** `docs/measurements/` — KV cache sweep, gateway pod drill, budget and rate-limit drill,

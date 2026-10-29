@@ -79,12 +79,17 @@ Each new module carries this contract in its header (PURPOSE, INPUTS, OUTPUTS, D
 - PURPOSE: run the 16 questions, score them, keep the latest result, expose it as Prometheus metrics.
 - INPUTS: `console/eval/questions.json`; `console/eval/snapshots/*.json`; a team key.
 - OUTPUTS: `EvalResult(started, finished, team, rows=[...], summary={hit_at_3, tool_accuracy, faithfulness,
-  latency_p95_s, prompt_tokens, completion_tokens, usd_per_1k_questions})` saved to `/data/eval.json`;
+  latency_p95_s, prompt_tokens, completion_tokens, usd_per_1k_questions, and the counts behind them:
+  hits, blog_total, tool_ok, platform_total, claims_supported, claims_total, facts_stated, facts_total,
+  rows_failed})` saved atomically to `/data/eval.json` (amended 2026-10-29 after the step 12 review);
   `metrics_text(result) -> str` with gauges `rag_eval_hit_at_3`, `rag_eval_tool_accuracy`,
   `rag_eval_faithfulness`, `rag_eval_latency_p95_seconds`, `rag_eval_usd_per_1k_questions`,
   `rag_eval_finished_timestamp_seconds`.
 - Judge: one call per answer; the judge lists the answer's claims and marks each `supported` or not against the
-  retrieved text; faithfulness = supported / all claims over the set.
+  retrieved text; faithfulness = supported / all claims over the set. For platform questions the same call
+  also marks which `expected_facts` the answer states (facts_stated of facts_total). Every evaluation
+  request bypasses the gateway cache (`cache: {"no-cache": true}`). A failed ask or an unreadable judge reply
+  is a row-level error (`rows_failed`), never the end of the run.
 - Cost: GPU price per hour (the console's existing `gpu_usd_per_hour`, 0.20 USD) divided by measured tokens per
   hour of the run, the same arithmetic as `stats.cost_per_million_tokens`.
 - DEPENDS: `agent`, `corpus`, `platform_status`, `stats.percentile`, `stats.cost_per_million_tokens`.
