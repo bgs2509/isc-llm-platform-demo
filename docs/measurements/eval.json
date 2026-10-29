@@ -1,14 +1,14 @@
 {
-  "measured_at": "2026-10-29 15:33",
-  "started": 1793276992.507806,
-  "finished": 1793277175.0011518,
+  "measured_at": "2026-10-29 16:30",
+  "started": 1793280433.140185,
+  "finished": 1793280626.682149,
   "team": "research",
   "rows": [
     {
       "id": "B1",
       "kind": "blog",
       "question": "How did the team help a mid-sized quantitative trading firm keep its cloud HPC spending under control?",
-      "answer": "The team built cost-control tooling around the firm's AWS HPC environment:\n\n- **Slurm tooling integrated with AWS ParallelCluster** to estimate compute costs before a job is approved for execution.\n- **A self-service tool integrated with AWS's Cost API** so in-house users could calculate compute estimates in real time.\n- **An optional secondary approval feature** for additional cost oversight.\n\nAs a result, researchers can estimate job costs with real-time AWS data and stay within budgets, avoiding over-budget jobs and saving money. Outsourcing the engineering also reduced load on the internal team, and reliable cost controls gave the firm confidence to move forward with cloud adoption after migrating from on-premise HPC.",
+      "answer": "The team helped the firm control cloud HPC costs by building tooling around its AWS-based HPC environment:\n\n- **Slurm tooling integrated with AWS ParallelCluster** to estimate compute costs before a job is approved for execution\n- **A self-service cost-estimation tool** integrated with AWS's Cost API, letting in-house users calculate compute estimates in real time\n- **An optional secondary approval feature** for additional cost oversight\n\n**Results:** Researchers can now estimate job costs using real-time AWS data and stay within budgets, the firm avoids running jobs that would overflow budgets, and outsourcing the engineering reduced workload on the internal team \u2014 giving them reliable cost controls and confidence in their cloud adoption.",
       "steps": [
         {
           "tool": "search_docs",
@@ -48,20 +48,22 @@
           "url": "https://insightsoftmax.com/blog/scaling-science-with-last-mile-hpc-helping-our-aerospace-customer-15x-the-capacity-of-their-hpc-clusters"
         }
       ],
-      "latency_s": 5.9173893658444285,
+      "latency_s": 6.080592833925039,
       "prompt_tokens": 2138,
-      "completion_tokens": 180,
+      "completion_tokens": 177,
       "first_tool": "search_docs",
       "hit": true,
       "tool_ok": null,
-      "claims_supported": 12,
-      "claims_total": 12
+      "claims_supported": 14,
+      "claims_total": 14,
+      "facts_stated": 0,
+      "facts_total": 0
     },
     {
       "id": "B2",
       "kind": "blog",
       "question": "What kind of machine learning architecture was proposed for modeling ocean chemistry and biology at several scales?",
-      "answer": "A **multi-scale machine learning architecture** for ocean biogeochemistry modeling. It connected coarse-grained ocean biogeochemical models with fine-grained microbial metabolic models via two novel prediction pipelines:\n\n1. **Multi-output regression** from dissolved organic carbon (DOC) composition to individual metabolite concentrations.\n2. **Cross-modal prediction** linking phytoplankton community composition to bacterial transporter expression profiles.\n\nThis was supported by custom data integration pipelines unifying six heterogeneous data sources (40 years of oceanographic time series, field metabolomics, omics data, and lab experiments) into depth-binned, cast-aggregated feature vectors.",
+      "answer": "The blog describes a **multi-scale ML architecture for ocean biogeochemistry modeling**. It was designed to connect coarse-grained ocean biogeochemical models with fine-grained microbial metabolic models, and included two novel prediction pipelines:\n\n1. **Multi-output regression** from dissolved organic carbon (DOC) composition to individual metabolite concentrations.\n2. **Cross-modal prediction** linking phytoplankton community composition to bacterial transporter expression profiles.\n\nThis was supported by custom data integration pipelines that unified six heterogeneous data sources (40 years of oceanographic time series, field metabolomics, omics data, and lab experiments) into depth-binned, cast-aggregated feature vectors.",
       "steps": [
         {
           "tool": "search_docs",
@@ -101,25 +103,73 @@
           "url": "https://insightsoftmax.com/blog/case-study-digital-transformation-for-data-driven-manufacturing"
         }
       ],
-      "latency_s": 4.832790595944971,
+      "latency_s": 4.78426110977307,
       "prompt_tokens": 1944,
-      "completion_tokens": 164,
+      "completion_tokens": 170,
       "first_tool": "search_docs",
       "hit": true,
       "tool_ok": null,
       "claims_supported": 9,
-      "claims_total": 9
+      "claims_total": 9,
+      "facts_stated": 0,
+      "facts_total": 0
     },
     {
       "id": "B3",
       "kind": "blog",
       "question": "What data engineering work went into smart charging for electric vehicles at a German carmaker?",
-      "answer": "For BMW (the German carmaker), the data engineering work included:\n\n- **Scalable data pipelines** built with Apache Airflow to process millions of daily data points from multiple automaker fleets\n- **Monte Carlo simulation models** to determine optimal EV charging station locations for PG&E's infrastructure planning\n- **Algorithms integrating vehicle telemetry and grid data** to optimize charging windows around renewable energy availability\n- **Privacy-aware data architecture** enabling competing automakers to collaborate and share data without exposing proprietary information\n- **Stakeholder visualization tools** to communicate technical results to utility executives and regulators\n\nResults included over 1 million miles powered by 100% renewable energy and 32% additional greenhouse gas emission reductions, plus a pipeline scalable for future automaker partnerships.",
+      "answer": "The data engineering work for BMW's smart EV charging infrastructure included:\n\n*   **Scalable Data Pipelines:** Built using Apache Airflow to process millions of daily data points from multiple automaker fleets.\n*   **Privacy-Aware Architecture:** Designed a secure data sharing architecture that enabled competitive automakers to collaborate without exposing proprietary information.\n*   **Algorithm Development:** Created algorithms integrating vehicle telemetry and grid data to optimize charging windows with renewable energy availability.\n*   **Simulation Models:** Developed Monte Carlo simulation models to determine optimal EV charging station locations for infrastructure planning.\n*   **Visualization Tools:** Developed stakeholder visualization tools to communicate technical outcomes to utility executives and regulatory bodies.",
       "steps": [
         {
           "tool": "search_docs",
           "args": {
-            "query": "smart charging electric vehicles German carmaker data engineering"
+            "query": "data engineering smart charging electric vehicles German carmaker"
+          },
+          "result": [
+            {
+              "title": "Case Study: How we helped BMW build smart EV charging infrastructure through advanced data engineering",
+              "url": "https://insightsoftmax.com/blog/case-study-how-we-helped-bmw-build-smart-ev-charging-infrastructure-through-advanced-data-engineering",
+              "text": "Case Study: How we helped BMW build smart EV charging infrastructure through advanced data engineering (https://insightsoftmax.com/blog/case-study-how-we-helped-bmw-build-smart-ev-charging-infrastructure-through-advanced-data-engineering)\n\nISC's experience with data engineering, algorithm development, and simulation tools allowed BMW's EV customers to take advantage of lower-priced charging while helping to lower overall emissions by shifting to renewable sources.\n\n## Challenge\n\nBMW and PG&E needed advanced data infrastructure and simulation capabilities to support EV charging infrastructure placement, as well as a consumer-facing app helping drivers optimize their charge times and reduce greenhouse gas emissions.\n\n## Solution\n- Developed Monte Carlo simulation models to determine optimal EV charging station locations for PG&E infrastructure planning\n- Built scalable data pipelines using Apache Airflow to process millions of daily data points from multiple automaker fleets\n- Created algorithms integrating vehicle telemetry and grid data to optimize charging windows with renewable energy availability\n- Designed privacy-aware data architecture enabling competitive automakers to collaborate without exposing proprietary information\n- Developed stakeholder visualization tools to communicate technical outcomes to utility executives and regulatory bodies\n\n## Results\n- Strategic infrastructure investments through sophisticated charging scenario simulations for optimal station placement\n- Successfully processed complex multi-tenant data streams with capacity to scale for future automaker partnerships\n- Achieved renewable energy alignment by shifting EV charging schedules to periods of high solar availability and low grid demand\n- Facilitated unprecedented collaboration between competing automakers through secure data sharing architecture\n- Supported informed decision-making across diverse stakeholders through intuitive technical visualizations and accessible reporting\n\nISC's highly scalable data ingestion pipeline allowed BMW to analyze millions of vehicle charge events from a consortium of automakers while maintaining data privacy. This in turn enabled over 1 million miles powered by 100% renewable energy, and 32% additional greenhouse gas emission reductions."
+            },
+            {
+              "title": "What do Pythons and Pandas Have to Do With Data?",
+              "url": "https://insightsoftmax.com/blog/what-do-pythons-and-pandas-have-to-do-with-data",
+              "text": "What do Pythons and Pandas Have to Do With Data? (https://insightsoftmax.com/blog/what-do-pythons-and-pandas-have-to-do-with-data)\n\nOur COO, Marcus Rabe, is on a bit of an adventure: he\u2019s teaching a 6-week post-graduate course at Hult International Business School in Boston, entitled Computational Analytics with Python. One of his lectures is titled, Data Lives in a Zoo: A Story of Pythons, Pandas, and Other Creatures .\n\nYou might be asking, what do Pythons and Pandas have to do with data? Both Python and Pandas are open-source software tools used to perform data analytics, which in turn allows companies to solve all kinds of business problems. Data analytics helps companies make their operations more efficient, improve their customer service, improve their decision-making, and make their marketing more effective. These tools are key parts of that effort, helping solve business problems by enabling a data analyst to:\n- Read in data\n- Clean data\n- Analyze and model data\n- Interpret the Results\n- Communicate the results\n\nThe data analysts and scientists at Insight Softmax use Python and Pandas every day to solve complex business problems. There are so many applications for these tools: Designing a system for a major car manufacturer to optimize electric vehicle battery charging, helping a grocery store chain optimize routes for their semi trucks to avoid polluting already-marginalized neighborhoods, or allowing a supply chain client to recover millions of dollars in lost revenue by more accurately modeling demand from their customers. We depend on these tools to help our clients solve their most challenging business problems."
+            },
+            {
+              "title": "Case Study: Supporting a major automaker in an electric truck grant application with air pollution data analysis",
+              "url": "https://insightsoftmax.com/blog/case-study-supporting-a-major-automaker-in-an-electric-truck-grant-application-through-air-pollution-data-analysis",
+              "text": "Case Study: Supporting a major automaker in an electric truck grant application with air pollution data analysis (https://insightsoftmax.com/blog/case-study-supporting-a-major-automaker-in-an-electric-truck-grant-application-through-air-pollution-data-analysis)\n\n## 845 store locations\n\n36,563 total trips (trip routes in yellow / DACs in pink)\n\nNumber of miles shown as a heatmap from yellow (low) to red (high)\n\nAir district miles (routes overlaid on air districts)\n\n2005 Individual DACs (Disadvantaged communities as defined by the CA EPA's Office of Environmental Health Hazard Assessment)\n\nRelative miles driven shown as a heatmap from yellow (low) to red (high)\n\n## Challenge\n\nA major automaker needed comprehensive route analysis data to support an electric truck grant proposal, requiring precise measurement of diesel truck miles driven through California's Disadvantaged Air Quality Communities (DACs) across multiple air districts.\n\n## Solution\n- Processed and cleaned delivery route data from 845 store locations, filtering to 408 active delivery destinations with standardized location codes\n- Mapped 36,563 individual truck trips across California's air districts using geospatial analysis and route optimization algorithms\n- Overlaid delivery routes with official DAC boundaries defined by California's Environmental Protection Agency Office of Environmental Health Hazard Assessment\n- Calculated precise mileage distributions across 10 air districts, identifying concentration patterns from San Francisco Bay distribution centers\n- Developed interactive Kepler.gl visualizations showing route overlays, heat maps, and miles-per-air-district breakdowns\n- Created comprehensive data rankings identifying highest-impact DAC areas for electric truck deployment prioritization\n\n## Results\n- Quantified 7.47 million total miles driven across California air districts with detailed geographic distribution analysis\n- Identified San Francisco Bay (38.4%) and San Joaquin Valley (27.7%) as primary delivery corridors representing 66% of total mileage\n- Mapped over 2.4 million miles driven specifically through disadvantaged communities, with San Joaquin Valley showing highest DAC impact\n- Delivered interactive visualization tools enabling dynamic exploration of route patterns and environmental impact zones\n- Provided compelling data-driven evidence supporting the automaker's grant proposal for targeted electric truck deployment strategies\n- Created reusable analytical framework for future route optimization and environmental impact assessment projects\n\nThe comprehensive route analysis provided the automaker with data-driven evidence for their grant proposal, demonstrating how to measurably reduce air pollution in disadvantaged communities."
+            }
+          ]
+        },
+        {
+          "tool": "search_docs",
+          "args": {
+            "query": "BMW smart charging data engineering"
+          },
+          "result": [
+            {
+              "title": "Case Study: How we helped BMW build smart EV charging infrastructure through advanced data engineering",
+              "url": "https://insightsoftmax.com/blog/case-study-how-we-helped-bmw-build-smart-ev-charging-infrastructure-through-advanced-data-engineering",
+              "text": "Case Study: How we helped BMW build smart EV charging infrastructure through advanced data engineering (https://insightsoftmax.com/blog/case-study-how-we-helped-bmw-build-smart-ev-charging-infrastructure-through-advanced-data-engineering)\n\nISC's experience with data engineering, algorithm development, and simulation tools allowed BMW's EV customers to take advantage of lower-priced charging while helping to lower overall emissions by shifting to renewable sources.\n\n## Challenge\n\nBMW and PG&E needed advanced data infrastructure and simulation capabilities to support EV charging infrastructure placement, as well as a consumer-facing app helping drivers optimize their charge times and reduce greenhouse gas emissions.\n\n## Solution\n- Developed Monte Carlo simulation models to determine optimal EV charging station locations for PG&E infrastructure planning\n- Built scalable data pipelines using Apache Airflow to process millions of daily data points from multiple automaker fleets\n- Created algorithms integrating vehicle telemetry and grid data to optimize charging windows with renewable energy availability\n- Designed privacy-aware data architecture enabling competitive automakers to collaborate without exposing proprietary information\n- Developed stakeholder visualization tools to communicate technical outcomes to utility executives and regulatory bodies\n\n## Results\n- Strategic infrastructure investments through sophisticated charging scenario simulations for optimal station placement\n- Successfully processed complex multi-tenant data streams with capacity to scale for future automaker partnerships\n- Achieved renewable energy alignment by shifting EV charging schedules to periods of high solar availability and low grid demand\n- Facilitated unprecedented collaboration between competing automakers through secure data sharing architecture\n- Supported informed decision-making across diverse stakeholders through intuitive technical visualizations and accessible reporting\n\nISC's highly scalable data ingestion pipeline allowed BMW to analyze millions of vehicle charge events from a consortium of automakers while maintaining data privacy. This in turn enabled over 1 million miles powered by 100% renewable energy, and 32% additional greenhouse gas emission reductions."
+            },
+            {
+              "title": "What do Pythons and Pandas Have to Do With Data?",
+              "url": "https://insightsoftmax.com/blog/what-do-pythons-and-pandas-have-to-do-with-data",
+              "text": "What do Pythons and Pandas Have to Do With Data? (https://insightsoftmax.com/blog/what-do-pythons-and-pandas-have-to-do-with-data)\n\nOur COO, Marcus Rabe, is on a bit of an adventure: he\u2019s teaching a 6-week post-graduate course at Hult International Business School in Boston, entitled Computational Analytics with Python. One of his lectures is titled, Data Lives in a Zoo: A Story of Pythons, Pandas, and Other Creatures .\n\nYou might be asking, what do Pythons and Pandas have to do with data? Both Python and Pandas are open-source software tools used to perform data analytics, which in turn allows companies to solve all kinds of business problems. Data analytics helps companies make their operations more efficient, improve their customer service, improve their decision-making, and make their marketing more effective. These tools are key parts of that effort, helping solve business problems by enabling a data analyst to:\n- Read in data\n- Clean data\n- Analyze and model data\n- Interpret the Results\n- Communicate the results\n\nThe data analysts and scientists at Insight Softmax use Python and Pandas every day to solve complex business problems. There are so many applications for these tools: Designing a system for a major car manufacturer to optimize electric vehicle battery charging, helping a grocery store chain optimize routes for their semi trucks to avoid polluting already-marginalized neighborhoods, or allowing a supply chain client to recover millions of dollars in lost revenue by more accurately modeling demand from their customers. We depend on these tools to help our clients solve their most challenging business problems."
+            },
+            {
+              "title": "Data Is Waste. Only Information Matters.",
+              "url": "https://insightsoftmax.com/blog/data-is-waste-only-information-matters",
+              "text": "Data Is Waste. Only Information Matters. (https://insightsoftmax.com/blog/data-is-waste-only-information-matters)\n\nOne more word of advice: it\u2019s important to include your employees from the very start. They may take on many roles, but up until now none of those likely required any IT knowledge. This doesn\u2019t necessarily mean allowing your staff to have input on every decision, but it\u2019s essential that you don\u2019t keep them in the dark. No one likes surprises, especially ones that involve their jobs and new tech.\n\nOne good way to ensure buy-in is to take baby steps. Trying too many new things all at once can be overwhelming, and your staff could just reject the idea wholesale. Instead, take a slow-but-steady approach of continuous improvement.\n\n#### Choosing the Right Partner\n\nAdding data analysis to your workload can feel insurmountable when you\u2019re already overworked, especially if collecting and analyzing data isn\u2019t part of your company\u2019s core competency. One way to ease that stress is to allow a trusted partner to take on all the heavy lifting. An outside company that can serve as your one-stop shop can be a lifesaver, allowing you to focus on the aspects of your business that might otherwise get pushed to the back burner. It\u2019s also a lot easier on your mental load than trying to manage 10 freelancers to handle one project each.\n\nAs your data science partners, ISC will work alongside you to help you make sense of your business data. We\u2019re experts at managing projects, choosing smart tools, and showing you how you can use your results to effectively solve your business problems. Drop us a line to learn more."
+            }
+          ]
+        },
+        {
+          "tool": "search_docs",
+          "args": {
+            "query": "BMW electric vehicle charging case study data engineering"
           },
           "result": [
             {
@@ -152,22 +202,28 @@
         {
           "title": "Case Study: Supporting a major automaker in an electric truck grant application with air pollution data analysis",
           "url": "https://insightsoftmax.com/blog/case-study-supporting-a-major-automaker-in-an-electric-truck-grant-application-through-air-pollution-data-analysis"
+        },
+        {
+          "title": "Data Is Waste. Only Information Matters.",
+          "url": "https://insightsoftmax.com/blog/data-is-waste-only-information-matters"
         }
       ],
-      "latency_s": 5.905536415986717,
-      "prompt_tokens": 2355,
-      "completion_tokens": 193,
+      "latency_s": 10.718291319906712,
+      "prompt_tokens": 9977,
+      "completion_tokens": 234,
       "first_tool": "search_docs",
       "hit": true,
       "tool_ok": null,
-      "claims_supported": 13,
-      "claims_total": 14
+      "claims_supported": 15,
+      "claims_total": 15,
+      "facts_stated": 0,
+      "facts_total": 0
     },
     {
       "id": "B4",
       "kind": "blog",
       "question": "Which quantum computing methods were tried to reduce costs and get answers faster?",
-      "answer": "Based on the blog, the quantum computing methods tried to reduce costs and accelerate time-to-insight were:\n\n- **Quantum annealing** and **gate-model algorithms** \u2014 used to explore combinatorial design spaces and identify promising candidate structures.\n- **Quantum pre-filtering** \u2014 a quantum filtering stage deployed on AWS Braket (running on vendors like IonQ and D-Wave) that filtered candidates before traditional CFD simulation, cutting down unnecessary, expensive simulations.\n- **Hybrid quantum-classical workflow** \u2014 integrating quantum pre-filtering with traditional CFD simulation pipelines, supported by scalable HPC infrastructure (AWS ParallelCluster, EFA-enabled compute).\n\nThis approach let the customer evaluate more innovative designs while staying within computational budget constraints.",
+      "answer": "According to the blog's case study, the methods tried were:\n\n- **Quantum annealing** and **gate-model algorithms** to explore combinatorial design spaces and identify promising candidate designs\n- A **quantum filtering/pre-filtering stage** on AWS Braket (running on vendors like IonQ and D-Wave, though D-Wave is no longer supported) to cut down unnecessary CFD simulations\n- A **hybrid quantum-classical workflow** integrating quantum pre-filtering with traditional CFD simulation pipelines (supported by HPC infrastructure via AWS ParallelCluster and E-enabled compute)\n\nThis approach accelerated design-space exploration and reduced simulation costs without increasing overall compute spending.",
       "steps": [
         {
           "tool": "search_docs",
@@ -207,20 +263,22 @@
           "url": "https://insightsoftmax.com/blog/how-space-physics-can-help-solve-earth-bound-data-science-challenges"
         }
       ],
-      "latency_s": 5.783204392064363,
+      "latency_s": 5.360538052394986,
       "prompt_tokens": 2431,
-      "completion_tokens": 184,
+      "completion_tokens": 168,
       "first_tool": "search_docs",
       "hit": true,
       "tool_ok": null,
       "claims_supported": 11,
-      "claims_total": 11
+      "claims_total": 11,
+      "facts_stated": 0,
+      "facts_total": 0
     },
     {
       "id": "B5",
       "kind": "blog",
       "question": "By how much did personalized recommendations raise the revenue of a large online marketplace?",
-      "answer": "Personalized recommendations raised the large online marketplace's (Creative Market's) revenue by **51%**, alongside a 65% increase in clicks and a 39% higher purchase rate.",
+      "answer": "Personalized recommendations raised the large online marketplace's revenue by **51%** (along with a 65% increase in clicks and a 39% higher purchase rate).",
       "steps": [
         {
           "tool": "search_docs",
@@ -252,20 +310,22 @@
           "url": "https://insightsoftmax.com/blog/how-isc-helped-a-large-online-marketplace-increase-revenue-51-percent-through-personalization"
         }
       ],
-      "latency_s": 3.10447741067037,
+      "latency_s": 3.1313913161866367,
       "prompt_tokens": 2645,
-      "completion_tokens": 73,
+      "completion_tokens": 69,
       "first_tool": "search_docs",
       "hit": true,
       "tool_ok": null,
-      "claims_supported": 4,
-      "claims_total": 4
+      "claims_supported": 3,
+      "claims_total": 3,
+      "facts_stated": 0,
+      "facts_total": 0
     },
     {
       "id": "B6",
       "kind": "blog",
       "question": "How was run-to-run variability handled when running large jobs on IonQ quantum hardware through Braket?",
-      "answer": "They handled it with a \"litmus test\" for noise-profile consistency:\n\n- **The problem:** Large circuit batches (>40\u201350 circuits) on Braket's IonQ service get split into separate \"execution windows\" throughout the day, with no control over ordering. Results were consistent within a batch but inconsistent across batches, since the noise profile shifts drastically between windows and drifts over time.\n- **The test:** They built a 2-qubit circuit of six alternating CNOT gates and decomposed it into 24 subcircuits (4 inputs \u00d7 1\u20136 CNOTs). If the batch shares a consistent noise profile, the data should look a certain way; outliers reveal inconsistency.\n- **The decision rule:** After execution, they estimate the average error probability per CNOT gate across all 24 circuits and compute the variance of errors. If variance exceeds a tolerance, the noise profile is deemed untrustworthy and the payload batch execution is terminated early \u2014 saving the client money.\n- **Next steps:** Incorporate the litmus test into routine execution, sprinkle random circuits from the 24-circuit batch into payload batches to verify consistency, and use the tests to compare batches and adjust for drift.",
+      "answer": "They handled it with a \"litmus test\" for noise consistency:\n\n- **The problem:** Large circuit batches (40\u201350+ circuits) on Braket's IonQ service get split into separate batch runs (\"execution windows\") executed sequentially throughout the day, with no control over ordering. Results were consistent within a batch but inconsistent across batches, since the noise profile can shift drastically between windows and drift over time.\n\n- **The approach:** They designed a two-qubit litmus circuit of six alternating CNOT gates, decomposed into 24 subcircuits (4 inputs \u00d7 1\u20136 CNOTs). After running the batch, they (1) estimated the average error probability per CNOT gate across all 24 circuits, and (2) computed the variance of the errors and compared it against a tolerance value.\n\n- **The decision rule:** If the variance exceeded tolerance, the noise profile was deemed too inconsistent to trust the payload batch \u2014 and execution was terminated immediately, saving the client money.\n\n- **Next steps:** They planned to embed the litmus test into routine batch execution, mixing random litmus circuits into payload batches to verify noise consistency and use the results to compare batches and adjust for drift.",
       "steps": [
         {
           "tool": "search_docs",
@@ -297,20 +357,22 @@
           "url": "https://insightsoftmax.com/blog/conquering-the-noise-how-we-overcame-variability-in-large-scale-runs-of-brakets-ionq-service"
         }
       ],
-      "latency_s": 8.562105891294777,
+      "latency_s": 8.371151444967836,
       "prompt_tokens": 2997,
-      "completion_tokens": 290,
+      "completion_tokens": 289,
       "first_tool": "search_docs",
       "hit": true,
       "tool_ok": null,
-      "claims_supported": 19,
-      "claims_total": 19
+      "claims_supported": 18,
+      "claims_total": 18,
+      "facts_stated": 0,
+      "facts_total": 0
     },
     {
       "id": "B7",
       "kind": "blog",
       "question": "How can someone put a dollar figure on the value an open source project creates?",
-      "answer": "Based on the blog posts, here's how to put a dollar figure on the value an open source project creates:\n\n**Core approach: work backwards from project revenue**\n- Dig in with product teams to find out how much time/money the open source effort saved or generated, then attribute a percentage of that project's value back to the open source work.\n- Example from the blog: a $100M project with 10% attribution = $10M in value generated.\n\n**Practical process (from the OSPO case study):**\n1. Interview 12+ project leaders who received open source team support over the past year.\n2. Calculate dollar-value attribution through estimation and validation (projects ranged from $50K to $100M).\n3. Peg the open source team's contribution at 2\u201325% of project success.\n4. Round down to stay conservative (e.g., cutting an estimate by two-thirds).\n5. Validate the dollar values with the Finance department for credibility.\n\n**Key principles:**\n- Be conservative \u2014 the goal isn't an exact number but demonstrating a non-zero (and likely much larger) contribution.\n- Expect this to take real time: one OSPO department head's effort required 10\u201312 managers and 2\u20133 months of conversations.\n- Financial figures are often deliberately obscured, so you'll need allies to get useful numbers.\n- Even rough methodologies build executive buy-in and help reposition open source as a value generator rather than a cost center.",
+      "answer": "Based on the blog posts, here's how to put a dollar figure on the value an open source project creates:\n\n**Core method: work backwards from project revenue**\n- Dig in with product teams to find out how much time/money the open source effort saved or generated for them.\n- Interview project leaders (e.g., 12+ leaders who received open source support over the past year).\n- Attribute a percentage of the project's success to the open source contribution (in their case, 2\u201325%). Example: a $100M project with 10% attribution = $10M in value generated.\n- **Round down / be conservative** \u2014 e.g., cut an estimate by two-thirds to get a defensible floor (their example dropped to ~$270K for a single fix).\n- **Validate the numbers with Finance** for credibility.\n\n**Key principles**\n- The goal isn't an exact number \u2014 it's having the conversation with stakeholders and establishing that the contribution is non-zero (and likely much more).\n- Aggregate many small wins: even conservative estimates of individual fixes/improvements add up quickly over a year.\n- Expect the real financials to be hard to obtain; you'll need allies, since many companies obscure project costs and revenue.\n\n**Why it matters**\n- Positioning the open source program as a value generator (rather than a cost center) makes its budget defensible and builds executive buy-in over time.\n\nNote: this process is time-intensive \u2014 their example took 10\u201312 managers and 2\u20133 months of conversations for a single department head.",
       "steps": [
         {
           "tool": "search_docs",
@@ -346,20 +408,22 @@
           "url": "https://insightsoftmax.com/blog/measuring-the-value-of-open-source-part-one-coming-up-with-some-numbers"
         }
       ],
-      "latency_s": 9.352437925990671,
+      "latency_s": 10.142212669365108,
       "prompt_tokens": 2340,
-      "completion_tokens": 360,
+      "completion_tokens": 380,
       "first_tool": "search_docs",
       "hit": true,
       "tool_ok": null,
       "claims_supported": 16,
-      "claims_total": 16
+      "claims_total": 16,
+      "facts_stated": 0,
+      "facts_total": 0
     },
     {
       "id": "B8",
       "kind": "blog",
       "question": "How much faster did the simulations of a nuclear fusion startup become, and what did that save?",
-      "answer": "The nuclear fusion startup's simulations became about **2.5x faster** after switching from c5.18xlarge to hpc6a.48xlarge instances (with optimized compilation and two nodes at 96 tasks per node). This, combined with the ~5% cheaper instance pricing, was estimated to save **several million dollars in compute costs** over their planned 3\u20134 years of simulations.",
+      "answer": "The nuclear fusion startup's simulations became about **2.5x faster** after switching from c5.18xlarge to hpc6a.48xlarge instances (two nodes at 96 tasks per node). Combined with the recommended instances being ~5% cheaper, this is estimated to save **several million dollars** in compute costs over their planned 3\u20134 years of simulations.",
       "steps": [
         {
           "tool": "search_docs",
@@ -395,20 +459,22 @@
           "url": "https://insightsoftmax.com/blog/measuring-the-value-of-open-source-part-two-actually-having-the-conversation"
         }
       ],
-      "latency_s": 3.5675058849155903,
+      "latency_s": 3.327458251733333,
       "prompt_tokens": 2618,
-      "completion_tokens": 119,
+      "completion_tokens": 115,
       "first_tool": "search_docs",
       "hit": true,
       "tool_ok": null,
-      "claims_supported": 7,
-      "claims_total": 7
+      "claims_supported": 6,
+      "claims_total": 6,
+      "facts_stated": 0,
+      "facts_total": 0
     },
     {
       "id": "B9",
       "kind": "blog",
       "question": "Which port did the team visit for the California port data interoperability grant program?",
-      "answer": "The team visited the **Port of Oakland** \u2014 ISC's Mike Mansour and Morasha Ahrns, joined by DataCRT's Noah Bruegmann, toured the port's security ops center and the Evergreen terminal.",
+      "answer": "The team visited the **Port of Oakland**. ISC's project lead Mike Mansour and project assistant Morasha Ahrns, joined by DataCRT's Noah Bruegmann, toured the port's security ops center and the Evergreen terminal after the grant funds were awarded.",
       "steps": [
         {
           "tool": "search_docs",
@@ -436,7 +502,7 @@
         {
           "tool": "search_docs",
           "args": {
-            "query": "team visited port site visit"
+            "query": "team visit port site visit grant program"
           },
           "result": [
             {
@@ -445,58 +511,14 @@
               "text": "CA Port Data Interoperability Grant Program: ISC Visits the Port of Oakland (https://insightsoftmax.com/blog/ca-port-data-interoperability-grant-program-isc-visits-the-port-of-oakland)\n\nWe reached a big milestone in the Port Data Interoperability Grant Program last week \u2014 we awarded all the funds to the five participating ports! While we have to wait until the official announcement before we can talk about details here, we did use this milestone as an opportunity to meet some of the awesome folks at Port of Oakland in person, and take a tour of their very cool facility. ISC\u2019s project lead Mike Mansour and project assistant Morasha Ahrns were joined by DataCRT \u2019s Noah Bruegmann. DataCRT / Noah are part of the grant program\u2019s Technical Advisory Committee, which has played such a critical role in this project.\n\nOnce on-site, our group was joined by Port of Oakland\u2019s Romario James, Pia Franzese, and Carolyn Almquist, who were kind enough to give a tour of the port security ops center and the Evergreen terminal. The security ops center was very cool \u2014 modern and impressive \u2014 and the Evergreen terminal was just awe-inspiring in its size and scale. After only seeing the port for so long while driving over the Bay Bridge, our group appreciated the opportunity to see it in person. Check out the attached photos to get a sense of the scale! We look forward to announcing more details about the awards within the next couple of weeks, and to working with Port of Oakland and our other stakeholders on the remainder of the project."
             },
             {
-              "title": "How ISC Helped a Large Online Marketplace Increase Revenue by 51% Through Personalization",
-              "url": "https://insightsoftmax.com/blog/how-isc-helped-a-large-online-marketplace-increase-revenue-51-percent-through-personalization",
-              "text": "How ISC Helped a Large Online Marketplace Increase Revenue by 51% Through Personalization (https://insightsoftmax.com/blog/how-isc-helped-a-large-online-marketplace-increase-revenue-51-percent-through-personalization)\n\nPersonalization \u2014 treating each customer as an individual vs. one of the masses \u2014 is a trend that\u2019s been catching steam for several years now. A big part of that is developing a recommendation engine that makes relevant, useful suggestions.\n\nThe companies who do it well are winning big and setting the standard for everyone else. In fact, good recommendations have become so standard that customers not only expect it, they expect it to be good. Here\u2019s a look at how ISC helped a large online marketplace gain a 65% increase in clicks, a 39% higher purchase rate, and 51% more revenue.\n\nCreative Market sells high-quality fonts, graphic design elements, stock photography, and anything else a creative needs to bring her visions to life. With millions of products in their inventory, a smart recommendation engine was a daunting goal.\n\nThe company had set an annual goal to provide customers with better personalization. Their search team reached out to Insight Softmax to help them build a recommendation engine to serve every customer the products most relevant to them.\n\nThat might be easy when you sell within a narrow niche. But how do you optimize when you\u2019re dealing with constantly changing factors like user-item sparsity, seasonality, item categorization and tagging, and a wide variety of user behavior? Even a slight parameter change in the wrong direction can send your results flying out of control.\n\n#### The ISC Approach\n\nThe first step to a successful data science partnership in this case didn\u2019t begin with numbers \u2013 it started with words. An in-depth conversation between ISC and Creative Market leadership uncovered a wealth of important information: the current state of their available data, what they\u2019d like that data to do, and their overall goals for personalization. This early collaboration put us on the right path from day one.\n\nFrom there, we dug into their data to create a detailed report, focused on what customers viewed while browsing vs. what they eventually ended up buying. This allowed us to suss out trends and patterns in the data. What we uncovered was a true \"aha!\" moment: Creative Market customers' purchases followed themes (swirly fonts and glitter backgrounds, for example), after which that customer disappeared and didn't interact with the site for several months. When they returned to the site months later, the themes of both their views and purchases were completely different (metal-edge backgrounds and skulls)."
-            },
-            {
               "title": "CA Port Data Interoperability Grant Program: A Successful Roundtable Discussion in January",
               "url": "https://insightsoftmax.com/blog/ca-port-data-interoperability-grant-program-a-successful-roundtable-discussion-in-january",
               "text": "CA Port Data Interoperability Grant Program: A Successful Roundtable Discussion in January (https://insightsoftmax.com/blog/ca-port-data-interoperability-grant-program-a-successful-roundtable-discussion-in-january)\n\nOn January 4th, the CA Port Data Interoperability Grant Program team held a roundtable discussion with all of the participating ports ( Port of Los Angeles , Port of Long Beach , Port of Oakland , Port of San Diego , and Port of Hueneme ), led by the California Association of Port Authorities (CAPA) .\n\nHaving CAPA take ownership and lead this discussion was very helpful, as they represent a more neutral party which can hold the interests of all the ports in mind as these new agreements are reached. CAPA also represents the non-containerized ports in CA, and can potentially bring some perspective on interoperability from the smaller ports. The theme of the discussion was how we can use interoperability to help harmonize the data ecosystem. By creating a space for everyone to talk together, we were able to unite on shared stakeholders and data standards, and crucially, collaborate on systems development.\n\nHere\u2019s an overview of what was discussed. Together, we:\n- Shared status updates on the proposal progress\n- Asked for guidance on getting standardized data from stakeholders\n- Collaborated around non-containerized standards development\n- Completed some setup for Port Infrastructure Development Program (PIDP) funding opportunities. This part of the discussion centered on how to use this round of state funding to set the ports up for success in future funding opportunities\n\nWe\u2019re very happy with how this program is turning out so far, and we look forward to receiving the final grant proposals in February, and then allocating these funds to the participating ports. Thanks again to the California Governor's Office of Business and Economic Development (GO-Biz) for making this project happen, and for being a great support to all the stakeholders throughout the process."
-            }
-          ]
-        },
-        {
-          "tool": "platform_status",
-          "args": {
-            "view": "alerts"
-          },
-          "result": [
-            {
-              "name": "ModelEndpointDown",
-              "state": "inactive",
-              "query": "up{job=\"vllm\"} == 0",
-              "value": 1.0
             },
             {
-              "name": "ModelQueueBuildingUp",
-              "state": "inactive",
-              "query": "sum(vllm:num_requests_waiting) > 4",
-              "value": 0.0
-            },
-            {
-              "name": "TimeToFirstTokenSlow",
-              "state": "inactive",
-              "query": "histogram_quantile(0.95, sum(rate(vllm:time_to_first_token_seconds_bucket[5m])) by (le)) > 5",
-              "value": 0.31
-            },
-            {
-              "name": "KvCacheNearlyFull",
-              "state": "inactive",
-              "query": "max(vllm:kv_cache_usage_perc) > 0.9",
-              "value": 0.04
-            },
-            {
-              "name": "GatewayErrorRateHigh",
-              "state": "inactive",
-              "query": "sum(rate(litellm_proxy_failed_requests_metric_total[5m])) / clamp_min(sum(rate(litellm_proxy_total_requests_metric_total[5m])), 0.001) > 0.05",
-              "value": 0.0
-            },
-            {
-              "name": "GpuUnderusedUnderLoad",
-              "state": "inactive",
-              "query": "avg_over_time(gpu_utilization_percent[2m]) < 30 and sum(vllm:num_requests_running) > 4",
-              "value": null
+              "title": "Introducing the California Port Data Interoperability Grant Program",
+              "url": "https://insightsoftmax.com/blog/introducing-the-california-port-data-interoperability-grant-program",
+              "text": "Introducing the California Port Data Interoperability Grant Program (https://insightsoftmax.com/blog/introducing-the-california-port-data-interoperability-grant-program)\n\nISC is excited to announce that we\u2019re leading a pioneering project, the first of its kind in the US: the California Port Data Interoperability Grant Program. Funding for the Program comes from Schedule (1) of AB-178, of which $27,000,000 will be administered directly to the ports. The overarching goal is to improve data system interoperability between the ports and their stakeholders, with a focus on the adoption of DCSA standards.\n\nThe program consists of five parts:\n- Outreach and discovery\n- Funding criteria development\n- Proposal evaluation\n- Funding awards\n- Technical oversight during implementation phase\n\nWe\u2019re pleased to be working with the CA Governor\u2019s Office of Business and Economic Development (GO-Biz) on this project, and to be collaborating with Port of Los Angeles , Port of Long Beach , Port of Oakland , Port of San Diego , and Port of Hueneme . Our other excellent stakeholders are Momentum (acting as grant administrators), as well as Data CRT , Latacora , and Cloud303 , who round out the technical advisory committee. Leading the project on ISC\u2019s side is lead data scientist Mike Mansour."
             }
           ]
         }
@@ -519,28 +541,26 @@
           "url": "https://insightsoftmax.com/blog/ca-port-data-interoperability-grant-program-isc-visits-the-port-of-oakland"
         },
         {
-          "title": "How ISC Helped a Large Online Marketplace Increase Revenue by 51% Through Personalization",
-          "url": "https://insightsoftmax.com/blog/how-isc-helped-a-large-online-marketplace-increase-revenue-51-percent-through-personalization"
-        },
-        {
           "title": "CA Port Data Interoperability Grant Program: A Successful Roundtable Discussion in January",
           "url": "https://insightsoftmax.com/blog/ca-port-data-interoperability-grant-program-a-successful-roundtable-discussion-in-january"
         }
       ],
-      "latency_s": 7.233624146785587,
-      "prompt_tokens": 8998,
-      "completion_tokens": 180,
+      "latency_s": 4.086627338081598,
+      "prompt_tokens": 5280,
+      "completion_tokens": 118,
       "first_tool": "search_docs",
       "hit": false,
       "tool_ok": null,
-      "claims_supported": 6,
-      "claims_total": 6
+      "claims_supported": 7,
+      "claims_total": 7,
+      "facts_stated": 0,
+      "facts_total": 0
     },
     {
       "id": "B10",
       "kind": "blog",
       "question": "What are the usual reasons that data science projects do not deliver?",
-      "answer": "According to the blog post \"Why Data Science Fails,\" the usual reasons data science projects don't deliver include:\n\n1. **Starting with the tool, not the problem** \u2014 fitting a problem to a trendy tool (e.g., using an LLM just because it's hyped) instead of choosing the right tool for the problem.\n2. **Using fancy tools on simple problems** \u2014 e.g., throwing a neural network at something a simple regression would solve, wasting money.\n3. **Poor data quality** \u2014 \"garbage in, garbage out\"; bad or inaccessible data yields no value, or worse, misleading answers that look correct.\n4. **The solution goes unused** \u2014 end users aren't trained, company processes never adapt, or users don't even know the feature exists.\n5. **Company culture disincentivizes adoption** \u2014 bonus structures reward the old method, or users fear the new tool will make them redundant.\n6. **No end-to-end view** \u2014 treating the solution in isolation without the software development needed to put it into production.\n7. **Business problem and outcomes not thought through** \u2014 skipping proper problem definition and specification before building.\n\nMore broadly, the post notes the failures are \"frustratingly human\": executives trusting gut feelings over data, lack of a data-driven culture, and investing in analytics with no clear path to creating value.",
+      "answer": "According to the blog post \"Why Data Science Fails\" (insightsoftmax.com), the usual reasons data science projects don't deliver include:\n\n1. **Starting with the tool, not the problem** \u2014 fitting a problem to a trendy tool (e.g., using an LLM just because it's hyped) instead of choosing the right tool for the problem.\n2. **Using fancy tools on simple problems** \u2014 e.g., throwing a neural network at something a linear regression would solve, wasting money.\n3. **Poor data quality** \u2014 \"garbage in, garbage out\"; bad or inaccessible data yields misleading or wrong answers.\n4. **The solution goes unused** \u2014 end users aren't trained, processes never adapt, or users don't even know the feature exists.\n5. **Company culture disincentivizes use** \u2014 bonus structures reward the old method, or users fear the tool will make them redundant.\n6. **No end-to-end view** \u2014 ignoring the software engineering needed to put the solution into production for real users.\n7. **Business problem and outcomes not defined** \u2014 skipping proper problem definition and specification before building.\n\nMore broadly, the article attributes failures to human factors: executives trusting gut feelings over data, lack of a data-driven culture, and investing in analytics with no clear path to value.",
       "steps": [
         {
           "tool": "search_docs",
@@ -572,20 +592,22 @@
           "url": "https://insightsoftmax.com/blog/why-data-science-fails"
         }
       ],
-      "latency_s": 7.359470912721008,
+      "latency_s": 7.5085008279420435,
       "prompt_tokens": 2650,
-      "completion_tokens": 321,
+      "completion_tokens": 310,
       "first_tool": "search_docs",
       "hit": true,
       "tool_ok": null,
-      "claims_supported": 27,
-      "claims_total": 27
+      "claims_supported": 26,
+      "claims_total": 26,
+      "facts_stated": 0,
+      "facts_total": 0
     },
     {
       "id": "P1",
       "kind": "platform",
       "question": "Is any alert firing on the platform right now?",
-      "answer": "No \u2014 all alerts are currently inactive. None are firing:\n\n- ModelEndpointDown: inactive (value 1.0)\n- ModelQueueBuildingUp: inactive (0.0)\n- TimeToFirstTokenSlow: inactive (0.31s)\n- KvCacheNearlyFull: inactive (4% usage)\n- GatewayErrorRateHigh: inactive (0% errors)\n- GpuUnderusedUnderLoad: inactive (no value)",
+      "answer": "No \u2014 all alerts are currently inactive:\n\n- **ModelEndpointDown** \u2013 inactive (value 1.0, i.e., endpoints up)\n- **ModelQueueBuildingUp** \u2013 inactive (0 waiting requests)\n- **TimeToFirstTokenSlow** \u2013 inactive (p95 TTFT 0.31s)\n- **KvCacheNearlyFull** \u2013 inactive (4% usage)\n- **GatewayErrorRateHigh** \u2013 inactive (0% error rate)\n- **GpuUnderusedUnderLoad** \u2013 inactive (no value)",
       "steps": [
         {
           "tool": "platform_status",
@@ -633,20 +655,22 @@
         }
       ],
       "sources": [],
-      "latency_s": 3.741205396130681,
+      "latency_s": 4.046119248028845,
       "prompt_tokens": 1207,
-      "completion_tokens": 122,
+      "completion_tokens": 144,
       "first_tool": "platform_status",
       "hit": null,
       "tool_ok": true,
-      "claims_supported": 14,
-      "claims_total": 14
+      "claims_supported": 13,
+      "claims_total": 14,
+      "facts_stated": 1,
+      "facts_total": 1
     },
     {
       "id": "P2",
       "kind": "platform",
       "question": "Which alerts are firing at the moment?",
-      "answer": "Only one alert is currently **firing**:\n\n- **ModelQueueBuildingUp** \u2014 `sum(vllm:num_requests_waiting) > 4`, current value: **7** waiting requests.\n\nAlso worth noting: **TimeToFirstTokenSlow** is **pending** (p95 TTFT \u2248 17.6s vs. threshold of 5s) \u2014 it would fire if the condition persists. All other alerts are inactive.",
+      "answer": "Only one alert is currently **firing**:\n\n- **ModelQueueBuildingUp** \u2014 `sum(vllm:num_requests_waiting) > 4`, current value: **7** waiting requests.\n\nNote: **TimeToFirstTokenSlow** is *pending* (p95 TTFT at ~17.6s vs. the 5s threshold) \u2014 it would fire if it stays breached long enough. All other alerts (ModelEndpointDown, KvCacheNearlyFull, GatewayErrorRateHigh, GpuUnderusedUnderLoad) are inactive.",
       "steps": [
         {
           "tool": "platform_status",
@@ -694,20 +718,22 @@
         }
       ],
       "sources": [],
-      "latency_s": 3.4806893011555076,
+      "latency_s": 4.387062127236277,
       "prompt_tokens": 1248,
-      "completion_tokens": 119,
+      "completion_tokens": 141,
       "first_tool": "platform_status",
       "hit": null,
       "tool_ok": true,
-      "claims_supported": 8,
-      "claims_total": 8
+      "claims_supported": 11,
+      "claims_total": 12,
+      "facts_stated": 2,
+      "facts_total": 2
     },
     {
       "id": "P3",
       "kind": "platform",
       "question": "Are requests waiting for the model, and how many?",
-      "answer": "Yes \u2014 the ModelQueueBuildingUp alert is firing, with **7 requests waiting** for the model (threshold is >4).",
+      "answer": "Yes \u2014 the **ModelQueueBuildingUp** alert is firing, with **7 requests waiting** in the model queue (threshold is >4).",
       "steps": [
         {
           "tool": "platform_status",
@@ -755,20 +781,22 @@
         }
       ],
       "sources": [],
-      "latency_s": 2.2791605489328504,
+      "latency_s": 2.8195749348960817,
       "prompt_tokens": 1254,
-      "completion_tokens": 53,
+      "completion_tokens": 56,
       "first_tool": "platform_status",
       "hit": null,
       "tool_ok": true,
       "claims_supported": 3,
-      "claims_total": 3
+      "claims_total": 3,
+      "facts_stated": 1,
+      "facts_total": 1
     },
     {
       "id": "P4",
       "kind": "platform",
       "question": "Which team sends the most requests per second?",
-      "answer": "The **research** team sends the most requests per second, at 0.4 req/s (engineering: 0.1, operations: 0.0).",
+      "answer": "The **research** team sends the most requests per second (0.4 req/s), compared to engineering (0.1) and operations (0.0).",
       "steps": [
         {
           "tool": "platform_status",
@@ -795,20 +823,22 @@
         }
       ],
       "sources": [],
-      "latency_s": 2.1602815873920918,
+      "latency_s": 2.1510287071578205,
       "prompt_tokens": 970,
-      "completion_tokens": 61,
+      "completion_tokens": 60,
       "first_tool": "platform_status",
       "hit": null,
       "tool_ok": true,
       "claims_supported": 4,
-      "claims_total": 4
+      "claims_total": 4,
+      "facts_stated": 1,
+      "facts_total": 1
     },
     {
       "id": "P5",
       "kind": "platform",
       "question": "How many tokens per second is the research team using?",
-      "answer": "The research team is using about **108 tokens per second** (\u2248108.3).",
+      "answer": "The research team is using about **108 tokens per second** (\u2248108.3 tokens/s, at ~0.22 requests/s).",
       "steps": [
         {
           "tool": "platform_status",
@@ -830,20 +860,22 @@
         }
       ],
       "sources": [],
-      "latency_s": 1.9694728972390294,
+      "latency_s": 2.224666594993323,
       "prompt_tokens": 1008,
-      "completion_tokens": 49,
+      "completion_tokens": 60,
       "first_tool": "platform_status",
       "hit": null,
       "tool_ok": true,
-      "claims_supported": 1,
-      "claims_total": 1
+      "claims_supported": 3,
+      "claims_total": 3,
+      "facts_stated": 1,
+      "facts_total": 1
     },
     {
       "id": "P6",
       "kind": "platform",
       "question": "Is the KV cache of the model close to full?",
-      "answer": "No. The KV cache usage is about **59%** (0.59), well below the 90% threshold for the \"KV cache nearly full\" alert, which is currently inactive.",
+      "answer": "No. The KV cache usage is about **59%** (0.59), well below the 90% threshold that would trigger the \"KvCacheNearlyFull\" alert (currently inactive).",
       "steps": [
         {
           "tool": "platform_status",
@@ -891,30 +923,35 @@
         }
       ],
       "sources": [],
-      "latency_s": 2.6500276499427855,
+      "latency_s": 2.638275533914566,
       "prompt_tokens": 1254,
-      "completion_tokens": 68,
+      "completion_tokens": 69,
       "first_tool": "platform_status",
       "hit": null,
       "tool_ok": true,
       "claims_supported": 3,
-      "claims_total": 3
+      "claims_total": 3,
+      "facts_stated": 2,
+      "facts_total": 2
     }
   ],
   "summary": {
     "hit_at_3": 0.9,
     "tool_accuracy": 1.0,
-    "faithfulness": 0.9936708860759493,
+    "faithfulness": 0.9878048780487805,
     "hits": 9,
     "blog_total": 10,
     "tool_ok": 6,
     "platform_total": 6,
-    "claims_supported": 157,
-    "claims_total": 158,
-    "latency_p95_s": 8.75968889996875,
-    "prompt_tokens": 38057,
-    "completion_tokens": 2536,
-    "usd_per_1k_questions": 0.633657140036424
+    "claims_supported": 162,
+    "claims_total": 164,
+    "facts_stated": 8,
+    "facts_total": 8,
+    "rows_failed": 0,
+    "latency_p95_s": 10.286232332000509,
+    "prompt_tokens": 41961,
+    "completion_tokens": 2560,
+    "usd_per_1k_questions": 0.6720206009017098
   },
   "chunking": {
     "blog_total": 10,

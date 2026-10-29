@@ -27,8 +27,9 @@ On one NVIDIA GB10 with a large Qwen model served by vLLM (details and limits in
 3. `nvidia-smi` GPU utilization stayed at 88–91 % in every run, so it cannot show this difference.
 4. Team limits worked: a team limited to 2 parallel requests got 2 of 5,969 requests through.
 5. RAG agent evaluation (2026-10-29, `docs/measurements/eval.json`): the expected article in the top 3 for
-   9 of 10 blog questions, the right tool for 6 of 6 platform questions, 157 of 158 answer claims supported
-   by the retrieved text, answer latency p95 8.8 s, 0.63 USD per 1,000 questions.
+   9 of 10 blog questions, the right tool for 6 of 6 platform questions, 162 of 164 answer claims supported
+   by the retrieved text, 8 of 8 expected platform facts stated, answer latency p95 10.3 s, 0.67 USD per
+   1,000 questions.
 6. Drills (`docs/measurements/`): a deleted gateway pod was ready again after 18 s (17 s without answers);
    the queue alert fired after 69 s of overload and cleared 14 s after it.
 

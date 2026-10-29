@@ -301,3 +301,16 @@ None (the three earlier ones and the documents gap were decided on 2026-10-29: d
 9. Owner steps left: merge the portal branch into its master and push; on vpn-2 add `ISC2_DOMAIN` to
    `~/.isuzu-secrets/web.env` and run `remote-deploy.sh edge`; merge this work branch into `main` (spark-1 and
    vpn-2 clones can then return to `main`); check https://isc-2.178-208-78-85.sslip.io:9443/ from outside.
+
+### 2026-10-29 — Step 12 review
+
+1. External reviewer (model-run.sh --role reviewer): NOT READY, 0 critical, 12 important, 2 minor. Each finding
+   was checked in the code. 13 fixed with tests (commits 2a8eeef..f2fabc2): strict judge reply, row-level
+   errors, atomic save with a log line, expected facts scored by the judge (decision taken by threshold:
+   score them), sparklines, trailing outage in the drill, bounded polling, checked key delete, port-forward
+   kill, corpus script exit codes, tenant limits from values.yaml, signal expressions from the console
+   constants, values() split per page, builds swapped into place. Not changed: the 5-minute team window
+   (plan decision B.1.3; the site labels it).
+2. Tests after the fixes: console 67, site and scripts 38, all passing.
+3. Evaluation after redeploy (2026-10-29 16:30): hit@3 9 of 10, tools 6 of 6, 162 of 164 claims, 8 of 8
+   expected facts, 0 failed rows, p95 10.3 s, 0.67 USD per 1,000 questions.
