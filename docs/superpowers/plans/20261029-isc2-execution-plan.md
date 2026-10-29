@@ -1,7 +1,7 @@
 # isc-2 site and RAG agent — execution plan
 
-Status (2026-10-29): mockups approved by the owner (as is); this plan NOT yet approved (do-feature step 10).
-No task started. Replaces `20261029-rag-agent-plan.md` and `20261029-isc2-site-plan.md` (see git history).
+Status (2026-10-29): mockups approved by the owner (as is); plan approved by the owner (do-feature step 10,
+2026-10-29, in session). Next: Phase 0. Replaces `20261029-rag-agent-plan.md` and `20261029-isc2-site-plan.md` (see git history).
 
 Inputs:
 
@@ -26,6 +26,14 @@ Phase D); `helm lint chart/llm-platform`.
 5. The test count on page 6 and home widget 6 comes from a `pytest` run done by the build command; any failing
    test stops the build. [auto-selected]
 6. "Ask the agent" on page 4 always uses the team `research`; no team picker. [owner]
+7. isc-1 stays next to isc-2 (open documents, login only on console and Grafana). [owner]
+8. isc-1 moves to git delivery too (task F.0); `deploy/publish.sh` is deleted. [auto-selected]
+9. Merged GitHub branches deleted on 2026-10-29: `worktree-fix+branch-origin-host-match` (this repository,
+   was `934f2903`) and `feat/branch-isc1-site` (portal repository, was `ab285eb5`, contained in its
+   `master`). [owner, done]
+10. The documents the isc-2 pages link to (README, architecture, benchmark report, handover, 5 runbooks,
+    publishing) are built into isc-2 too (task E.3); the 14 non-ASCII signs in them (`×` 10, `→` 3, `÷` 1)
+    are replaced in the source files (task E.0). [owner]
 
 ## Rules for every task
 
@@ -149,6 +157,12 @@ D.6 Each script has a test of its pure part (summary arithmetic over a recorded 
 
 ## Phase E — site builder (`site/isc2/`)
 
+E.0 Documents: replace `×` with `x`, `→` with `->`, `÷` with `/` in `README.md`, `docs/benchmark-report.md`,
+    `docs/handover.md`, `deploy/README.md`, `docs/runbooks/05-release-upgrade-rollback.md`; en and em dashes
+    stay (typographic punctuation, allowed by rule 1 of the site design). `scripts/make_report.py` writes
+    the benchmark report (lines 27, 30, 58, 67-70): change its output strings the same way and regenerate.
+    The isc-1 landing page (`site/build.py` lines 84-86) keeps its signs: isc-1 is not under rule 1.
+    Commit `docs(...): ...`.
 E.1 `git mv docs/superpowers/mockups/isc2/*.html site/isc2/templates/`; `mock.css` -> `site/isc2/static/site.css`;
     `mock.js` -> `site/isc2/static/site.js`. Remove every "Mock note" element and the notes button; replace
     each placeholder `<span class="ph">...</span>` with `{{key}}`; repeated rows (KV table, Helm history,
@@ -163,8 +177,9 @@ E.2 Tests `site/test_isc2.py` (render with a fixture inputs dict; no pytest insi
        (no drift between the tracked pages and the inputs).
 E.3 Implement `site/isc2/build.py`: `gather()` runs `pytest -q` in `console` and `site` (stops on a failure),
     reads `docs/benchmark-results.json` and `docs/measurements/*.json`, the commit hash, and writes
-    `site/isc2/inputs.json`; `render(inputs)` fills the templates; `main()` = gather, render, write to
-    `deploy/origin/site-isc2/`. The footer shows the input commit and the date of the newest measurement,
+    `site/isc2/inputs.json`; `render(inputs)` fills the templates and turns the 10 linked documents into
+    pages with the isc-2 header (reuses `md_to_html` from `site/build.py`; the E.2 tests cover these pages
+    too); `main()` = gather, render, write to `deploy/origin/site-isc2/`. The footer shows the input commit and the date of the newest measurement,
     not the build time (keeps E.2.6 deterministic).
 E.4 Live JavaScript in `site.js`: `/console/api/stream` (strip of page 1, home widget 1), `/console/api/status`
     (views per page), `/console/api/agent/eval` and `POST /console/api/agent/ask` with `tenant: "research"`,
@@ -175,6 +190,10 @@ E.5 Build, open the pages locally against the console through an SSH tunnel to s
 
 ## Phase F — publish isc-2
 
+F.0 isc-1 to git delivery: `site/build.py` writes to `deploy/origin/site/` (tracked; remove it and `site/dist/`
+    from `.gitignore`); its footer shows the commit and the date of `docs/benchmark-results.json` instead of
+    the build time; test in `site/test_build.py` that the tracked pages equal a fresh build; delete
+    `deploy/publish.sh`. Commit `feat(site): ...` and the built pages.
 F.1 `deploy/origin/Caddyfile`: `@isc2 host {$ISC2_DOMAIN}` and `handle @isc2 { import /run/secrets/auth.caddy;
     root * /srv/isc2; file_server }` after the console and Grafana handles, before the fallback;
     `compose.yaml`: mount `./site-isc2` read-only at `/srv/isc2`, pass `ISC2_DOMAIN` (from the
@@ -217,13 +236,9 @@ Contract items without a task: none. Tasks without a contract or design item: no
 4. Written inline by the orchestrator, not by a mid-tier subagent (do-feature step 9): the whole context
    (code read in this session, six decisions) was already here.
 
-## Open questions (asked when the step comes)
+## Open questions
 
-1. isc-1 after isc-2 works: keep, or redirect to isc-2.
-2. isc-1 still reaches the web server by `tar` (`deploy/publish.sh`), against the owner rule of 2026-10-07;
-   move it to git delivery or leave it until isc-1's fate is decided.
-3. Delete the merged GitHub branches `worktree-fix+branch-origin-host-match` (this repository) and
-   `feat/branch-isc1-site` (portal repository).
+None (the three earlier ones and the documents gap were decided on 2026-10-29: decisions 7-10).
 
 ## Log
 
