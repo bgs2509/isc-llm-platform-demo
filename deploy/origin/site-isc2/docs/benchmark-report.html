@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>benchmark-report</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="../static/site.css">
+</head>
+<body>
+<header class="top"><div class="top-in">
+  <a class="brand" href="../index.html" target="_blank" rel="noopener">Private LLM platform</a>
+  <nav>
+    <a href="../inference.html" target="_blank" rel="noopener">1 Inference</a>
+    <a href="../infrastructure.html" target="_blank" rel="noopener">2 Infrastructure</a>
+    <a href="../gateway.html" target="_blank" rel="noopener">3 Gateway</a>
+    <a href="../rag.html" target="_blank" rel="noopener">4 RAG and agent</a>
+    <a href="../observability.html" target="_blank" rel="noopener">5 Observability</a>
+    <a href="../delivery.html" target="_blank" rel="noopener">6 Delivery</a>
+  </nav>
+</div></header>
+<main><section class="case doc"><h1>Benchmark report</h1>
+<p>Generated 2026-10-28 21:10:20 by <code>scripts/make_report.py</code> from <code>docs/benchmark-results.json</code>.</p>
+<h2>What was measured</h2>
+<p>One large model (a Qwen3.8 Flash Next build, served by vLLM on one NVIDIA GB10 GPU with unified memory)
+shared by several teams through the gateway. Each run lasts 30 seconds;
+every request is a streamed chat completion with a unique prompt of about
+60 words and a limit of 128 output tokens;
+the load generator keeps a fixed number of requests in flight ("concurrency"). Requests go through the
+gateway with a team key, so the numbers include the gateway.</p>
+<p>Measured per run: output tokens per second (completed tokens divided by run time), time to first token
+(p50 and p95), request latency (p95), GPU utilization from <code>nvidia-smi</code> (average over the run), and the cost
+per 1 million output tokens, computed as GPU price per hour / (tokens per second x 3600) x 1,000,000 with an
+assumed GPU price of <strong>0.20 USD per hour</strong> (a demo assumption, editable in the console).</p>
+<h2>Result 1: more parallel requests, much cheaper tokens</h2>
+<table>
+<thead>
+<tr>
+<th>Concurrency</th>
+<th>OK requests</th>
+<th>Refused</th>
+<th>Output tokens/s</th>
+<th>vs concurrency 1</th>
+<th>Tokens/s per request</th>
+<th>TTFT p50 / p95, s</th>
+<th>Latency p95, s</th>
+<th>GPU util avg, %</th>
+<th>USD per 1M tokens</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>9</td>
+<td>0</td>
+<td>35.0</td>
+<td>1.0x</td>
+<td>35.0</td>
+<td>0.36 / 0.36</td>
+<td>3.9</td>
+<td>89</td>
+<td>1.59</td>
+</tr>
+<tr>
+<td>2</td>
+<td>14</td>
+<td>0</td>
+<td>55.5</td>
+<td>1.6x</td>
+<td>27.8</td>
+<td>0.45 / 0.64</td>
+<td>5.1</td>
+<td>91</td>
+<td>1.00</td>
+</tr>
+<tr>
+<td>4</td>
+<td>23</td>
+<td>0</td>
+<td>86.2</td>
+<td>2.5x</td>
+<td>21.5</td>
+<td>0.52 / 0.77</td>
+<td>6.8</td>
+<td>88</td>
+<td>0.64</td>
+</tr>
+<tr>
+<td>8</td>
+<td>32</td>
+<td>0</td>
+<td>128.0</td>
+<td>3.7x</td>
+<td>16.0</td>
+<td>0.82 / 1.18</td>
+<td>9.0</td>
+<td>90</td>
+<td>0.43</td>
+</tr>
+<tr>
+<td>16</td>
+<td>49</td>
+<td>429x3</td>
+<td>180.7</td>
+<td>5.2x</td>
+<td>11.3</td>
+<td>1.14 / 2.82</td>
+<td>12.0</td>
+<td>90</td>
+<td>0.31</td>
+</tr>
+</tbody>
+</table>
+<ol>
+<li><strong>Throughput grows 5.2x</strong> when concurrency grows from 1 to 16
+   (35.0 -&gt; 180.7 output tokens/s). The server batches
+   parallel requests, so each extra request adds output at little extra cost.</li>
+<li><strong>Cost per million output tokens falls by 81 %</strong> (1.59 -&gt; 0.31 USD;
+   base: concurrency 1, price assumption above).</li>
+<li><strong>The price is latency.</strong> Time to first token p95 rises from 0.36 to 2.82 s
+   and each stream slows from 35.0 to 11.3 tokens/s.</li>
+<li><strong>GPU utilization does not show any of this.</strong> It stays between 88 and 91 %
+   in every run, because <code>nvidia-smi</code> reports the "percent of time over the past sample period during which one or more
+   kernels was executing on the GPU" (its own field description). One stream already keeps the GPU "busy";
+   tokens per second and cost per million tokens separate good use from poor use.</li>
+<li><strong>The ceiling is the server's slot count.</strong> The model server runs at most 16 requests at once (observed
+   setting <code>--max-num-seqs 16</code>). At concurrency 16 the queue starts to show in time to first token.</li>
+</ol>
+<h2>Result 2: what the gateway adds</h2>
+<table>
+<thead>
+<tr>
+<th>Scenario</th>
+<th>Requests sent</th>
+<th>OK</th>
+<th>Refused (429)</th>
+<th>Cache hits</th>
+<th>TTFT p95, s</th>
+<th>Output tokens/s</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Repeated prompts, team <em>research</em> (600 requests per minute limit), concurrency 8</td>
+<td>2844</td>
+<td>1148</td>
+<td>1696</td>
+<td>1133</td>
+<td>0.04</td>
+<td>4210.9</td>
+</tr>
+<tr>
+<td>Unique prompts, team <em>operations</em> (2 parallel, 30 requests per minute), concurrency 8</td>
+<td>5969</td>
+<td>2</td>
+<td>5967</td>
+<td>0</td>
+<td>0.72</td>
+<td>12.8</td>
+</tr>
+</tbody>
+</table>
+<ol>
+<li><strong>Response cache.</strong> With 8 distinct prompts repeated, 1133 of 1148 OK answers came from the gateway
+   cache with time to first token p95 of 0.04 s, and the model did no work for them. The
+   tokens-per-second figure of that run counts cached tokens, so it is not GPU throughput.
+   The team's per-minute limit then refused 1696 requests; the gateway's counting window was not investigated.</li>
+<li><strong>Team limits protect the model.</strong> The <em>operations</em> team, limited to 2 parallel requests and 30 per minute,
+   had 2 of 5969 requests served; the rest were refused immediately, so one team cannot take
+   all model slots from the others.</li>
+<li><strong>A limit equal to the load refuses a few requests.</strong> In the concurrency-16 run, 3 of
+   52 requests were refused with 429 because the <em>research</em> team's parallel limit is 16,
+   the same as the load. Set team limits with some headroom above the planned concurrency.</li>
+</ol>
+<h2>Sizing hints</h2>
+<ol>
+<li>For interactive use with p95 time to first token under 1 second, plan for about <strong>4 parallel requests</strong>
+   (0.77 s at concurrency 4; 1.18 s at 8).</li>
+<li>At concurrency 8 the model completed 1.00 answers of up to
+   128 tokens per second, about 3600 answers per hour.</li>
+<li>A batch workload with no latency target should run near the slot ceiling (16): the cheapest tokens.</li>
+</ol>
+<h2>Limits of these numbers</h2>
+<ol>
+<li>One 30-second run per setting; the spread between repeated runs was not measured.</li>
+<li>Every answer reached the 128-token limit, so the numbers describe long answers;
+   short answers shift the balance toward time to first token.</li>
+<li>The GPU is shared with other work on the host; GPU utilization is a whole-GPU reading.</li>
+<li>The GPU price is an assumption; the cost figures scale linearly with it.</li>
+<li>The response-cache run measures the gateway, not the model.</li>
+</ol>
+<h2>Reproduce</h2>
+<p><code>scripts/benchmark.py</code> runs the sweep through the console API (the same API the web page uses) and writes
+<code>docs/benchmark-results.json</code>; <code>scripts/make_report.py</code> rebuilds this report.</p></section></main>
+</body>
+</html>

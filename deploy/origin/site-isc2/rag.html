@@ -1,0 +1,216 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>RAG Agent and Evaluation</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="static/site.css">
+</head>
+<body>
+<header class="top"><div class="top-in">
+  <a class="brand" href="index.html" target="_blank" rel="noopener">Private LLM platform</a>
+  <nav>
+    <a href="inference.html" target="_blank" rel="noopener">1 Inference</a>
+    <a href="infrastructure.html" target="_blank" rel="noopener">2 Infrastructure</a>
+    <a href="gateway.html" target="_blank" rel="noopener">3 Gateway</a>
+    <a href="rag.html" target="_blank" rel="noopener" aria-current="page">4 RAG and agent</a>
+    <a href="observability.html" target="_blank" rel="noopener">5 Observability</a>
+    <a href="delivery.html" target="_blank" rel="noopener">6 Delivery</a>
+  </nav>
+</div></header>
+
+<main>
+  <section>
+    <p class="eyebrow">Requirement 4 of 6</p>
+    <h1>RAG, an agent with tools, an evaluation set and an API</h1>
+    <div class="kw"><span>RAG</span><span>BM25</span><span>chunking</span><span>tool calling</span><span>agent</span><span>evaluation set</span><span>API</span></div>
+  </section>
+
+  <section class="case">
+    <h2><small>Ask the agent</small></h2>
+    <form id="ask-form" class="ask">
+      <input id="ask-input" type="text" maxlength="500" value="Which alerts are firing right now, and what does the runbook say?" aria-label="Question">
+      <button class="btn" type="submit">Ask as research</button>
+    </form>
+    <div id="ask-out" class="panel" aria-live="polite" hidden>
+      <p class="src">Question: <span id="ask-q"></span></p>
+      <div class="steps" id="ask-steps"></div>
+    </div>
+  </section>
+
+  <section class="case">
+    <h2><small>Challenge</small></h2>
+    <ul>
+      <li>Answer questions about the client firm's public blog with the source article</li>
+      <li>Answer questions about the running platform from live data, not from the model's memory</li>
+      <li>Prove the quality with numbers, re-run after every change</li>
+    </ul>
+  </section>
+
+  <section class="case">
+    <h2><small>Solution</small></h2>
+    <ul>
+      <li>Corpus: 36 blog articles, chunked by text kind (whole case study, by section, or paragraph windows)</li>
+      <li>Retrieval: BM25, standard library only; every chunk starts with its title and URL</li>
+      <li>Agent: the model picks tools through OpenAI <code>tools</code>; at most 3 rounds; temperature 0</li>
+      <li>Tools: <code>search_docs(query)</code>, <code>platform_status(view)</code> (alerts or teams from Prometheus; the model never writes PromQL)</li>
+      <li>Calls go through the gateway with a team key: agent tokens and spend are accounted like any team's</li>
+    </ul>
+  </section>
+
+  <section class="case" id="eval">
+    <h2><small>Results</small> evaluation set, 16 questions</h2>
+    <div class="tiles">
+      <div class="tile"><span class="lbl">hit@3</span><b><span data-live="eval-hit">9</span> of 10</b><span class="sub">blog questions with the expected article in the top 3</span></div>
+      <div class="tile"><span class="lbl">tool accuracy</span><b><span data-live="eval-tool">6</span> of 6</b><span class="sub">platform questions where the first tool was right</span></div>
+      <div class="tile"><span class="lbl">faithfulness</span><b><span data-live="eval-claims-ok">157</span> of <span data-live="eval-claims-total">158</span></b><span class="sub">answer claims supported by retrieved text</span></div>
+      <div class="tile"><span class="lbl">latency p95</span><b><span data-live="eval-p95">8.8 s</span></b><span class="sub">per answer, over 16 questions</span></div>
+      <div class="tile"><span class="lbl">cost</span><b><span data-live="eval-usd">0.63 USD</span></b><span class="sub">per 1,000 questions at 0.20 USD per GPU hour</span></div>
+    </div>
+    <p class="src"><span class="pill saved" data-pill>saved run</span> /console/api/agent/eval &middot; run <span data-live="eval-date">2026-10-29 12:32 UTC</span> &middot; judge: the same model &middot; <span data-live="eval-note"></span></p>
+
+    <div class="panel">
+      <div class="tbl" id="eval-rows">
+        <details class="row"><summary><span class="q">B1 &middot; How did the team help a mid-sized quantitative trading firm keep its cloud HPC spending under control?</span><span class="pill live">hit</span><span>5.9 s</span></summary><div><span>First tool: <code>search_docs</code></span><span>Sources cited: <a href="https://insightsoftmax.com/blog/case-study-cloud-hpc-cost-optimization-tools-for-a-mid-sized-quantitative-trading-firm" target="_blank" rel="noopener">Case Study: Cloud HPC cost optimization tools for a mid-sized quantitative trading firm</a>, <a href="https://insightsoftmax.com/blog/case-study-data-infrastructure-modernization-for-a-discretionary-hedge-fund" target="_blank" rel="noopener">Case study: Data infrastructure modernization for a discretionary hedge fund</a>, <a href="https://insightsoftmax.com/blog/scaling-science-with-last-mile-hpc-helping-our-aerospace-customer-15x-the-capacity-of-their-hpc-clusters" target="_blank" rel="noopener">Scaling science with Last-Mile HPC: Helping our aerospace customer 15x the capacity of their HPC clusters</a></span><span>Claims supported: 12 of 12</span><span>Answer: The team built cost-control tooling around the firm&#x27;s AWS HPC environment:
+
+- **Slurm tooling integrated with AWS ParallelCluster** to estimate compute costs before a job is approved for execution.
+- **A self-service tool integrated with AWS&#x27;s Cost API** so in-house users could calculate compute estimates in real time.
+- **An optional secondary approval feature** for additional cost oversight.
+
+As a result, researchers can estimate job costs with real-time AWS data and stay within budgets, avoiding over-budget jobs and saving money. Outsourcing the engineering also reduced load on the internal team, and reliable cost controls gave the firm confidence to move forward with cloud adoption after migrating from on-premise HPC.</span></div></details>
+        <details class="row"><summary><span class="q">B2 &middot; What kind of machine learning architecture was proposed for modeling ocean chemistry and biology at several scales?</span><span class="pill live">hit</span><span>4.8 s</span></summary><div><span>First tool: <code>search_docs</code></span><span>Sources cited: <a href="https://insightsoftmax.com/blog/case-study-designing-a-multi-scale-machine-learning-architecture-for-ocean-biogeochemistry-modeling" target="_blank" rel="noopener">Case Study: Designing a multi-scale ML architecture for ocean biogeochemistry modeling</a>, <a href="https://insightsoftmax.com/blog/case-study-machine-learning-architecture-validation-for-fleet-safety-risk-prediction-platform" target="_blank" rel="noopener">Case Study: ML architecture validation for fleet safety risk prediction platform</a>, <a href="https://insightsoftmax.com/blog/case-study-digital-transformation-for-data-driven-manufacturing" target="_blank" rel="noopener">Case Study: Digital transformation for data-driven manufacturing</a></span><span>Claims supported: 9 of 9</span><span>Answer: A **multi-scale machine learning architecture** for ocean biogeochemistry modeling. It connected coarse-grained ocean biogeochemical models with fine-grained microbial metabolic models via two novel prediction pipelines:
+
+1. **Multi-output regression** from dissolved organic carbon (DOC) composition to individual metabolite concentrations.
+2. **Cross-modal prediction** linking phytoplankton community composition to bacterial transporter expression profiles.
+
+This was supported by custom data integration pipelines unifying six heterogeneous data sources (40 years of oceanographic time series, field metabolomics, omics data, and lab experiments) into depth-binned, cast-aggregated feature vectors.</span></div></details>
+        <details class="row"><summary><span class="q">B3 &middot; What data engineering work went into smart charging for electric vehicles at a German carmaker?</span><span class="pill live">hit</span><span>5.9 s</span></summary><div><span>First tool: <code>search_docs</code></span><span>Sources cited: <a href="https://insightsoftmax.com/blog/case-study-how-we-helped-bmw-build-smart-ev-charging-infrastructure-through-advanced-data-engineering" target="_blank" rel="noopener">Case Study: How we helped BMW build smart EV charging infrastructure through advanced data engineering</a>, <a href="https://insightsoftmax.com/blog/what-do-pythons-and-pandas-have-to-do-with-data" target="_blank" rel="noopener">What do Pythons and Pandas Have to Do With Data?</a>, <a href="https://insightsoftmax.com/blog/case-study-supporting-a-major-automaker-in-an-electric-truck-grant-application-through-air-pollution-data-analysis" target="_blank" rel="noopener">Case Study: Supporting a major automaker in an electric truck grant application with air pollution data analysis</a></span><span>Claims supported: 13 of 14</span><span>Answer: For BMW (the German carmaker), the data engineering work included:
+
+- **Scalable data pipelines** built with Apache Airflow to process millions of daily data points from multiple automaker fleets
+- **Monte Carlo simulation models** to determine optimal EV charging station locations for PG&amp;E&#x27;s infrastructure planning
+- **Algorithms integrating vehicle telemetry and grid data** to optimize charging windows around renewable energy availability
+- **Privacy-aware data architecture** enabling competing automakers to collaborate and share data without exposing proprietary information
+- **Stakeholder visualization tools** to communicate technical results to utility executives and regulators
+
+Results included over 1 million miles powered by 100% renewable energy and 32% additional greenhouse gas emission reductions, plus a pipeline scalable for future automaker partnerships.</span></div></details>
+        <details class="row"><summary><span class="q">B4 &middot; Which quantum computing methods were tried to reduce costs and get answers faster?</span><span class="pill live">hit</span><span>5.8 s</span></summary><div><span>First tool: <code>search_docs</code></span><span>Sources cited: <a href="https://insightsoftmax.com/blog/case-study-using-quantum-annealing-and-gate-model-algorithms-to-cut-costs-and-accelerate-time-to-insight" target="_blank" rel="noopener">Case Study: Using quantum annealing and gate-model algorithms to cut costs and accelerate time-to-insight</a>, <a href="https://insightsoftmax.com/blog/conquering-the-noise-how-we-overcame-variability-in-large-scale-runs-of-brakets-ionq-service" target="_blank" rel="noopener">Conquering the Noise: How We Overcame Variability in Large-Scale Runs of Braket&#8217;s IonQ Service</a>, <a href="https://insightsoftmax.com/blog/how-space-physics-can-help-solve-earth-bound-data-science-challenges" target="_blank" rel="noopener">How Space Physics Can Help Solve Earth-Bound Data Science Challenges</a></span><span>Claims supported: 11 of 11</span><span>Answer: Based on the blog, the quantum computing methods tried to reduce costs and accelerate time-to-insight were:
+
+- **Quantum annealing** and **gate-model algorithms** &#8212; used to explore combinatorial design spaces and identify promising candidate structures.
+- **Quantum pre-filtering** &#8212; a quantum filtering stage deployed on AWS Braket (running on vendors like IonQ and D-Wave) that filtered candidates before traditional CFD simulation, cutting down unnecessary, expensive simulations.
+- **Hybrid quantum-classical workflow** &#8212; integrating quantum pre-filtering with traditional CFD simulation pipelines, supported by scalable HPC infrastructure (AWS ParallelCluster, EFA-enabled compute).
+
+This approach let the customer evaluate more innovative designs while staying within computational budget constraints.</span></div></details>
+        <details class="row"><summary><span class="q">B5 &middot; By how much did personalized recommendations raise the revenue of a large online marketplace?</span><span class="pill live">hit</span><span>3.1 s</span></summary><div><span>First tool: <code>search_docs</code></span><span>Sources cited: <a href="https://insightsoftmax.com/blog/how-isc-helped-a-large-online-marketplace-increase-revenue-51-percent-through-personalization" target="_blank" rel="noopener">How ISC Helped a Large Online Marketplace Increase Revenue by 51% Through Personalization</a></span><span>Claims supported: 4 of 4</span><span>Answer: Personalized recommendations raised the large online marketplace&#x27;s (Creative Market&#x27;s) revenue by **51%**, alongside a 65% increase in clicks and a 39% higher purchase rate.</span></div></details>
+        <details class="row"><summary><span class="q">B6 &middot; How was run-to-run variability handled when running large jobs on IonQ quantum hardware through Braket?</span><span class="pill live">hit</span><span>8.6 s</span></summary><div><span>First tool: <code>search_docs</code></span><span>Sources cited: <a href="https://insightsoftmax.com/blog/conquering-the-noise-how-we-overcame-variability-in-large-scale-runs-of-brakets-ionq-service" target="_blank" rel="noopener">Conquering the Noise: How We Overcame Variability in Large-Scale Runs of Braket&#8217;s IonQ Service</a></span><span>Claims supported: 19 of 19</span><span>Answer: They handled it with a &quot;litmus test&quot; for noise-profile consistency:
+
+- **The problem:** Large circuit batches (&gt;40&#8211;50 circuits) on Braket&#x27;s IonQ service get split into separate &quot;execution windows&quot; throughout the day, with no control over ordering. Results were consistent within a batch but inconsistent across batches, since the noise profile shifts drastically between windows and drifts over time.
+- **The test:** They built a 2-qubit circuit of six alternating CNOT gates and decomposed it into 24 subcircuits (4 inputs &#215; 1&#8211;6 CNOTs). If the batch shares a consistent noise profile, the data should look a certain way; outliers reveal inconsistency.
+- **The decision rule:** After execution, they estimate the average error probability per CNOT gate across all 24 circuits and compute the variance of errors. If variance exceeds a tolerance, the noise profile is deemed untrustworthy and the payload batch execution is terminated early &#8212; saving the client money.
+- **Next steps:** Incorporate the litmus test into routine execution, sprinkle random circuits from the 24-circuit batch into payload batches to verify consistency, and use the tests to compare batches and adjust for drift.</span></div></details>
+        <details class="row"><summary><span class="q">B7 &middot; How can someone put a dollar figure on the value an open source project creates?</span><span class="pill live">hit</span><span>9.4 s</span></summary><div><span>First tool: <code>search_docs</code></span><span>Sources cited: <a href="https://insightsoftmax.com/blog/measuring-the-value-of-open-source-part-two-actually-having-the-conversation" target="_blank" rel="noopener">Measuring the value of open source, part two: actually having the conversation</a>, <a href="https://insightsoftmax.com/blog/measuring-the-value-of-open-source-part-one-coming-up-with-some-numbers" target="_blank" rel="noopener">Measuring the Value of Open Source, Part One: Coming Up With Some Numbers</a></span><span>Claims supported: 16 of 16</span><span>Answer: Based on the blog posts, here&#x27;s how to put a dollar figure on the value an open source project creates:
+
+**Core approach: work backwards from project revenue**
+- Dig in with product teams to find out how much time/money the open source effort saved or generated, then attribute a percentage of that project&#x27;s value back to the open source work.
+- Example from the blog: a $100M project with 10% attribution = $10M in value generated.
+
+**Practical process (from the OSPO case study):**
+1. Interview 12+ project leaders who received open source team support over the past year.
+2. Calculate dollar-value attribution through estimation and validation (projects ranged from $50K to $100M).
+3. Peg the open source team&#x27;s contribution at 2&#8211;25% of project success.
+4. Round down to stay conservative (e.g., cutting an estimate by two-thirds).
+5. Validate the dollar values with the Finance department for credibility.
+
+**Key principles:**
+- Be conservative &#8212; the goal isn&#x27;t an exact number but demonstrating a non-zero (and likely much larger) contribution.
+- Expect this to take real time: one OSPO department head&#x27;s effort required 10&#8211;12 managers and 2&#8211;3 months of conversations.
+- Financial figures are often deliberately obscured, so you&#x27;ll need allies to get useful numbers.
+- Even rough methodologies build executive buy-in and help reposition open source as a value generator rather than a cost center.</span></div></details>
+        <details class="row"><summary><span class="q">B8 &middot; How much faster did the simulations of a nuclear fusion startup become, and what did that save?</span><span class="pill live">hit</span><span>3.6 s</span></summary><div><span>First tool: <code>search_docs</code></span><span>Sources cited: <a href="https://insightsoftmax.com/blog/case-study-how-we-helped-a-nuclear-fusion-startup-speed-up-their-simulations-by-2.5x-and-save-$MMs-in-compute-costs" target="_blank" rel="noopener">Case study: How we helped a nuclear fusion startup speed up their simulations by 2.5x and save $MMs in compute costs</a>, <a href="https://insightsoftmax.com/blog/measuring-the-value-of-open-source-part-two-actually-having-the-conversation" target="_blank" rel="noopener">Measuring the value of open source, part two: actually having the conversation</a></span><span>Claims supported: 7 of 7</span><span>Answer: The nuclear fusion startup&#x27;s simulations became about **2.5x faster** after switching from c5.18xlarge to hpc6a.48xlarge instances (with optimized compilation and two nodes at 96 tasks per node). This, combined with the ~5% cheaper instance pricing, was estimated to save **several million dollars in compute costs** over their planned 3&#8211;4 years of simulations.</span></div></details>
+        <details class="row"><summary><span class="q">B9 &middot; Which port did the team visit for the California port data interoperability grant program?</span><span class="pill firing">miss</span><span>7.2 s</span></summary><div><span>First tool: <code>search_docs</code></span><span>Sources cited: <a href="https://insightsoftmax.com/blog/introducing-the-california-port-data-interoperability-grant-program" target="_blank" rel="noopener">Introducing the California Port Data Interoperability Grant Program</a>, <a href="https://insightsoftmax.com/blog/another-big-milestone-in-the-port-data-interoperability-grant-program-the-official-release-of-27m-in-funds" target="_blank" rel="noopener">Another Big Milestone in the Port Data Interoperability Grant Program: the Official Release of $27M in Funds</a>, <a href="https://insightsoftmax.com/blog/ca-port-data-interoperability-grant-program-the-proposal-window-is-open" target="_blank" rel="noopener">CA Port Data Interoperability Grant Program: The Proposal Window is Open, With a First-of-its-kind Review Process</a>, <a href="https://insightsoftmax.com/blog/ca-port-data-interoperability-grant-program-isc-visits-the-port-of-oakland" target="_blank" rel="noopener">CA Port Data Interoperability Grant Program: ISC Visits the Port of Oakland</a>, <a href="https://insightsoftmax.com/blog/how-isc-helped-a-large-online-marketplace-increase-revenue-51-percent-through-personalization" target="_blank" rel="noopener">How ISC Helped a Large Online Marketplace Increase Revenue by 51% Through Personalization</a>, <a href="https://insightsoftmax.com/blog/ca-port-data-interoperability-grant-program-a-successful-roundtable-discussion-in-january" target="_blank" rel="noopener">CA Port Data Interoperability Grant Program: A Successful Roundtable Discussion in January</a></span><span>Claims supported: 6 of 6</span><span>Answer: The team visited the **Port of Oakland** &#8212; ISC&#x27;s Mike Mansour and Morasha Ahrns, joined by DataCRT&#x27;s Noah Bruegmann, toured the port&#x27;s security ops center and the Evergreen terminal.</span></div></details>
+        <details class="row"><summary><span class="q">B10 &middot; What are the usual reasons that data science projects do not deliver?</span><span class="pill live">hit</span><span>7.4 s</span></summary><div><span>First tool: <code>search_docs</code></span><span>Sources cited: <a href="https://insightsoftmax.com/blog/why-data-science-fails" target="_blank" rel="noopener">Why Data Science Fails</a></span><span>Claims supported: 27 of 27</span><span>Answer: According to the blog post &quot;Why Data Science Fails,&quot; the usual reasons data science projects don&#x27;t deliver include:
+
+1. **Starting with the tool, not the problem** &#8212; fitting a problem to a trendy tool (e.g., using an LLM just because it&#x27;s hyped) instead of choosing the right tool for the problem.
+2. **Using fancy tools on simple problems** &#8212; e.g., throwing a neural network at something a simple regression would solve, wasting money.
+3. **Poor data quality** &#8212; &quot;garbage in, garbage out&quot;; bad or inaccessible data yields no value, or worse, misleading answers that look correct.
+4. **The solution goes unused** &#8212; end users aren&#x27;t trained, company processes never adapt, or users don&#x27;t even know the feature exists.
+5. **Company culture disincentivizes adoption** &#8212; bonus structures reward the old method, or users fear the new tool will make them redundant.
+6. **No end-to-end view** &#8212; treating the solution in isolation without the software development needed to put it into production.
+7. **Business problem and outcomes not thought through** &#8212; skipping proper problem definition and specification before building.
+
+More broadly, the post notes the failures are &quot;frustratingly human&quot;: executives trusting gut feelings over data, lack of a data-driven culture, and investing in analytics with no clear path to creating value.</span></div></details>
+        <details class="row"><summary><span class="q">P1 &middot; Is any alert firing on the platform right now?</span><span class="pill live">tool ok</span><span>3.7 s</span></summary><div><span>First tool: <code>platform_status</code></span><span>Sources cited: none</span><span>Claims supported: 14 of 14</span><span>Answer: No &#8212; all alerts are currently inactive. None are firing:
+
+- ModelEndpointDown: inactive (value 1.0)
+- ModelQueueBuildingUp: inactive (0.0)
+- TimeToFirstTokenSlow: inactive (0.31s)
+- KvCacheNearlyFull: inactive (4% usage)
+- GatewayErrorRateHigh: inactive (0% errors)
+- GpuUnderusedUnderLoad: inactive (no value)</span></div></details>
+        <details class="row"><summary><span class="q">P2 &middot; Which alerts are firing at the moment?</span><span class="pill live">tool ok</span><span>3.5 s</span></summary><div><span>First tool: <code>platform_status</code></span><span>Sources cited: none</span><span>Claims supported: 8 of 8</span><span>Answer: Only one alert is currently **firing**:
+
+- **ModelQueueBuildingUp** &#8212; `sum(vllm:num_requests_waiting) &gt; 4`, current value: **7** waiting requests.
+
+Also worth noting: **TimeToFirstTokenSlow** is **pending** (p95 TTFT &#8776; 17.6s vs. threshold of 5s) &#8212; it would fire if the condition persists. All other alerts are inactive.</span></div></details>
+        <details class="row"><summary><span class="q">P3 &middot; Are requests waiting for the model, and how many?</span><span class="pill live">tool ok</span><span>2.3 s</span></summary><div><span>First tool: <code>platform_status</code></span><span>Sources cited: none</span><span>Claims supported: 3 of 3</span><span>Answer: Yes &#8212; the ModelQueueBuildingUp alert is firing, with **7 requests waiting** for the model (threshold is &gt;4).</span></div></details>
+        <details class="row"><summary><span class="q">P4 &middot; Which team sends the most requests per second?</span><span class="pill live">tool ok</span><span>2.2 s</span></summary><div><span>First tool: <code>platform_status</code></span><span>Sources cited: none</span><span>Claims supported: 4 of 4</span><span>Answer: The **research** team sends the most requests per second, at 0.4 req/s (engineering: 0.1, operations: 0.0).</span></div></details>
+        <details class="row"><summary><span class="q">P5 &middot; How many tokens per second is the research team using?</span><span class="pill live">tool ok</span><span>2.0 s</span></summary><div><span>First tool: <code>platform_status</code></span><span>Sources cited: none</span><span>Claims supported: 1 of 1</span><span>Answer: The research team is using about **108 tokens per second** (&#8776;108.3).</span></div></details>
+        <details class="row"><summary><span class="q">P6 &middot; Is the KV cache of the model close to full?</span><span class="pill live">tool ok</span><span>2.7 s</span></summary><div><span>First tool: <code>platform_status</code></span><span>Sources cited: none</span><span>Claims supported: 3 of 3</span><span>Answer: No. The KV cache usage is about **59%** (0.59), well below the 90% threshold for the &quot;KV cache nearly full&quot; alert, which is currently inactive.</span></div></details>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h3>Decision backed by the evaluation set: chunking</h3>
+      <div class="tbl"><table>
+        <tr><th>chunker</th><th class="num">chunks</th><th class="num">hit@3 on 10 blog questions</th></tr>
+        <tr><td>by text kind (chosen)</td><td class="num"><span data-live="eval-ch-kind-chunks">73</span></td><td class="num"><span data-live="eval-ch-kind-hits">9 of 10</span> of 10</td></tr>
+        <tr><td>fixed windows, about 250 words</td><td class="num"><span data-live="eval-ch-fixed-chunks">94</span></td><td class="num"><span data-live="eval-ch-fixed-hits">9 of 10</span> of 10</td></tr>
+      </table></div>
+      <p class="src"><span class="pill saved">saved run</span> search only, no model calls</p>
+    </div>
+  </section>
+
+  <section class="case">
+    <h2><small>API</small></h2>
+    <pre><code>curl -u reviewer:*** -X POST https://&lt;site&gt;/console/api/agent/ask \
+  -H 'Content-Type: application/json' \
+  -d '{"tenant": "research", "question": "Which alerts are firing?"}'</code></pre>
+    <pre><code>{
+  "answer": "...",
+  "steps": [{"tool": "platform_status", "args": {"view": "alerts"}, "result": [...]}],
+  "sources": [{"title": "...", "url": "https://..."}],
+  "prompt_tokens": 0, "completion_tokens": 0, "latency_s": 0.0, "rounds": 1
+}</code></pre>
+  </section>
+
+  <section class="case">
+    <h2><small>Trade-offs</small></h2>
+    <ul>
+      <li>BM25 instead of embeddings: no new service and no second model in GPU memory; no synonyms</li>
+      <li>The judge is the model under test; questions written by us from the corpus</li>
+      <li>16 questions: enough to catch a regression, too few for a confidence interval</li>
+    </ul>
+  </section>
+
+  <section class="case">
+    <h2><small>What I'd change at scale</small></h2>
+    <ul>
+      <li>Dense retrieval through an embedding model behind the same gateway (vLLM pooling runner)</li>
+      <li>A judge from a different model family; questions from real user logs</li>
+      <li>Evaluation in CI: block a release when hit@3 or faithfulness drops</li>
+    </ul>
+  </section>
+
+  <section class="case">
+    <h2><small>Links</small></h2>
+    <ul>
+      <li><a href="docs/architecture.html" target="_blank" rel="noopener">RAG agent design and contracts</a></li>
+      <li><a href="rag.html#eval" target="_blank" rel="noopener">The 16 evaluation questions</a></li>
+      <li><a href="grafana/" target="_blank" rel="noopener">Grafana: RAG agent row</a></li>
+      <li><a href="https://insightsoftmax.com/blog" target="_blank" rel="noopener">Source blog</a></li>
+    </ul>
+  </section>
+</main>
+<script src="static/site.js"></script>
+</body>
+</html>

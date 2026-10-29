@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>README</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="static/site.css">
+</head>
+<body>
+<header class="top"><div class="top-in">
+  <a class="brand" href="index.html" target="_blank" rel="noopener">Private LLM platform</a>
+  <nav>
+    <a href="inference.html" target="_blank" rel="noopener">1 Inference</a>
+    <a href="infrastructure.html" target="_blank" rel="noopener">2 Infrastructure</a>
+    <a href="gateway.html" target="_blank" rel="noopener">3 Gateway</a>
+    <a href="rag.html" target="_blank" rel="noopener">4 RAG and agent</a>
+    <a href="observability.html" target="_blank" rel="noopener">5 Observability</a>
+    <a href="delivery.html" target="_blank" rel="noopener">6 Delivery</a>
+  </nav>
+</div></header>
+<main><section class="case doc"><h1>isc-llm-platform-demo</h1>
+<p>A small private LLM platform: <strong>one gateway in front of one large model, with per-team keys and limits,
+dashboards, alerts and a web console that proves the numbers.</strong> It runs on a single GPU machine and is
+packaged as a Helm chart for a local <code>kind</code> Kubernetes cluster.</p>
+<h2>What you get</h2>
+<ol>
+<li><strong>Team gateway</strong> (LiteLLM): one key per team, parallel and per-minute limits, spend budgets, response
+   cache, token and cost accounting.</li>
+<li><strong>Observability</strong>: Prometheus (model server, GPU, gateway), 6 alert rules, a 12-panel Grafana dashboard.</li>
+<li><strong>Console</strong>: start a load test as any team, watch tokens per second, time to first token, GPU use, KV cache
+   and queue update every second, save runs, compare "before" and "after".</li>
+<li><strong>Runbooks and handover</strong> for operating it, and a <strong>benchmark report</strong> with measured numbers.</li>
+</ol>
+<h2>Measured results</h2>
+<p>On one NVIDIA GB10 with a large Qwen model served by vLLM (details and limits in
+<a target="_blank" rel="noopener" href="docs/benchmark-report.html">docs/benchmark-report.md</a>):</p>
+<ol>
+<li>Output throughput grew <strong>5.2x</strong> when parallel requests grew from 1 to 16 (35.0 -&gt; 180.7 tokens/s).</li>
+<li>Cost per million output tokens fell <strong>81 %</strong> at the same time (base: 1 request; assumed GPU price 0.20 USD/hour).</li>
+<li><code>nvidia-smi</code> GPU utilization stayed at 88&#8211;91 % in every run, so it cannot show this difference.</li>
+<li>Team limits worked: a team limited to 2 parallel requests got 2 of 5,969 requests through.</li>
+</ol>
+<h2>How it fits together</h2>
+<p>See <a target="_blank" rel="noopener" href="docs/architecture.html">docs/architecture.md</a>. The model server (vLLM) runs as a plain container on the
+GPU host; everything else runs in the cluster. Two small host helpers in <code>tools/</code> connect them.</p>
+<h2>Run it</h2>
+<p>Prerequisites: Docker, a GPU host with an OpenAI-compatible vLLM server, <code>kind</code>, <code>kubectl</code>, <code>helm</code>.</p>
+<pre><code class="language-bash">kind create cluster --config cluster/kind-cluster.yaml
+python3 tools/model_forward.py 172.23.0.1 18310 127.0.0.1 18300 &amp;   # relay to the model server
+python3 tools/gpu_exporter.py 172.23.0.1 18311 &amp;                    # GPU readings for Prometheus
+scripts/install.sh                                                  # build, load images, helm install
+</code></pre>
+<p>Then open the console at <code>http://127.0.0.1:18500</code> and Grafana at <code>http://127.0.0.1:18501/grafana/</code>
+(use an SSH tunnel from another computer). Edit <code>chart/llm-platform/values.yaml</code> for the model name, the host
+address of your cluster network, team limits and prices.</p>
+<h2>Publish</h2>
+<p><code>site/build.py</code> builds a static site from this README, <code>docs/</code> and the benchmark results; <code>deploy/</code> has the
+reverse-proxy block, the tunnel unit and a publish script (see <a target="_blank" rel="noopener" href="deploy/README.html">deploy/README.md</a>).</p>
+<h2>Tests</h2>
+<pre><code class="language-bash">(cd console &amp;&amp; python -m pip install -r requirements-dev.txt &amp;&amp; python -m pytest)
+python -m pytest site            # every local link of the built site resolves
+helm lint chart/llm-platform
+</code></pre>
+<h2>Layout</h2>
+<pre><code>chart/llm-platform/   Helm chart
+console/              console (FastAPI + plain JavaScript) and its tests
+tools/                host helpers (relay, GPU exporter)
+scripts/              install, benchmark, report and dashboard generators
+site/                 static site builder
+deploy/               publishing templates (reverse proxy, tunnel, publish script)
+docs/                 architecture, runbooks, handover, benchmark report
+cluster/              kind cluster configuration
+</code></pre>
+<h2>Honest limits</h2>
+<p>One node and one model; the model runs outside Kubernetes, so GPU scheduling by Kubernetes is not shown;
+benchmark numbers are one 30-second run per setting on a shared GPU; chargeback rates and GPU price are
+demo values. See <a target="_blank" rel="noopener" href="docs/handover.html">docs/handover.md</a>.</p></section></main>
+</body>
+</html>

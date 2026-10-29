@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>02-slow-answers-or-queue</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="../../static/site.css">
+</head>
+<body>
+<header class="top"><div class="top-in">
+  <a class="brand" href="../../index.html" target="_blank" rel="noopener">Private LLM platform</a>
+  <nav>
+    <a href="../../inference.html" target="_blank" rel="noopener">1 Inference</a>
+    <a href="../../infrastructure.html" target="_blank" rel="noopener">2 Infrastructure</a>
+    <a href="../../gateway.html" target="_blank" rel="noopener">3 Gateway</a>
+    <a href="../../rag.html" target="_blank" rel="noopener">4 RAG and agent</a>
+    <a href="../../observability.html" target="_blank" rel="noopener">5 Observability</a>
+    <a href="../../delivery.html" target="_blank" rel="noopener">6 Delivery</a>
+  </nav>
+</div></header>
+<main><section class="case doc"><h1>Runbook 2: slow answers or a growing queue</h1>
+<p><strong>Alerts:</strong> <code>ModelQueueBuildingUp</code> (more than 4 requests waiting for 1 minute), <code>TimeToFirstTokenSlow</code>
+(p95 above 5 seconds for 5 minutes), <code>GpuUnderusedUnderLoad</code> (many requests running, GPU mostly idle).</p>
+<h2>Meaning</h2>
+<p>The model serves a fixed number of requests at once (its <code>--max-num-seqs</code> setting). Extra requests wait,
+and time to first token grows with the wait.</p>
+<h2>Check</h2>
+<ol>
+<li>Grafana dashboard "LLM platform": panel "Requests on the model" (running against waiting) and
+   "Time to first token".</li>
+<li>Who sends the load: panels "Gateway requests per second by team" and "Tokens per second by team".</li>
+<li>Long answers: a team with a high <code>max_tokens</code> holds a slot longer.</li>
+</ol>
+<h2>Fix</h2>
+<ol>
+<li>One team floods the model: lower its parallel limit or per-minute limit at the gateway (runbook 4).</li>
+<li>Many long answers: ask the team to lower <code>max_tokens</code>, or lower the team's budget.</li>
+<li>Steady overload from all teams: the model needs more capacity (a second replica or a larger server); use
+   the benchmark report to size it.</li>
+<li><code>GpuUnderusedUnderLoad</code> with slow answers points to a bottleneck outside the GPU (gateway or network):
+   check gateway pod CPU and the latency panel.</li>
+</ol>
+<h2>Verify</h2>
+<p>Waiting requests return to 0, p95 time to first token drops below 5 seconds, alerts resolve.</p></section></main>
+</body>
+</html>

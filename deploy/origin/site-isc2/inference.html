@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>LLM inference on GPU</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="static/site.css">
+</head>
+<body>
+<header class="top"><div class="top-in">
+  <a class="brand" href="index.html" target="_blank" rel="noopener">Private LLM platform</a>
+  <nav>
+    <a href="inference.html" target="_blank" rel="noopener" aria-current="page">1 Inference</a>
+    <a href="infrastructure.html" target="_blank" rel="noopener">2 Infrastructure</a>
+    <a href="gateway.html" target="_blank" rel="noopener">3 Gateway</a>
+    <a href="rag.html" target="_blank" rel="noopener">4 RAG and agent</a>
+    <a href="observability.html" target="_blank" rel="noopener">5 Observability</a>
+    <a href="delivery.html" target="_blank" rel="noopener">6 Delivery</a>
+  </nav>
+</div></header>
+
+<main>
+  <section>
+    <p class="eyebrow">Requirement 1 of 6</p>
+    <h1>LLM inference on GPU with vLLM</h1>
+    <div class="kw"><span>vLLM</span><span>GPU</span><span>latency</span><span>throughput</span><span>concurrency</span><span>KV cache</span></div>
+  </section>
+
+  <section aria-label="Live model state">
+    <div class="strip">
+      <div><b><span data-live="strip-running">16</span> of 16</b><span>requests running (slots)</span></div>
+      <div><b><span data-live="strip-waiting">14</span></b><span>requests waiting</span></div>
+      <div><b><span data-live="strip-kv">64</span> %</b><span>KV cache used</span></div>
+      <div><b><span data-live="strip-tps">180.7</span></b><span>output tokens/s</span></div>
+      <div><b><span data-live="strip-gpu">90</span> %</b><span>GPU utilization</span></div>
+    </div>
+    <p class="src" style="margin-top:6px"><span class="pill build" data-pill>build</span> /console/api/stream, every 2 s while a run is active; otherwise the latest saved run of <span data-live="strip-date">2026-10-28</span></p>
+  </section>
+
+  <section class="case">
+    <h2><small>Challenge</small></h2>
+    <ul>
+      <li>One GPU host (NVIDIA GB10), one large Qwen model, several teams sending requests at the same time</li>
+      <li>Find the concurrency where throughput stops growing and latency starts to hurt</li>
+      <li>Know when the KV cache, not compute, becomes the limit</li>
+    </ul>
+  </section>
+
+  <section class="case">
+    <h2><small>Solution</small></h2>
+    <ul>
+      <li>vLLM serving <code>qwen38-lil</code>, at most 16 sequences in parallel</li>
+      <li>Load generator in the console: fixed prompt set, 30 s runs, concurrency 1, 2, 4, 8, 16</li>
+      <li>vLLM metrics (<code>num_requests_running</code>, <code>num_requests_waiting</code>, <code>kv_cache_usage_perc</code>) scraped by Prometheus and copied into every run timeline</li>
+    </ul>
+  </section>
+
+  <section class="case">
+    <h2><small>Results</small></h2>
+    <div class="two">
+      <div class="panel">
+        <h3>Concurrency explorer</h3>
+        <label for="conc">Parallel requests: <b data-conc>1</b></label>
+        <input id="conc" type="range" min="0" max="4" step="1" value="0" data-levels='[{&quot;c&quot;:1,&quot;tps&quot;:35.0,&quot;ttft&quot;:0.364,&quot;cost&quot;:1.589},{&quot;c&quot;:2,&quot;tps&quot;:55.5,&quot;ttft&quot;:0.637,&quot;cost&quot;:1.0},{&quot;c&quot;:4,&quot;tps&quot;:86.2,&quot;ttft&quot;:0.772,&quot;cost&quot;:0.645},{&quot;c&quot;:8,&quot;tps&quot;:128.0,&quot;ttft&quot;:1.182,&quot;cost&quot;:0.434},{&quot;c&quot;:16,&quot;tps&quot;:180.7,&quot;ttft&quot;:2.816,&quot;cost&quot;:0.307}]'>
+        <div class="tbl"><table>
+          <tr><th>at <span data-conc>1</span> parallel</th><th class="num">value</th><th class="num">vs 1 parallel</th></tr>
+          <tr><td>output tokens/s</td><td class="num"><span data-f="tps">35.0</span></td><td class="num"><span data-f="tpsx">1.0 x</span></td></tr>
+          <tr><td>time to first token p95</td><td class="num"><span data-f="ttft">0.36 s</span></td><td class="num"><span data-f="ttftd">0 s</span></td></tr>
+          <tr><td>cost per 1M output tokens</td><td class="num"><span data-f="cost">1.59 USD</span></td><td class="num"><span data-f="costd">0 %</span></td></tr>
+        </table></div>
+        <p class="src">Knee: 8 parallel requests &mdash; the next step adds only 41 % throughput (base: the knee level)</p>
+      </div>
+      <div class="panel bars">
+        <h3>Output tokens/s by concurrency</h3>
+        <svg viewBox="0 0 300 150" role="img" aria-label="Output tokens per second at 1, 2, 4, 8 and 16 parallel requests">
+          <rect data-c="1" x="20" y="110" width="40" height="20"><title>1 parallel: 35.0 tokens/s</title></rect>
+          <rect data-c="2" x="75" y="98" width="40" height="32"><title>2 parallel: 55.5 tokens/s</title></rect>
+          <rect data-c="4" x="130" y="80" width="40" height="50"><title>4 parallel: 86.2 tokens/s</title></rect>
+          <rect data-c="8" x="185" y="56" width="40" height="74"><title>8 parallel: 128.0 tokens/s</title></rect>
+          <rect data-c="16" x="240" y="25" width="40" height="105"><title>16 parallel: 180.7 tokens/s</title></rect>
+          <text x="40" y="145" text-anchor="middle">1</text><text x="95" y="145" text-anchor="middle">2</text>
+          <text x="150" y="145" text-anchor="middle">4</text><text x="205" y="145" text-anchor="middle">8</text>
+          <text x="260" y="145" text-anchor="middle">16</text>
+        </svg>
+        <p class="src"><span class="pill build">build</span> docs/benchmark-results.json, 5 runs of 30 s, 2026-10-28</p>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h3>KV cache and queue against prompt length and concurrency</h3>
+      <div class="tbl"><table>
+        <tr><th>prompt, words</th><th class="num">parallel</th><th class="num">KV cache peak</th><th class="num">waiting peak</th><th class="num">TTFT p95</th><th class="num">tokens/s</th></tr>
+        <tr><td>200</td><td class="num">4</td><td class="num">15 %</td><td class="num">0</td><td class="num">1.07 s</td><td class="num">91</td></tr>
+        <tr><td>500</td><td class="num">8</td><td class="num">30 %</td><td class="num">3</td><td class="num">2.58 s</td><td class="num">114</td></tr>
+        <tr><td>1,000</td><td class="num">8</td><td class="num">30 %</td><td class="num">5</td><td class="num">4.46 s</td><td class="num">98</td></tr>
+        <tr><td>1,000</td><td class="num">16</td><td class="num">59 %</td><td class="num">13</td><td class="num">9.03 s</td><td class="num">124</td></tr>
+        <tr><td>2,000</td><td class="num">16</td><td class="num">64 %</td><td class="num">14</td><td class="num">16.86 s</td><td class="num">82</td></tr>
+      </table></div>
+      <p class="src"><span class="pill build">build</span> docs/measurements/kv-sweep.json, 5 runs of 30 s, 2026-10-29</p>
+    </div>
+  </section>
+
+  <section class="case">
+    <h2><small>Trade-offs</small></h2>
+    <ul>
+      <li>Concurrency 16: 5.2 x throughput, paid with +2.45 s time to first token p95</li>
+      <li>GPU utilization stays at 88&ndash;91 % in every run: it cannot tell 1 request from 16</li>
+      <li>30 s runs on a shared host: one run per setting, no confidence interval</li>
+    </ul>
+  </section>
+
+  <section class="case">
+    <h2><small>What I'd change at scale</small></h2>
+    <ul>
+      <li>Second replica and prefix-aware routing (llm-d or the vLLM router) once a second GPU exists</li>
+      <li>Speculative decoding, measured with the same console runs (the KV cache is already FP8)</li>
+      <li>Admission control on queue length instead of a fixed 16-slot limit</li>
+    </ul>
+  </section>
+
+  <section class="case">
+    <h2><small>Links</small></h2>
+    <ul>
+      <li><a href="console/" target="_blank" rel="noopener">Console: run your own load test</a></li>
+      <li><a href="docs/benchmark-report.html" target="_blank" rel="noopener">Benchmark report</a></li>
+      <li><a href="docs/runbooks/02-slow-answers-or-queue.html" target="_blank" rel="noopener">Runbook: slow answers or a growing queue</a></li>
+      <li><a href="docs/runbooks/03-kv-cache-full.html" target="_blank" rel="noopener">Runbook: KV cache nearly full</a></li>
+      <li><a href="grafana/" target="_blank" rel="noopener">Grafana: model row</a></li>
+    </ul>
+  </section>
+</main>
+<script src="static/site.js"></script>
+</body>
+</html>

@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Inference Observability</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="static/site.css">
+</head>
+<body>
+<header class="top"><div class="top-in">
+  <a class="brand" href="index.html" target="_blank" rel="noopener">Private LLM platform</a>
+  <nav>
+    <a href="inference.html" target="_blank" rel="noopener">1 Inference</a>
+    <a href="infrastructure.html" target="_blank" rel="noopener">2 Infrastructure</a>
+    <a href="gateway.html" target="_blank" rel="noopener">3 Gateway</a>
+    <a href="rag.html" target="_blank" rel="noopener">4 RAG and agent</a>
+    <a href="observability.html" target="_blank" rel="noopener" aria-current="page">5 Observability</a>
+    <a href="delivery.html" target="_blank" rel="noopener">6 Delivery</a>
+  </nav>
+</div></header>
+
+<main>
+  <section>
+    <p class="eyebrow">Requirement 5 of 6</p>
+    <h1>Observability of LLM inference</h1>
+    <div class="kw"><span>Prometheus</span><span>Grafana</span><span>alerting</span><span>reliability</span><span>latency</span><span>usage</span><span>errors</span><span>cost</span><span>OpenTelemetry</span></div>
+  </section>
+
+  <section class="case" data-picker>
+    <h2><small>Signal map</small> click a signal</h2>
+    <div class="tiles">
+      <button class="tile" type="button" data-show="rel"><span class="lbl">reliability</span><b><span data-sig="reliability">100.0 %</span></b><span class="sub">gateway requests without 5xx, 15 min</span><svg class="spark" data-spark viewBox="0 0 100 34" preserveAspectRatio="none" aria-hidden="true"><path d=""/></svg></button>
+      <button class="tile" type="button" data-show="lat"><span class="lbl">latency</span><b><span data-sig="latency">2.82 s</span></b><span class="sub">time to first token p95, 5 min</span><svg class="spark" data-spark viewBox="0 0 100 34" preserveAspectRatio="none" aria-hidden="true"><path d=""/></svg></button>
+      <button class="tile" type="button" data-show="use"><span class="lbl">usage</span><b><span data-sig="usage">181</span></b><span class="sub">output tokens/s, all teams</span><svg class="spark" data-spark viewBox="0 0 100 34" preserveAspectRatio="none" aria-hidden="true"><path d=""/></svg></button>
+      <button class="tile" type="button" data-show="err"><span class="lbl">errors</span><b><span data-sig="errors">5.8 %</span></b><span class="sub">gateway 4xx and 5xx share, 5 min</span><svg class="spark" data-spark viewBox="0 0 100 34" preserveAspectRatio="none" aria-hidden="true"><path d=""/></svg></button>
+      <button class="tile" type="button" data-show="cost"><span class="lbl">cost</span><b><span data-sig="cost">0.31 USD</span></b><span class="sub">per 1M output tokens now</span><svg class="spark" data-spark viewBox="0 0 100 34" preserveAspectRatio="none" aria-hidden="true"><path d=""/></svg></button>
+    </div>
+    <p class="src"><span class="pill build" data-pill>build</span> /console/api/status?view=signals, number now and a 15-minute series</p>
+    <div class="panel detail" data-panel="rel"><h3>Reliability</h3><dl><dt>Metric</dt><dd><code>100 * (1 - rate(litellm_proxy_failed_requests_metric_total{exception_status=~"5.."}[5m]) / rate(litellm_proxy_total_requests_metric_total[5m]))</code></dd><dt>Panel</dt><dd><a href="grafana/" target="_blank" rel="noopener">Gateway requests by status</a></dd><dt>Alert rule</dt><dd><code>ModelEndpointDown</code></dd><dt>Runbook</dt><dd><a href="docs/runbooks/01-model-endpoint-down.html" target="_blank" rel="noopener">Model endpoint down</a></dd></dl></div>
+    <div class="panel detail" data-panel="lat" hidden><h3>Latency</h3><dl><dt>Metric</dt><dd><code>histogram_quantile(0.95, sum(rate(vllm:time_to_first_token_seconds_bucket[5m])) by (le))</code></dd><dt>Panel</dt><dd><a href="grafana/" target="_blank" rel="noopener">Time to first token</a></dd><dt>Alert rule</dt><dd><code>TimeToFirstTokenSlow</code></dd><dt>Runbook</dt><dd><a href="docs/runbooks/02-slow-answers-or-queue.html" target="_blank" rel="noopener">Slow answers or a growing queue</a></dd></dl></div>
+    <div class="panel detail" data-panel="use" hidden><h3>Usage</h3><dl><dt>Metric</dt><dd><code>sum(rate(vllm:generation_tokens_total[1m]))</code></dd><dt>Panel</dt><dd><a href="grafana/" target="_blank" rel="noopener">Tokens per second by team</a></dd><dt>Alert rule</dt><dd><code>GpuUnderusedUnderLoad</code></dd><dt>Runbook</dt><dd><a href="docs/runbooks/02-slow-answers-or-queue.html" target="_blank" rel="noopener">Slow answers or a growing queue</a></dd></dl></div>
+    <div class="panel detail" data-panel="err" hidden><h3>Errors</h3><dl><dt>Metric</dt><dd><code>100 * rate(litellm_proxy_failed_requests_metric_total[5m]) / rate(litellm_proxy_total_requests_metric_total[5m])</code></dd><dt>Panel</dt><dd><a href="grafana/" target="_blank" rel="noopener">Gateway errors</a></dd><dt>Alert rule</dt><dd><code>GatewayErrorRateHigh</code></dd><dt>Runbook</dt><dd><a href="docs/runbooks/04-gateway-errors-and-limits.html" target="_blank" rel="noopener">Gateway errors and team limits</a></dd></dl></div>
+    <div class="panel detail" data-panel="cost" hidden><h3>Cost</h3><dl><dt>Metric</dt><dd><code>0.20 USD per hour / (output tokens/s * 3600) * 1,000,000</code></dd><dt>Panel</dt><dd><a href="grafana/" target="_blank" rel="noopener">Cost per 1M tokens</a></dd><dt>Alert rule</dt><dd>none; a budget per team is enforced by the gateway</dd><dt>Runbook</dt><dd><a href="docs/runbooks/04-gateway-errors-and-limits.html" target="_blank" rel="noopener">Gateway errors and team limits</a></dd></dl></div>
+  </section>
+
+  <section class="case" id="alerts">
+    <h2><small>Alert rules</small> live state</h2>
+    <div class="tbl"><table>
+      <tr><th>rule</th><th>state</th><th class="num">value now</th><th>runbook</th></tr>
+      <tr data-rule="ModelEndpointDown"><td><code>ModelEndpointDown</code></td><td><span class="pill inactive" data-state>unknown</span></td><td class="num" data-value>&mdash;</td><td><a href="docs/runbooks/01-model-endpoint-down.html" target="_blank" rel="noopener">01</a></td></tr>
+      <tr data-rule="ModelQueueBuildingUp"><td><code>ModelQueueBuildingUp</code></td><td><span class="pill inactive" data-state>unknown</span></td><td class="num" data-value>&mdash;</td><td><a href="docs/runbooks/02-slow-answers-or-queue.html" target="_blank" rel="noopener">02</a></td></tr>
+      <tr data-rule="TimeToFirstTokenSlow"><td><code>TimeToFirstTokenSlow</code></td><td><span class="pill inactive" data-state>unknown</span></td><td class="num" data-value>&mdash;</td><td><a href="docs/runbooks/02-slow-answers-or-queue.html" target="_blank" rel="noopener">02</a></td></tr>
+      <tr data-rule="KvCacheNearlyFull"><td><code>KvCacheNearlyFull</code></td><td><span class="pill inactive" data-state>unknown</span></td><td class="num" data-value>&mdash;</td><td><a href="docs/runbooks/03-kv-cache-full.html" target="_blank" rel="noopener">03</a></td></tr>
+      <tr data-rule="GatewayErrorRateHigh"><td><code>GatewayErrorRateHigh</code></td><td><span class="pill inactive" data-state>unknown</span></td><td class="num" data-value>&mdash;</td><td><a href="docs/runbooks/04-gateway-errors-and-limits.html" target="_blank" rel="noopener">04</a></td></tr>
+      <tr data-rule="GpuUnderusedUnderLoad"><td><code>GpuUnderusedUnderLoad</code></td><td><span class="pill inactive" data-state>unknown</span></td><td class="num" data-value>&mdash;</td><td><a href="docs/runbooks/02-slow-answers-or-queue.html" target="_blank" rel="noopener">02</a></td></tr>
+    </table></div>
+    <p class="src"><span class="pill build" data-pill>build</span> /console/api/status?view=alerts &middot; checked <span data-live="alerts-checked">not checked yet</span></p>
+  </section>
+
+  <section class="case">
+    <h2><small>Challenge</small></h2>
+    <ul>
+      <li>See reliability, latency, usage, errors and cost of inference in one place, per team</li>
+      <li>Alert before users notice; each alert leads to a runbook</li>
+      <li>Prove the alerts fire and resolve, not only that they exist</li>
+    </ul>
+  </section>
+
+  <section class="case">
+    <h2><small>Solution</small></h2>
+    <ul>
+      <li>Prometheus scrapes vLLM, the GPU exporter, the gateway and the console (RAG evaluation scores)</li>
+      <li>12-panel Grafana dashboard generated from code, one row per layer, plus a RAG agent row</li>
+      <li>6 alert rules, each with a runbook link in its annotations</li>
+    </ul>
+  </section>
+
+  <section class="case">
+    <h2><small>Results</small></h2>
+    <div class="panel">
+      <h3>Drill: <code>ModelQueueBuildingUp</code> under load</h3>
+      <ul>
+        <li>Load: 24 parallel requests (16 as research from the console, 8 as engineering) for 150 s</li>
+        <li>Fired after 69 s of load</li>
+        <li>Resolved 14 s after the load stopped</li>
+        <li>Queue when the alert fired: 7 requests waiting</li>
+      </ul>
+      <p class="src"><span class="pill build">build</span> docs/measurements/alert-drill.json (Prometheus <code>ALERTS</code> series), 2026-10-29</p>
+    </div>
+  </section>
+
+  <section class="case">
+    <h2><small>Trade-offs</small></h2>
+    <ul>
+      <li>Prometheus metrics only, no traces: cheap and enough for one model; a slow request cannot be followed across services</li>
+      <li>Alerts are visible on the dashboard and this page; no paging channel</li>
+      <li>Cost is computed from an assumed GPU price, not read from a bill</li>
+    </ul>
+  </section>
+
+  <section class="case">
+    <h2><small>What I'd change at scale</small></h2>
+    <ul>
+      <li>OpenTelemetry traces: the gateway's <code>otel</code> callback into a collector, one trace per request from gateway to model</li>
+      <li>Alertmanager with routing per team and an on-call channel</li>
+      <li>Service level objectives with error budgets instead of fixed thresholds</li>
+    </ul>
+  </section>
+
+  <section class="case">
+    <h2><small>Links</small></h2>
+    <ul>
+      <li><a href="grafana/" target="_blank" rel="noopener">Grafana dashboard</a></li>
+      <li><a href="observability.html#alerts" target="_blank" rel="noopener">Alert rules (Prometheus configuration)</a></li>
+      <li>Runbooks: <a href="docs/runbooks/01-model-endpoint-down.html" target="_blank" rel="noopener">01</a>, <a href="docs/runbooks/02-slow-answers-or-queue.html" target="_blank" rel="noopener">02</a>, <a href="docs/runbooks/03-kv-cache-full.html" target="_blank" rel="noopener">03</a>, <a href="docs/runbooks/04-gateway-errors-and-limits.html" target="_blank" rel="noopener">04</a>, <a href="docs/runbooks/05-release-upgrade-rollback.html" target="_blank" rel="noopener">05</a></li>
+    </ul>
+  </section>
+</main>
+<script src="static/site.js"></script>
+</body>
+</html>
