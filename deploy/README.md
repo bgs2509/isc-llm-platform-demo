@@ -20,17 +20,17 @@ origin container is separate, so the change to the existing setup is one site bl
 ## Parts
 
 1. `deploy/origin/` — compose file and Caddyfile of the origin; `auth.caddy` (bcrypt hash, git-ignored) comes
-   from `deploy/render.py`, the pages from `site/build.py` (`site/dist` copied to `origin/site/`).
+   from `deploy/render.py`; the pages in `deploy/origin/site/` are built by `site/build.py` and tracked in git.
 2. `deploy/portal/` — the block for the existing Caddy and the compose lines it needs.
 3. `deploy/isc-tunnel.service.template` — systemd user unit for the reverse tunnel on the GPU host.
-4. `deploy/publish.sh` — builds the pages on the GPU host and copies them to the web server.
 
 ## Steps
 
 1. GPU host: `helm upgrade ... -f deploy/values-site.yaml` with `publicUrl: https://<host>:9443`.
-2. Web server: `git clone` this repository; on the GPU host run `site/build.py` and `deploy/render.py`, then
-   copy the two git-ignored results (`site/dist` as `deploy/origin/site/`, `deploy/origin/auth.caddy`) with a
-   `tar` pipe; `docker compose up -d` in `deploy/origin/`.
+2. Pages: `python site/build.py` (writes `deploy/origin/site/`), commit and push; `site/test_build.py` fails
+   while the tracked pages differ from a fresh build. Web server: `git clone` this repository (later
+   `git pull --ff-only`); on the GPU host run `deploy/render.py` and copy its one git-ignored result,
+   `deploy/origin/auth.caddy`, to the web server; `docker compose up -d` in `deploy/origin/`.
 3. GPU host: a new key for the tunnel only. On the web server its `authorized_keys` line starts with
    `restrict,port-forwarding,permitlisten="127.0.0.1:19500",permitlisten="127.0.0.1:19501",command="/bin/false"`
    (options as in `man sshd`); install the unit from the template with `systemctl --user enable --now`.

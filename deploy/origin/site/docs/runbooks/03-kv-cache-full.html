@@ -1,0 +1,19 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>03-kv-cache-full</title><link rel="icon" href="data:,"><link rel="stylesheet" href="../../style.css"></head><body><div class="top"><div><b>Private LLM platform</b><a href="../../index.html">Overview</a><a href="../../docs/architecture.html">Architecture</a><a href="../../docs/benchmark-report.html">Benchmark report</a><a href="../../docs/handover.html">Handover</a><a href="../../console/">Console</a><a href="../../grafana/">Grafana</a></div></div><main><h1>Runbook 3: KV cache nearly full</h1>
+<p><strong>Alert:</strong> <code>KvCacheNearlyFull</code> (<code>vllm:kv_cache_usage_perc</code> above 0.9 for 2 minutes).
+<strong>Impact:</strong> the server cannot start new requests until memory frees up; queue and latency rise.</p>
+<h2>Meaning</h2>
+<p>The KV cache holds the processed text of running requests. Long prompts and long answers fill it; many
+parallel requests fill it faster.</p>
+<h2>Check</h2>
+<ol>
+<li>Dashboard panel "KV cache used" next to "Requests on the model".</li>
+<li>Which teams send long requests: compare "Tokens per second by team".</li>
+</ol>
+<h2>Fix</h2>
+<ol>
+<li>Lower the parallel limit of the heavy team at the gateway, or ask it to shorten prompts and <code>max_tokens</code>.</li>
+<li>If the pressure is normal for the workload, the owner of the model server can change engine settings
+   (context length, number of parallel sequences, cache memory share). This restarts the model; plan it.</li>
+</ol>
+<h2>Verify</h2>
+<p>KV cache usage stays below 80 % under the usual load; the alert resolves.</p></main></body></html>

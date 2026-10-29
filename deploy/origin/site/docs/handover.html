@@ -1,0 +1,67 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>handover</title><link rel="icon" href="data:,"><link rel="stylesheet" href="../style.css"></head><body><div class="top"><div><b>Private LLM platform</b><a href="../index.html">Overview</a><a href="../docs/architecture.html">Architecture</a><a href="../docs/benchmark-report.html">Benchmark report</a><a href="../docs/handover.html">Handover</a><a href="../console/">Console</a><a href="../grafana/">Grafana</a></div></div><main><h1>Handover</h1>
+<p>What the customer team receives and how to run it.</p>
+<h2>Delivered</h2>
+<ol>
+<li><strong>Helm chart</strong> <code>chart/llm-platform</code> — gateway (LiteLLM) with Postgres, Prometheus with 6 alert rules,
+   Grafana with a 12-panel dashboard, the load-test console, and a job that creates the team keys.</li>
+<li><strong>Host helpers</strong> in <code>tools/</code> — a relay from the cluster network to the model server and an <code>nvidia-smi</code> exporter.</li>
+<li><strong>Console</strong> <code>console/</code> — load tests, live charts, saved runs, before/after comparison; 8 unit tests.</li>
+<li><strong>Runbooks</strong> <code>docs/runbooks/</code> — five procedures for the five alert groups and for upgrades.</li>
+<li><strong>Benchmark report</strong> <code>docs/benchmark-report.md</code> — measured throughput, latency and cost per million tokens.</li>
+<li><strong>Architecture</strong> <code>docs/architecture.md</code> — components, decisions, what changes at scale.</li>
+</ol>
+<h2>Access</h2>
+<table>
+<thead>
+<tr>
+<th>What</th>
+<th>Where</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Console</td>
+<td><code>http://127.0.0.1:18500</code> on the host (SSH tunnel from elsewhere)</td>
+</tr>
+<tr>
+<td>Grafana</td>
+<td><code>http://127.0.0.1:18501/grafana/</code>, dashboard "LLM platform"</td>
+</tr>
+<tr>
+<td>Team keys</td>
+<td>Secret <code>llm-platform-secrets</code>, entries <code>key-research</code>, <code>key-engineering</code>, <code>key-operations</code></td>
+</tr>
+<tr>
+<td>Gateway admin</td>
+<td>master key in the same Secret, entry <code>masterKey</code></td>
+</tr>
+</tbody>
+</table>
+<h2>Operating</h2>
+<ol>
+<li>Install or update: <code>scripts/install.sh</code> (builds the console image, loads images, runs <code>helm upgrade --install</code>).</li>
+<li>Check health: <code>kubectl -n llm-platform get pods</code>; Prometheus targets <code>vllm</code>, <code>gpu</code>, <code>gateway</code> must be <code>up</code>.</li>
+<li>Alerts: see <code>docs/runbooks/</code> (each alert annotation names its runbook). Alerts are evaluated by Prometheus;
+   routing them to a pager needs Alertmanager, which is not included.</li>
+<li>Host processes (<code>tools/model_forward.py</code>, <code>tools/gpu_exporter.py</code>) do not start after a reboot of the host.</li>
+</ol>
+<h2>Who owns what</h2>
+<ol>
+<li>The model server and the GPU host belong to the host owner; the platform only reads its metrics and calls its API.</li>
+<li>Team limits and budgets belong to the platform operator (<code>values.yaml</code>, gateway admin API).</li>
+<li>Dashboards and alert rules belong to the platform operator.</li>
+</ol>
+<h2>Known limits</h2>
+<ol>
+<li>One node, one model, one gateway replica; the response cache is in memory.</li>
+<li>The model runs outside Kubernetes, so GPU scheduling is not demonstrated (see architecture, decision 1).</li>
+<li>Priority scheduling is not enabled on the model server.</li>
+<li>Benchmark numbers come from one run per setting on a shared GPU.</li>
+<li>Demo chargeback rates and GPU price are placeholders.</li>
+</ol>
+<h2>Next steps for a real customer</h2>
+<ol>
+<li>Move the model server into the cluster with the NVIDIA device plugin; add nodes.</li>
+<li>Add Alertmanager and single sign-on; keep keys in the customer's secret store.</li>
+<li>Re-run <code>scripts/benchmark.py</code> on the customer's hardware and set team limits from the results.</li>
+</ol></main></body></html>

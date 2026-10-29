@@ -1,0 +1,24 @@
+
+:root{--bg:#f6f7f9;--card:#fff;--text:#1d2430;--muted:#667085;--line:#e4e7ec;--accent:#2563eb;--code:#eef1f5}
+@media (prefers-color-scheme: dark){:root{--bg:#0f1318;--card:#171c23;--text:#e6e9ef;--muted:#98a2b3;--line:#2a313b;--accent:#5b8def;--code:#222932}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:16px/1.6 system-ui,sans-serif}
+a{color:var(--accent)}
+.top{border-bottom:1px solid var(--line);background:var(--card)}
+.top div{max-width:960px;margin:0 auto;padding:12px 16px;display:flex;gap:18px;flex-wrap:wrap;align-items:center}
+.top b{margin-right:auto}.top a{text-decoration:none;color:var(--muted);font-size:14px}.top a:hover{color:var(--text)}
+main{max-width:960px;margin:0 auto;padding:24px 16px 64px}
+h1{font-size:30px;line-height:1.25;margin:0 0 8px}h2{margin-top:36px}
+p.lead{font-size:18px;color:var(--muted);margin:0 0 24px}
+pre,code{background:var(--code);border-radius:6px;font:14px/1.5 ui-monospace,monospace}
+code{padding:1px 5px}pre{padding:12px 14px;overflow-x:auto}pre code{padding:0;background:none}
+table{border-collapse:collapse;width:100%;font-size:14px;display:block;overflow-x:auto}
+th,td{border-bottom:1px solid var(--line);padding:6px 10px;text-align:left;vertical-align:top}th{color:var(--muted);font-weight:500}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin:20px 0}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+.stat b{display:block;font-size:28px;line-height:1.2}.stat span{color:var(--muted);font-size:14px}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;margin:20px 0}
+.card{display:block;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px;text-decoration:none;color:var(--text)}
+.card:hover{border-color:var(--accent)}.card b{display:block;margin-bottom:4px}.card span{color:var(--muted);font-size:14px}
+.tag{font-size:12px;border:1px solid var(--line);border-radius:99px;padding:1px 8px;color:var(--muted);margin-left:6px}
+footer{color:var(--muted);font-size:13px;margin-top:48px}

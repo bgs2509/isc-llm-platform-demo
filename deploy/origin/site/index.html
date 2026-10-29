@@ -1,0 +1,35 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Private LLM platform</title><link rel="icon" href="data:,"><link rel="stylesheet" href="style.css"></head><body><div class="top"><div><b>Private LLM platform</b><a href="index.html">Overview</a><a href="docs/architecture.html">Architecture</a><a href="docs/benchmark-report.html">Benchmark report</a><a href="docs/handover.html">Handover</a><a href="console/">Console</a><a href="grafana/">Grafana</a></div></div><main>
+<h1>One gateway, one large model, several teams</h1>
+<p class="lead">A small private LLM platform running on a single NVIDIA GB10 machine: per-team keys and limits,
+dashboards, alerts and a console that proves the numbers. Everything below was measured on the real model.</p>
+<div class="grid">
+  <div class="stat"><b>5.2×</b><span>output tokens/s going from 1 to 16 parallel requests (35.0 → 180.7)</span></div>
+  <div class="stat"><b>−81 %</b><span>cost per 1M output tokens at the same time (base: 1 request; assumed GPU price 0.20 USD/hour)</span></div>
+  <div class="stat"><b>0.36 → 2.82 s</b><span>time to first token p95: the price of the speed-up</span></div>
+  <div class="stat"><b>88–91 %</b><span>GPU utilization in every run: it cannot show this difference</span></div>
+</div>
+<h2>Explore</h2>
+<div class="cards">
+  <a class="card" href="console/"><b>Live console <span class="tag">password</span></b><span>Start a load test as a team, watch tokens per second, latency, GPU and queue move, compare before and after.</span></a>
+  <a class="card" href="grafana/"><b>Grafana dashboard <span class="tag">password</span></b><span>12 panels from Prometheus: model, GPU and gateway, with 6 alert rules behind it.</span></a>
+  <a class="card" href="docs/benchmark-report.html"><b>Benchmark report</b><span>Throughput, latency and cost per million tokens from 1 to 16 parallel requests; what the gateway adds.</span></a>
+  <a class="card" href="docs/architecture.html"><b>Architecture</b><span>Components, decisions and trade-offs, and what changes at customer scale.</span></a>
+  <a class="card" href="docs/handover.html"><b>Handover</b><span>What a customer team receives and how to operate it.</span></a>
+  <a class="card" href="readme.html"><b>README</b><span>What it is, how to run it, honest limits.</span></a>
+</div>
+<h2>Runbooks</h2>
+<ul>
+  <li><a href="docs/runbooks/01-model-endpoint-down.html">Model endpoint down</a></li>
+  <li><a href="docs/runbooks/02-slow-answers-or-queue.html">Slow answers or a growing queue</a></li>
+  <li><a href="docs/runbooks/03-kv-cache-full.html">KV cache nearly full</a></li>
+  <li><a href="docs/runbooks/04-gateway-errors-and-limits.html">Gateway errors and team limits</a></li>
+  <li><a href="docs/runbooks/05-release-upgrade-rollback.html">Upgrade and roll back a release</a></li>
+</ul>
+<h2>Built with</h2>
+<p>vLLM (model server), LiteLLM (gateway), Kubernetes in Docker (<code>kind</code>) and Helm, PostgreSQL,
+Prometheus, Grafana, FastAPI and plain JavaScript (console), <code>nvidia-smi</code> exporter.</p>
+<h2>Access</h2>
+<p>The live console and Grafana start real load on a GPU, so they are protected by a password. The documents
+and the report are open.</p>
+<footer>Measured 2026-10-28, built from the project repository. Benchmark numbers: one 30-second run per setting on a shared GPU; see the report for limits.</footer>
+</main></body></html>

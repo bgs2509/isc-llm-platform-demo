@@ -1,0 +1,25 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>01-model-endpoint-down</title><link rel="icon" href="data:,"><link rel="stylesheet" href="../../style.css"></head><body><div class="top"><div><b>Private LLM platform</b><a href="../../index.html">Overview</a><a href="../../docs/architecture.html">Architecture</a><a href="../../docs/benchmark-report.html">Benchmark report</a><a href="../../docs/handover.html">Handover</a><a href="../../console/">Console</a><a href="../../grafana/">Grafana</a></div></div><main><h1>Runbook 1: model endpoint down</h1>
+<p><strong>Alert:</strong> <code>ModelEndpointDown</code> (Prometheus cannot scrape the model server for 1 minute).
+<strong>Impact:</strong> every team gets errors; gateway failures rise.</p>
+<h2>Check</h2>
+<ol>
+<li>Is the model server alive on the GPU host?
+   <code>curl -s -o /dev/null -w "%{http_code}\n" http://127.0.0.1:18300/v1/models</code> (expect 200; the port is the
+   one the server listens on).</li>
+<li>Is the relay listening for the cluster? <code>ss -ltn | grep 18310</code> (expect a listener on the cluster network gateway address).</li>
+<li>From inside the cluster:
+   <code>kubectl -n llm-platform run probe --rm -i --restart=Never --image=curlimages/curl --command -- curl -s -m 5 -o /dev/null -w "%{http_code}\n" http://172.23.0.1:18310/v1/models</code></li>
+</ol>
+<h2>Fix</h2>
+<ol>
+<li>Server down: start the model container the way its owner started it; wait until <code>/v1/models</code> answers.</li>
+<li>Relay down: <code>nohup python3 tools/model_forward.py 172.23.0.1 18310 127.0.0.1 18300 &gt; tools/model_forward.log 2&gt;&amp;1 &amp;</code>.
+   The relay does not start after a reboot of the host.</li>
+<li>GPU exporter down (the <code>gpu</code> target is down): <code>nohup python3 tools/gpu_exporter.py 172.23.0.1 18311 &gt; tools/gpu_exporter.log 2&gt;&amp;1 &amp;</code>.</li>
+</ol>
+<h2>Verify</h2>
+<p>The <code>vllm</code> target is <code>up</code> in Prometheus (<code>/targets</code>), the alert resolves, and a one-request test from the
+console succeeds.</p>
+<h2>Escalate</h2>
+<p>If the server container will not start, the problem is on the GPU host (driver, memory): check <code>nvidia-smi</code>
+and the container log, then call the host owner.</p></main></body></html>

@@ -1,0 +1,75 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>architecture</title><link rel="icon" href="data:,"><link rel="stylesheet" href="../style.css"></head><body><div class="top"><div><b>Private LLM platform</b><a href="../index.html">Overview</a><a href="../docs/architecture.html">Architecture</a><a href="../docs/benchmark-report.html">Benchmark report</a><a href="../docs/handover.html">Handover</a><a href="../console/">Console</a><a href="../grafana/">Grafana</a></div></div><main><h1>Architecture</h1>
+<h2>Goal</h2>
+<p>Give several teams controlled access to one large model that runs on one GPU machine, and make cost,
+latency and GPU use visible. The platform is a small, runnable copy of what a customer would get:
+one gateway in front of the model, per-team keys and limits, dashboards, alerts, and a console to prove
+the numbers.</p>
+<h2>Components</h2>
+<pre><code> Teams (one key each)
+ [research]    [engineering]    [operations]
+        \            |             /
+         v           v            v
+   +--------------------------------------------+
+   | Gateway (LiteLLM): per-team keys, budgets, |
+   | parallel and per-minute limits, response   |
+   | cache, token and cost accounting           |
+   +------------------+-------------------------+
+                      |  OpenAI-compatible API
+                      v
+          Relay (host) -&gt; vLLM server (GPU host)
+                      |
+    metrics           |            metrics
+   +------------------+------------------+
+   v                                     v
+ Prometheus  &lt;----  nvidia-smi exporter (host)
+   |   alert rules (6)
+   v
+ Grafana dashboard           Console: load tests, live charts, before/after comparison
+</code></pre>
+<ol>
+<li><strong>Gateway</strong> (LiteLLM, in the cluster) is the only entry point for teams. It checks the team key, enforces
+   limits and a spend budget, caches repeated answers in memory, and counts tokens and cost per team.
+   Keys are created by a Helm post-install job; random secrets are generated once and kept across upgrades.</li>
+<li><strong>Model server</strong> (vLLM, outside the cluster) serves the model on the GPU. It was already running on the
+   host and is used as it is; the platform never restarts or reconfigures it.</li>
+<li><strong>Relay and GPU exporter</strong> (host processes, <code>tools/</code>) connect the cluster to the host: the model server
+   listens only on the host loopback, so a small TCP relay passes traffic from the cluster network, and a
+   tiny exporter turns <code>nvidia-smi</code> readings into Prometheus metrics.</li>
+<li><strong>Prometheus</strong> scrapes the model server, the GPU exporter and the gateway every 5 seconds and evaluates
+   the alert rules in <code>chart/llm-platform/templates/prometheus-config.yaml</code>.</li>
+<li><strong>Grafana</strong> shows one provisioned dashboard (12 panels), read-only for anonymous viewers.</li>
+<li><strong>Console</strong> (FastAPI and a plain JavaScript page) starts load tests through the gateway as a chosen team,
+   streams live numbers once a second, saves runs and compares two of them.</li>
+</ol>
+<h2>Decisions and trade-offs</h2>
+<ol>
+<li><strong>Kubernetes for everything except the GPU workload.</strong> <code>kind</code> runs Kubernetes nodes as Docker
+   containers and needs no administrator rights, so it is safe on a shared machine. The kind project lists GPU
+   device plugins among things it cannot reasonably test, so the model stays a plain container. On a real
+   cluster the model would run as a pod scheduled by the NVIDIA device plugin; only <code>values.yaml</code> and one
+   template change.</li>
+<li><strong>Use the running model as it is.</strong> No second model is started; tests run against the real model.
+   Priority scheduling in vLLM needs the server flag <code>--scheduling-policy priority</code> (a restart), so it is
+   not used; requests from the platform are served first-come, first-served.</li>
+<li><strong>Gateway cache is in memory.</strong> Fine for one replica. With several gateway replicas a shared cache (Redis)
+   is needed.</li>
+<li><strong>GPU utilization is a weak signal.</strong> <code>nvidia-smi</code> reports the "percent of time over the past sample period during which one or more
+   kernels was executing on the GPU", so a single stream already shows a high value. Throughput (tokens per second) and cost per million tokens are
+   the numbers that separate good and bad use; see <code>docs/benchmark-report.md</code>.</li>
+<li><strong>Costs are arithmetic, not billing.</strong> The cost per million tokens in the console is the GPU price per hour
+   divided by the measured tokens per hour; the price is an assumption the user can edit. The gateway's
+   per-team spend uses fixed chargeback rates from <code>values.yaml</code>.</li>
+</ol>
+<h2>Security notes</h2>
+<ol>
+<li>Console and Grafana ports are published on the host loopback only (<code>127.0.0.1</code>); use an SSH tunnel.</li>
+<li>Team keys, the gateway master key and passwords live in one Kubernetes Secret (<code>llm-platform-secrets</code>).</li>
+<li>The relay passes bytes and does not read or store prompts.</li>
+</ol>
+<h2>What changes at customer scale</h2>
+<ol>
+<li>Several nodes, GPU scheduling by the device plugin or GPU Operator, and gateway replicas with a shared cache.</li>
+<li>Alertmanager (or the customer's paging tool) behind the existing alert rules.</li>
+<li>Single sign-on in front of the console and Grafana; keys in the customer's secret store.</li>
+<li>Per-team quotas tuned from the benchmark report instead of the demo values.</li>
+</ol></main></body></html>

@@ -1,0 +1,57 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>publishing</title><link rel="icon" href="data:,"><link rel="stylesheet" href="../style.css"></head><body><div class="top"><div><b>Private LLM platform</b><a href="../index.html">Overview</a><a href="../docs/architecture.html">Architecture</a><a href="../docs/benchmark-report.html">Benchmark report</a><a href="../docs/handover.html">Handover</a><a href="../console/">Console</a><a href="../grafana/">Grafana</a></div></div><main><h1>Publishing the demo on a public web server</h1>
+<p>Goal: one site, <code>https://&lt;host&gt;:9443/</code>, with open documents and a password-protected live console and
+Grafana. The GPU host stays behind its network and opens one outgoing SSH connection to the web server.</p>
+<pre><code>visitor --HTTPS:9443--&gt; portal Caddy (terminates TLS, one proxy block)
+                          --&gt; origin container (host network, docker0 address :19080)
+                                /          static site (build output of site/build.py)
+                                /console/  password --&gt; 127.0.0.1:19500 --+
+                                /grafana/  password --&gt; 127.0.0.1:19501 --+-- reverse SSH tunnel
+                                                                              from the GPU host
+                         GPU host: console 127.0.0.1:18500, Grafana 127.0.0.1:18501
+</code></pre>
+<p>The existing Caddy keeps terminating TLS because it already owns ports 80 and 9443 on the web server; the new
+origin container is separate, so the change to the existing setup is one site block, one variable and one
+<code>extra_hosts</code> line (<code>deploy/portal/</code>).</p>
+<h2>Parts</h2>
+<ol>
+<li><code>deploy/origin/</code> — compose file and Caddyfile of the origin; <code>auth.caddy</code> (bcrypt hash, git-ignored) comes
+   from <code>deploy/render.py</code>; the pages in <code>deploy/origin/site/</code> are built by <code>site/build.py</code> and tracked in git.</li>
+<li><code>deploy/portal/</code> — the block for the existing Caddy and the compose lines it needs.</li>
+<li><code>deploy/isc-tunnel.service.template</code> — systemd user unit for the reverse tunnel on the GPU host.</li>
+</ol>
+<h2>Steps</h2>
+<ol>
+<li>GPU host: <code>helm upgrade ... -f deploy/values-site.yaml</code> with <code>publicUrl: https://&lt;host&gt;:9443</code>.</li>
+<li>Pages: <code>python site/build.py</code> (writes <code>deploy/origin/site/</code>), commit and push; <code>site/test_build.py</code> fails
+   while the tracked pages differ from a fresh build. Web server: <code>git clone</code> this repository (later
+   <code>git pull --ff-only</code>); on the GPU host run <code>deploy/render.py</code> and copy its one git-ignored result,
+   <code>deploy/origin/auth.caddy</code>, to the web server; <code>docker compose up -d</code> in <code>deploy/origin/</code>.</li>
+<li>GPU host: a new key for the tunnel only. On the web server its <code>authorized_keys</code> line starts with
+   <code>restrict,port-forwarding,permitlisten="127.0.0.1:19500",permitlisten="127.0.0.1:19501",command="/bin/false"</code>
+   (options as in <code>man sshd</code>); install the unit from the template with <code>systemctl --user enable --now</code>.</li>
+<li>Existing Caddy: add the block and the variable (<code>deploy/portal/</code>), validate, recreate the container.</li>
+<li>Web server firewall: with <code>ufw</code> and an input policy of DROP, packets from the portal's Docker network to the
+   docker0 address are dropped (<code>[UFW BLOCK] ... DPT=19080</code> in <code>/var/log/ufw.log</code>). Allow that one port:
+   <code>sudo ufw allow from &lt;portal network subnet&gt; to 172.17.0.1 port 19080 proto tcp</code>.</li>
+<li>Verify: <code>https://&lt;host&gt;:9443/</code> returns the home page; <code>/console/</code> and <code>/grafana/</code> answer 401 without the
+   password and the console and the dashboard with it.</li>
+</ol>
+<h2>Pitfalls met</h2>
+<ol>
+<li>The origin's site address has no host (<code>http://:19080</code>, with <code>bind</code> for the address): the portal passes the
+   public name in <code>Host</code>, and a site address with a host makes Caddy answer an empty 200 to every path.</li>
+<li>The origin's Caddyfile is a single-file bind mount: after <code>git pull</code> recreate the container
+   (<code>docker compose up -d --force-recreate</code>), a restart keeps the old file.</li>
+<li>Checks from the web server itself go over loopback and pass the firewall; check from a container on the
+   portal's network or from outside.</li>
+</ol>
+<h2>Security</h2>
+<ol>
+<li>The console starts real load on a GPU, so <code>/console/</code> and <code>/grafana/</code> are behind HTTP basic auth over HTTPS.</li>
+<li>The password is in <code>deploy/.site-credentials</code> on the GPU host (mode 600, git-ignored).</li>
+<li>The tunnel key should be restricted in <code>authorized_keys</code> to opening these two loopback ports only.</li>
+<li>The origin listens on the docker0 address only, not on a public interface.</li>
+</ol>
+<h2>Undo</h2>
+<p>Remove the block and the variable from the existing Caddy and recreate it; <code>docker compose down</code> in the origin
+directory; stop the tunnel unit; delete the directory.</p></main></body></html>

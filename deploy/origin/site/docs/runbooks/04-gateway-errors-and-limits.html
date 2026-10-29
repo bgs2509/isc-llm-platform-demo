@@ -1,0 +1,30 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>04-gateway-errors-and-limits</title><link rel="icon" href="data:,"><link rel="stylesheet" href="../../style.css"></head><body><div class="top"><div><b>Private LLM platform</b><a href="../../index.html">Overview</a><a href="../../docs/architecture.html">Architecture</a><a href="../../docs/benchmark-report.html">Benchmark report</a><a href="../../docs/handover.html">Handover</a><a href="../../console/">Console</a><a href="../../grafana/">Grafana</a></div></div><main><h1>Runbook 4: gateway errors and team limits</h1>
+<p><strong>Alert:</strong> <code>GatewayErrorRateHigh</code> (more than 5 % of gateway requests fail for 5 minutes).</p>
+<h2>Tell the causes apart</h2>
+<ol>
+<li><strong>429 for one team</strong>: the team hit its parallel or per-minute limit, or its budget. This is the gateway
+   working as designed. Dashboard panel "Gateway failures per second by team and status".</li>
+<li><strong>5xx for all teams</strong>: the gateway or the model fails. Check runbook 1 first.</li>
+<li><strong>401</strong>: a wrong or expired team key.</li>
+</ol>
+<h2>Check</h2>
+<ol>
+<li><code>kubectl -n llm-platform get pods</code> (all <code>Running</code>).</li>
+<li><code>kubectl -n llm-platform logs deploy/litellm --tail=100</code>.</li>
+</ol>
+<h2>Fix</h2>
+<ol>
+<li>Legitimate demand above the limit: raise the team's limits in <code>values.yaml</code>
+   (<code>tenants[].maxParallelRequests</code>, <code>rpmLimit</code>, <code>maxBudgetUsd</code>). The bootstrap job creates keys but does not
+   change existing ones; update an existing key through the gateway admin API <code>/key/update</code> with the master key:</li>
+</ol>
+<p><code>bash
+   kubectl -n llm-platform port-forward svc/litellm 4000:4000 &amp;
+   MASTER=$(kubectl -n llm-platform get secret llm-platform-secrets -o jsonpath="{.data.masterKey}" | base64 -d)
+   curl -X POST http://127.0.0.1:4000/key/update -H "Authorization: Bearer $MASTER" \
+     -H "Content-Type: application/json" \
+     -d "{\"key\": \"&lt;team key&gt;\", \"rpm_limit\": 600, \"max_parallel_requests\": 16}"</code>
+2. Gateway pod crashing: <code>kubectl -n llm-platform describe pod -l app=litellm</code>; the pod waits for Postgres
+   at start, so also check <code>kubectl -n llm-platform get pods -l app=postgres</code>.</p>
+<h2>Verify</h2>
+<p>Failure rate below 5 %, a test from the console as the affected team succeeds.</p></main></body></html>

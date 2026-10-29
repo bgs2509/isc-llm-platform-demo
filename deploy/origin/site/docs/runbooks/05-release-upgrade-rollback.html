@@ -1,0 +1,23 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>05-release-upgrade-rollback</title><link rel="icon" href="data:,"><link rel="stylesheet" href="../../style.css"></head><body><div class="top"><div><b>Private LLM platform</b><a href="../../index.html">Overview</a><a href="../../docs/architecture.html">Architecture</a><a href="../../docs/benchmark-report.html">Benchmark report</a><a href="../../docs/handover.html">Handover</a><a href="../../console/">Console</a><a href="../../grafana/">Grafana</a></div></div><main><h1>Runbook 5: upgrade and roll back a release</h1>
+<h2>Upgrade</h2>
+<ol>
+<li>Change <code>values.yaml</code> or the templates.</li>
+<li><code>helm lint chart/llm-platform</code></li>
+<li><code>helm upgrade llm-platform chart/llm-platform -n llm-platform --wait</code></li>
+</ol>
+<p>Random secrets (master key, team keys, passwords) are kept across upgrades.</p>
+<h2>Roll back</h2>
+<ol>
+<li><code>helm history llm-platform -n llm-platform</code> — find the last good revision.</li>
+<li><code>helm rollback llm-platform &lt;revision&gt; -n llm-platform --wait</code></li>
+</ol>
+<h2>Verify</h2>
+<p>All pods <code>Running</code>, Prometheus targets <code>up</code>, a one-request test from the console succeeds.</p>
+<h2>Notes</h2>
+<ol>
+<li>The database lives on a 1 GiB volume; deleting the Postgres pod keeps it, deleting the release's
+   volume claim loses keys, spend and budgets.</li>
+<li>To rotate a team key: remove the entry <code>key-&lt;team&gt;</code> from the Secret and run <code>helm upgrade</code>; the bootstrap
+   job creates the new key. The old key stays valid in the gateway until it is deleted through the gateway admin
+   API (see the LiteLLM documentation for key deletion).</li>
+</ol></main></body></html>

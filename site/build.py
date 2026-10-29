@@ -1,19 +1,20 @@
 #!/usr/bin/env python3
-"""Build the static site (site/dist) from README.md, docs/ and docs/benchmark-results.json.
+"""Build the static site from README.md, docs/ and docs/benchmark-results.json.
 
+The output is tracked in git (deploy/origin/site) and reaches the web server by git pull; the build is
+deterministic so a test can compare the tracked pages with a fresh build.
 Usage: python site/build.py
 """
 import html
 import json
 import re
 import shutil
-import time
 from pathlib import Path
 
 import markdown
 
 ROOT = Path(__file__).resolve().parent.parent
-OUT = ROOT / "site" / "dist"
+OUT = ROOT / "deploy" / "origin" / "site"
 EXT = ["tables", "fenced_code", "sane_lists"]
 
 CSS = """
@@ -63,8 +64,8 @@ def md_to_html(path: Path) -> str:
     return re.sub(r'href="([^"#:]+)\.md(#[^"]*)?"', lambda m: f'href="{m.group(1)}.html{m.group(2) or ""}"', body)
 
 
-def write(rel: str, content: str) -> None:
-    p = OUT / rel
+def write(out: Path, rel: str, content: str) -> None:
+    p = out / rel
     p.parent.mkdir(parents=True, exist_ok=True)
     p.write_text(content, encoding="utf8")
 
@@ -109,24 +110,24 @@ Prometheus, Grafana, FastAPI and plain JavaScript (console), <code>nvidia-smi</c
 <h2>Access</h2>
 <p>The live console and Grafana start real load on a GPU, so they are protected by a password. The documents
 and the report are open.</p>
-<footer>Built {time.strftime("%Y-%m-%d %H:%M")} from the project repository. Benchmark numbers: one 30-second run per setting on a shared GPU; see the report for limits.</footer>
+<footer>Measured {data["generated_at"][:10]}, built from the project repository. Benchmark numbers: one 30-second run per setting on a shared GPU; see the report for limits.</footer>
 """
 
 
-def main() -> None:
-    if OUT.exists():
-        shutil.rmtree(OUT)
-    OUT.mkdir(parents=True)
-    write("style.css", CSS)
-    write("index.html", page("Private LLM platform", landing(), 0))
+def main(out: Path = OUT) -> None:
+    if out.exists():
+        shutil.rmtree(out)
+    out.mkdir(parents=True)
+    write(out, "style.css", CSS)
+    write(out, "index.html", page("Private LLM platform", landing(), 0))
     pages = [("readme.html", ROOT / "README.md", "README"), ("deploy/README.html", ROOT / "deploy" / "README.md", "publishing")]
     for name in ("architecture", "benchmark-report", "handover"):
         pages.append((f"docs/{name}.html", ROOT / "docs" / f"{name}.md", name))
     for p in sorted((ROOT / "docs" / "runbooks").glob("*.md")):
         pages.append((f"docs/runbooks/{p.stem}.html", p, p.stem))
     for rel, src, title in pages:
-        write(rel, page(title, md_to_html(src), rel.count("/")))
-    print("built", len(pages) + 1, "pages into", OUT)
+        write(out, rel, page(title, md_to_html(src), rel.count("/")))
+    print("built", len(pages) + 1, "pages into", out)
 
 
 if __name__ == "__main__":

@@ -1,4 +1,4 @@
-"""Every local link of the built site points to a file of the build.
+"""Every local link of the built site points to a file of the build; the tracked pages equal a fresh build.
 
 Run: python -m pytest site
 """
@@ -15,18 +15,27 @@ _spec.loader.exec_module(build)
 PROXIED = {"console", "grafana"}
 
 
-def test_local_links_resolve():
-    build.main()
+def test_local_links_resolve(tmp_path):
+    build.main(tmp_path)
     missing = []
-    for page in build.OUT.rglob("*.html"):
+    for page in tmp_path.rglob("*.html"):
         for ref in re.findall(r'(?:href|src)="([^"]+)"', page.read_text()):
             ref = ref.split("#", 1)[0]
             if not ref or re.match(r"^[a-z]+:", ref):
                 continue
             target = (page.parent / ref).resolve()
-            out = build.OUT.resolve()
+            out = tmp_path.resolve()
             if target.is_relative_to(out) and target.relative_to(out).parts[:1] in {(p,) for p in PROXIED}:
                 continue
             if not target.exists():
-                missing.append(f"{page.relative_to(build.OUT)} -> {ref}")
+                missing.append(f"{page.relative_to(tmp_path)} -> {ref}")
     assert not missing, missing
+
+
+def test_tracked_pages_equal_fresh_build(tmp_path):
+    build.main(tmp_path)
+    fresh = {p.relative_to(tmp_path): p.read_bytes() for p in tmp_path.rglob("*") if p.is_file()}
+    tracked = {p.relative_to(build.OUT): p.read_bytes() for p in build.OUT.rglob("*") if p.is_file()}
+    assert sorted(tracked) == sorted(fresh), "rebuild: python site/build.py"
+    changed = [str(k) for k in fresh if fresh[k] != tracked[k]]
+    assert not changed, f"rebuild: python site/build.py; changed {changed}"
