@@ -1,0 +1,22 @@
+<?xml version="1.0" ?>
+<Technology generated="auto" source="YAML frontmatter of markdown specs">
+  <Feature source="2026-10-29-isc2-site-design.md">
+    <feature>isc2-site</feature>
+    <risk>medium</risk>
+    <risk_reason>new static site and two small console routes; one more site block in the shared portal proxy; no DB, no auth model change (the whole site behind the existing login)</risk_reason>
+    <open_questions/>
+    <approved>2026-10-29, owner, in session: home = 6 interactive widgets (variant 4, live data, whole site behind the reviewer login); pages 1-6 as below</approved>
+  </Feature>
+  <Feature source="2026-10-29-rag-agent-design.md">
+    <feature>rag-agent</feature>
+    <risk>medium</risk>
+    <risk_reason>one new package of modules inside the console, two new API routes, one new scrape job; no DB, no auth change, reversible by a helm rollback</risk_reason>
+    <open_questions/>
+    <context7_verified>
+      <Item>prometheus HTTP API /api/v1/rules and /api/v1/query (prometheus.io/docs/prometheus/latest/querying/api)</Item>
+      <Item>litellm proxy callbacks otel (docs.litellm.ai) — not used, recorded as the path to OpenTelemetry</Item>
+      <Item>vllm --runner pooling /v1/embeddings (docs.vllm.ai) — not used, recorded as the path to dense retrieval</Item>
+    </context7_verified>
+    <approved>2026-10-29, owner, in session (variant 2; corpus = client blog; judge = qwen38-lil; company name allowed)</approved>
+  </Feature>
+</Technology>

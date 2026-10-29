@@ -1,3 +1,15 @@
+# Saved runs (runs.json) survive pod restarts and upgrades.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: console-data
+  labels: {{- include "llm-platform.labels" . | nindent 4 }}
+spec:
+  accessModes: ["ReadWriteOnce"]
+  resources:
+    requests:
+      storage: 100Mi
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -30,7 +42,7 @@ spec:
           resources: {requests: {cpu: 50m, memory: 96Mi}, limits: {memory: 512Mi}}
       volumes:
         - name: data
-          emptyDir: {}
+          persistentVolumeClaim: {claimName: console-data}
 ---
 apiVersion: v1
 kind: Service

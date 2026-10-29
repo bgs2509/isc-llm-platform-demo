@@ -11,10 +11,13 @@ existing OpenAI-compatible model server (vLLM). Packaged as a Helm chart, run on
 - `console/` — web console (FastAPI + plain JavaScript), tests in `console/tests/`
 - `tools/` — host-side helpers (`model_forward.py` relay, `gpu_exporter.py`)
 - `scripts/` — `install.sh`, `benchmark.py`, `make_dashboard.py`, `make_report.py`
-- `docs/` — architecture, runbooks, handover, benchmark report
+- `site/` — static site builder (`build.py`) and its link test
+- `deploy/` — publishing: origin container, portal proxy block, reverse tunnel unit (`deploy/README.md`)
+- `docs/` — architecture, runbooks, handover, benchmark report; `docs/superpowers/` — designs and plans
+- `corpus/` — raw HTML of the blog corpus (git-ignored)
 
 ## Commands
 
-- Tests: `cd console && python -m pytest`
+- Tests: `cd console && python -m pytest`; site links: `python -m pytest site`
 - Chart checks: `helm lint chart/llm-platform`
 - Install: `scripts/install.sh`

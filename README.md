@@ -53,7 +53,8 @@ reverse-proxy block, the tunnel unit and a publish script (see [deploy/README.md
 ## Tests
 
 ```bash
-cd console && python -m pip install -r requirements-dev.txt && python -m pytest
+(cd console && python -m pip install -r requirements-dev.txt && python -m pytest)
+python -m pytest site            # every local link of the built site resolves
 helm lint chart/llm-platform
 ```
 
