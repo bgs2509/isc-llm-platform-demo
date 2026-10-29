@@ -32,7 +32,13 @@ _spec = importlib.util.spec_from_file_location("site_build", ROOT / "site" / "bu
 isc1 = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(isc1)
 
-PAGES = ["index", "inference", "infrastructure", "gateway", "rag", "observability", "delivery"]
+HOME_TITLE = "Private LLM platform"
+# One title per topic page: the menu, the home card, the page heading and the prev/next buttons all use it.
+TOPICS = [("inference", "vLLM inference"), ("infrastructure", "Kubernetes and operations"),
+          ("gateway", "LiteLLM gateway"), ("rag", "RAG agent"), ("observability", "Observability"),
+          ("delivery", "Delivery")]
+TITLE = {"index": HOME_TITLE, **dict(TOPICS)}
+PAGES = list(TITLE)
 RUNBOOK_OF = {"01": "01-model-endpoint-down", "02": "02-slow-answers-or-queue", "03": "03-kv-cache-full",
               "04": "04-gateway-errors-and-limits", "05": "05-release-upgrade-rollback"}
 # (rule name, runbook number) as in chart/llm-platform/templates/prometheus-config.yaml
@@ -478,20 +484,91 @@ def ascii_safe(text: str) -> str:
     return text.encode("ascii", "xmlcharrefreplace").decode("ascii")
 
 
-def _header(templates: Path, up: str) -> str:
-    head = re.search(r"<header class=\"top\">.*?</header>", (templates / "index.html").read_text(encoding="utf8"),
-                     flags=re.S).group(0)
-    head = head.replace(' aria-current="page"', "")
-    return re.sub(r'href="(?![a-z]+:|/|#)', f'href="{up}', head)
+# ---- navigation shared by every page: menu, stack diagram, prev/next -------------------
+# Links between the site's own pages stay in the same tab; tools and documents open in a new tab.
+def header(current: str | None, up: str = "") -> str:
+    def item(slug: str) -> str:
+        mark = ' aria-current="page"' if slug == current else ""
+        return f'<a href="{up}{slug}.html"{mark}>{esc(TITLE[slug])}</a>'
+    nav = "\n    ".join(item(slug) for slug, _ in TOPICS)
+    return (f'<header class="top"><div class="top-in">\n'
+            f'  <a class="brand" href="{up}index.html">{esc(HOME_TITLE)}</a>\n'
+            f'  <nav>\n    {nav}\n  </nav>\n</div></header>')
 
 
-def _doc_page(title: str, body: str, depth: int, templates: Path) -> str:
+# (x, y, width, height, label, second line) of each linked block inside the Kubernetes and GPU host frames.
+_BLOCKS = {
+    "gateway": (180, 50, 300, 46, "LiteLLM gateway", "team keys, limits, cache"),
+    "rag": (180, 112, 140, 46, "RAG agent", "tools, evaluation set"),
+    "observability": (340, 112, 140, 46, "Prometheus + Grafana", "6 alert rules"),
+    "inference": (570, 50, 160, 46, "vLLM", "Qwen, 16 parallel slots"),
+}
+
+
+def _block(slug: str, current: str, body: str) -> str:
+    cls, mark = ("node on", ' aria-current="page"') if slug == current else ("node", "")
+    return f'<a href="{slug}.html" class="{cls}"{mark} aria-label="{esc(TITLE[slug])}">{body}</a>'
+
+
+def stack(current: str) -> str:
+    """The platform as one diagram; every block opens its page, the current page's block is highlighted."""
+    parts = [
+        _block("infrastructure", current,
+               '<rect class="frame" x="150" y="12" width="356" height="164" rx="10"/>'
+               '<text class="cap" x="164" y="34">Kubernetes (kind + Helm)</text>'),
+        _block("inference", current,
+               '<rect class="frame" x="550" y="12" width="200" height="164" rx="10"/>'
+               '<text class="cap" x="564" y="34">GPU host: NVIDIA GB10</text>'
+               '<text class="sub" x="564" y="130">model server outside</text>'
+               '<text class="sub" x="564" y="146">the cluster</text>'),
+    ]
+    for slug, (x, y, w, h, label, sub) in _BLOCKS.items():
+        parts.append(_block(slug, current,
+                            f'<rect class="box" x="{x}" y="{y}" width="{w}" height="{h}" rx="7"/>'
+                            f'<text class="lbl" x="{x + 12}" y="{y + 20}">{label}</text>'
+                            f'<text class="sub" x="{x + 12}" y="{y + 37}">{sub}</text>'))
+    parts.append(_block("delivery", current,
+                        '<rect class="box" x="10" y="192" width="740" height="40" rx="7"/>'
+                        '<text class="lbl" x="24" y="217">Delivery</text>'
+                        '<text class="sub" x="100" y="217">one-command install, tests, 5 runbooks, '
+                        'incident write-ups</text>'))
+    return ('<figure class="stack"><svg viewBox="0 0 760 240" role="group" aria-label="Platform diagram">'
+            '<defs><marker id="arr" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" '
+            'orient="auto"><path d="M0 0L8 4L0 8z"/></marker></defs>'
+            '<rect class="team" x="10" y="50" width="110" height="46" rx="7"/>'
+            '<text class="lbl" x="22" y="70">3 teams</text><text class="sub" x="22" y="87">OpenAI API</text>'
+            '<path class="flow" d="M120 73H178"/><path class="flow" d="M250 112V98"/>'
+            '<path class="flow" d="M480 73H568"/><path class="flow dash" d="M480 135H548"/>'
+            + "".join(parts) + '</svg></figure>')
+
+
+def pager(current: str) -> str:
+    """Prev/next buttons named exactly like the pages they open."""
+    i = PAGES.index(current)
+    before = PAGES[i - 1]
+    prev = f'<a class="prev" href="{before}.html">&larr; {esc(TITLE[before])}</a>'
+    nxt = ""
+    if i + 1 < len(PAGES):
+        after = PAGES[i + 1]
+        nxt = f'<a class="next" href="{after}.html">{esc(TITLE[after])} &rarr;</a>'
+    return f'<nav class="pager" aria-label="Pages">{prev}{nxt}</nav>'
+
+
+def page_values(name: str) -> dict[str, str]:
+    vals = {"header": header(name), "title": esc(TITLE[name]), "stack": stack(name),
+            **{f"title_{slug}": esc(t) for slug, t in TOPICS}}
+    if name != "index":
+        vals["pager"] = pager(name)
+    return vals
+
+
+def _doc_page(title: str, body: str, depth: int) -> str:
     up = "../" * depth
     body = re.sub(r"<a (?![^>]*target=)", '<a target="_blank" rel="noopener" ', body)
     return (f'<!doctype html>\n<html lang="en">\n<head>\n<meta charset="utf-8">\n'
             f'<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">\n'
             f'<title>{esc(title)}</title>\n<link rel="icon" href="data:,">\n'
-            f'<link rel="stylesheet" href="{up}static/site.css">\n</head>\n<body>\n{_header(templates, up)}\n'
+            f'<link rel="stylesheet" href="{up}static/site.css">\n</head>\n<body>\n{header(None, up)}\n'
             f'<main><section class="case doc">{body}</section></main>\n</body>\n</html>\n')
 
 
@@ -510,9 +587,9 @@ def render(inputs: dict, templates: Path = TEMPLATES, root: Path = ROOT) -> dict
     pages: dict[str, str] = {}
     for name in PAGES:
         text = (templates / f"{name}.html").read_text(encoding="utf8")
-        pages[f"{name}.html"] = ascii_safe(fill(text, vals, f"{name}.html"))
+        pages[f"{name}.html"] = ascii_safe(fill(text, vals | page_values(name), f"{name}.html"))
     for rel, src, title in documents(root):
-        pages[rel] = ascii_safe(_doc_page(title, isc1.md_to_html(src), rel.count("/"), templates))
+        pages[rel] = ascii_safe(_doc_page(title, isc1.md_to_html(src), rel.count("/")))
     for f in sorted(STATIC.iterdir()):
         text = f.read_text(encoding="utf8")
         assert text.isascii(), f"{f.name} has a character outside ASCII"

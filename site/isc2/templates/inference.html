@@ -3,28 +3,23 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>LLM inference on GPU</title>
+<title>{{title}}</title>
 <link rel="icon" href="data:,">
 <link rel="stylesheet" href="static/site.css">
 </head>
 <body>
-<header class="top"><div class="top-in">
-  <a class="brand" href="index.html" target="_blank" rel="noopener">Private LLM platform</a>
-  <nav>
-    <a href="inference.html" target="_blank" rel="noopener" aria-current="page">1 Inference</a>
-    <a href="infrastructure.html" target="_blank" rel="noopener">2 Infrastructure</a>
-    <a href="gateway.html" target="_blank" rel="noopener">3 Gateway</a>
-    <a href="rag.html" target="_blank" rel="noopener">4 RAG and agent</a>
-    <a href="observability.html" target="_blank" rel="noopener">5 Observability</a>
-    <a href="delivery.html" target="_blank" rel="noopener">6 Delivery</a>
-  </nav>
-</div></header>
+{{header}}
 
 <main>
-  <section>
-    <p class="eyebrow">Requirement 1 of 6</p>
-    <h1>LLM inference on GPU with vLLM</h1>
+  <section class="intro">
+    <h1>{{title}}</h1>
     <div class="kw"><span>vLLM</span><span>GPU</span><span>latency</span><span>throughput</span><span>concurrency</span><span>KV cache</span></div>
+    <ul class="tldr">
+      <li>One Qwen model on one NVIDIA GB10, served by vLLM</li>
+      <li>Load test at concurrency 1 to 16: where throughput stops growing</li>
+      <li>KV cache and queue watched live on every run</li>
+    </ul>
+    {{stack}}
   </section>
 
   <section aria-label="Live model state">
@@ -121,6 +116,7 @@
       <li><a href="grafana/" target="_blank" rel="noopener">Grafana: model row</a></li>
     </ul>
   </section>
+  {{pager}}
 </main>
 <script src="static/site.js"></script>
 </body>

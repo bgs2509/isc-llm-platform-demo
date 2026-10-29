@@ -3,28 +3,33 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Inference Observability</title>
+<title>Observability</title>
 <link rel="icon" href="data:,">
 <link rel="stylesheet" href="static/site.css">
 </head>
 <body>
 <header class="top"><div class="top-in">
-  <a class="brand" href="index.html" target="_blank" rel="noopener">Private LLM platform</a>
+  <a class="brand" href="index.html">Private LLM platform</a>
   <nav>
-    <a href="inference.html" target="_blank" rel="noopener">1 Inference</a>
-    <a href="infrastructure.html" target="_blank" rel="noopener">2 Infrastructure</a>
-    <a href="gateway.html" target="_blank" rel="noopener">3 Gateway</a>
-    <a href="rag.html" target="_blank" rel="noopener">4 RAG and agent</a>
-    <a href="observability.html" target="_blank" rel="noopener" aria-current="page">5 Observability</a>
-    <a href="delivery.html" target="_blank" rel="noopener">6 Delivery</a>
+    <a href="inference.html">vLLM inference</a>
+    <a href="infrastructure.html">Kubernetes and operations</a>
+    <a href="gateway.html">LiteLLM gateway</a>
+    <a href="rag.html">RAG agent</a>
+    <a href="observability.html" aria-current="page">Observability</a>
+    <a href="delivery.html">Delivery</a>
   </nav>
 </div></header>
 
 <main>
-  <section>
-    <p class="eyebrow">Requirement 5 of 6</p>
-    <h1>Observability of LLM inference</h1>
+  <section class="intro">
+    <h1>Observability</h1>
     <div class="kw"><span>Prometheus</span><span>Grafana</span><span>alerting</span><span>reliability</span><span>latency</span><span>usage</span><span>errors</span><span>cost</span><span>OpenTelemetry</span></div>
+    <ul class="tldr">
+      <li>Prometheus collects model, GPU and gateway metrics</li>
+      <li>Grafana dashboard with model, GPU, gateway and agent rows</li>
+      <li>6 alert rules, each linked to a runbook</li>
+    </ul>
+    <figure class="stack"><svg viewBox="0 0 760 240" role="group" aria-label="Platform diagram"><defs><marker id="arr" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L8 4L0 8z"/></marker></defs><rect class="team" x="10" y="50" width="110" height="46" rx="7"/><text class="lbl" x="22" y="70">3 teams</text><text class="sub" x="22" y="87">OpenAI API</text><path class="flow" d="M120 73H178"/><path class="flow" d="M250 112V98"/><path class="flow" d="M480 73H568"/><path class="flow dash" d="M480 135H548"/><a href="infrastructure.html" class="node" aria-label="Kubernetes and operations"><rect class="frame" x="150" y="12" width="356" height="164" rx="10"/><text class="cap" x="164" y="34">Kubernetes (kind + Helm)</text></a><a href="inference.html" class="node" aria-label="vLLM inference"><rect class="frame" x="550" y="12" width="200" height="164" rx="10"/><text class="cap" x="564" y="34">GPU host: NVIDIA GB10</text><text class="sub" x="564" y="130">model server outside</text><text class="sub" x="564" y="146">the cluster</text></a><a href="gateway.html" class="node" aria-label="LiteLLM gateway"><rect class="box" x="180" y="50" width="300" height="46" rx="7"/><text class="lbl" x="192" y="70">LiteLLM gateway</text><text class="sub" x="192" y="87">team keys, limits, cache</text></a><a href="rag.html" class="node" aria-label="RAG agent"><rect class="box" x="180" y="112" width="140" height="46" rx="7"/><text class="lbl" x="192" y="132">RAG agent</text><text class="sub" x="192" y="149">tools, evaluation set</text></a><a href="observability.html" class="node on" aria-current="page" aria-label="Observability"><rect class="box" x="340" y="112" width="140" height="46" rx="7"/><text class="lbl" x="352" y="132">Prometheus + Grafana</text><text class="sub" x="352" y="149">6 alert rules</text></a><a href="inference.html" class="node" aria-label="vLLM inference"><rect class="box" x="570" y="50" width="160" height="46" rx="7"/><text class="lbl" x="582" y="70">vLLM</text><text class="sub" x="582" y="87">Qwen, 16 parallel slots</text></a><a href="delivery.html" class="node" aria-label="Delivery"><rect class="box" x="10" y="192" width="740" height="40" rx="7"/><text class="lbl" x="24" y="217">Delivery</text><text class="sub" x="100" y="217">one-command install, tests, 5 runbooks, incident write-ups</text></a></svg></figure>
   </section>
 
   <section class="case" data-picker>
@@ -112,10 +117,11 @@
     <h2><small>Links</small></h2>
     <ul>
       <li><a href="grafana/" target="_blank" rel="noopener">Grafana dashboard</a></li>
-      <li><a href="observability.html#alerts" target="_blank" rel="noopener">Alert rules (Prometheus configuration)</a></li>
+      <li><a href="observability.html#alerts">Alert rules (Prometheus configuration)</a></li>
       <li>Runbooks: <a href="docs/runbooks/01-model-endpoint-down.html" target="_blank" rel="noopener">01</a>, <a href="docs/runbooks/02-slow-answers-or-queue.html" target="_blank" rel="noopener">02</a>, <a href="docs/runbooks/03-kv-cache-full.html" target="_blank" rel="noopener">03</a>, <a href="docs/runbooks/04-gateway-errors-and-limits.html" target="_blank" rel="noopener">04</a>, <a href="docs/runbooks/05-release-upgrade-rollback.html" target="_blank" rel="noopener">05</a></li>
     </ul>
   </section>
+  <nav class="pager" aria-label="Pages"><a class="prev" href="rag.html">&larr; RAG agent</a><a class="next" href="delivery.html">Delivery &rarr;</a></nav>
 </main>
 <script src="static/site.js"></script>
 </body>

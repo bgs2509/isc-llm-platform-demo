@@ -13,7 +13,12 @@ approved: "2026-10-29, owner, in session: home = 6 interactive widgets (variant 
 1. English only: no character outside ASCII and typographic punctuation in any built page (checked by a test).
 2. Bullets with keywords, no prose paragraphs; numbers carry units; percentages name their base.
 3. Every page follows the client's own case format: Challenge -> Solution -> Results, then Trade-offs,
-   What I'd change at scale, Links. Every link to another page or tool opens in a new tab.
+   What I'd change at scale, Links. Links between the site's own pages open in the same tab; tools (console,
+   Grafana), documents and external addresses open in a new tab (owner decision 2026-10-29, variant "a").
+6. Read in 2 seconds: every page opens with its title, three short points and the platform diagram (every block
+   links to its page, the current page's block is highlighted); topic pages end with prev/next buttons.
+7. One title per page (`TOPICS` in `site/isc2/build.py`): the menu, the home card, the page heading, the tab
+   title and the prev/next buttons all show it verbatim (checked by a test).
 4. Live data comes only from the console under the same origin (`/console/api/...`); the browser never talks to
    Prometheus or Kubernetes. Without load a widget shows the latest saved run (with its date); before the first
    run it shows the measurement baked in at build time.
@@ -21,8 +26,9 @@ approved: "2026-10-29, owner, in session: home = 6 interactive widgets (variant 
 
 ## Home page
 
-Six widgets, one per mandatory requirement of the role; each widget shows its live or latest number and opens
-its page in a new tab.
+Title, one line of the stack (Qwen, vLLM, NVIDIA GB10 (DGX Spark), Kubernetes (kind + Helm), LiteLLM,
+Prometheus + Grafana), three points, the platform diagram; then six widgets, one per mandatory requirement of the
+role, each headed by its page title, showing its live or latest number and opening its page.
 
 ## Page 1 — LLM inference on GPU (vLLM)
 

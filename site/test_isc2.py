@@ -136,13 +136,49 @@ def test_topic_page_has_the_six_sections_in_order(pages, name):
         assert "Ask the agent" in heads and "API" in heads
 
 
-def test_every_link_opens_in_a_new_tab(pages):
+SITE_PAGES = {"index.html", *TOPIC_PAGES}
+
+
+def _site_page(href: str) -> str | None:
+    """The site page a link opens, or None for a tool, a document or an external address."""
+    name = href.split("#", 1)[0].replace("../", "")
+    return name if name in SITE_PAGES else None
+
+
+def test_site_pages_open_in_the_same_tab_and_everything_else_in_a_new_tab(pages):
     bad = []
     for rel, text in pages.items():
         for tag in re.findall(r"<a\b[^>]*>", text):
-            if 'target="_blank"' not in tag or 'rel="noopener"' not in tag:
+            href = re.search(r'href="([^"]*)"', tag).group(1)
+            new_tab = 'target="_blank"' in tag and 'rel="noopener"' in tag
+            if new_tab == bool(_site_page(href)):
                 bad.append((rel, tag))
     assert not bad, bad[:5]
+
+
+def test_every_link_to_a_site_page_is_named_like_its_heading(pages):
+    heads = {name: re.search(r"<h1>([^<]+)</h1>", pages[name]).group(1) for name in SITE_PAGES}
+    assert heads["index.html"] == build.HOME_TITLE
+    assert {heads[f"{slug}.html"] for slug, _ in build.TOPICS} == {t for _, t in build.TOPICS}
+    bad = []
+    for rel, text in pages.items():
+        for tag, inner in re.findall(r"(<a\b[^>]*>)(.*?)</a>", text, flags=re.S):
+            href = re.search(r'href="([^"]*)"', tag).group(1)
+            target = _site_page(href)
+            if target is None or "#" in href:
+                continue
+            label = re.search(r'aria-label="([^"]+)"', tag) or re.search(r"<h2>([^<]+)</h2>", inner)
+            text_of = label.group(1) if label else re.sub(r"<[^>]+>|&larr;|&rarr;", "", inner).strip()
+            if text_of != heads[target]:
+                bad.append((rel, href, text_of))
+    assert not bad, bad[:5]
+
+
+@pytest.mark.parametrize("name", TOPIC_PAGES)
+def test_topic_page_marks_itself_in_the_diagram_and_links_its_neighbours(pages, name):
+    text = pages[name]
+    assert f'<a href="{name}" class="node on" aria-current="page"' in text
+    assert '<nav class="pager"' in text and "Requirement" not in text.split("</h1>")[0]
 
 
 def test_local_links_and_assets_resolve(pages, tmp_path):
