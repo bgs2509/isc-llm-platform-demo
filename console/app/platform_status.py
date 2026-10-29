@@ -44,7 +44,7 @@ TEAM_REQUESTS = f"sum by (api_key_alias) (rate({_TOTAL}{_ALIAS}[5m]))"
 TEAM_TOKENS = f'sum by (api_key_alias) (rate(litellm_total_tokens_metric_total{_ALIAS}[5m]))'
 _ERR_SHARE = f"sum(rate({_FAILED}[5m])) / clamp_min(sum(rate({_TOTAL}[5m])), 0.001)"
 SIGNAL_QUERIES = {
-    "reliability": (f'100 * (1 - sum(rate({_FAILED}{{exception_status=~"5.."}}[5m]))'
+    "reliability": (f'100 * (1 - (sum(rate({_FAILED}{{exception_status=~"5.."}}[5m])) or vector(0))'
                     f" / clamp_min(sum(rate({_TOTAL}[5m])), 0.001))"),
     "latency": "histogram_quantile(0.95, sum(rate(vllm:time_to_first_token_seconds_bucket[5m])) by (le))",
     "usage": "sum(rate(vllm:generation_tokens_total[1m]))",

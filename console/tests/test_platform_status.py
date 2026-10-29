@@ -136,3 +136,9 @@ async def test_snapshot_returned_unchanged():
             "teams": [{"team": "t", "requests_per_s": 1.0, "tokens_per_s": 2.0}]}
     assert await platform_status.fetch("alerts", snapshot=snap) == snap["alerts"]
     assert await platform_status.fetch("teams", snapshot=snap) == snap["teams"]
+
+
+def test_reliability_counts_zero_failures_when_no_5xx_series_exists():
+    # Prometheus returns an empty vector for a sum over absent series; 1 - empty would be empty too.
+    q = platform_status.SIGNAL_QUERIES["reliability"]
+    assert 'exception_status=~"5.."' in q and "or vector(0)" in q
