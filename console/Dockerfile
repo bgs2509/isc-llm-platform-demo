@@ -5,6 +5,7 @@ RUN pip install --no-cache-dir -r requirements.txt \
  && useradd --system --uid 10001 app && mkdir /data && chown app /data
 COPY app ./app
 COPY corpus ./corpus
+COPY eval ./eval
 ENV PYTHONUNBUFFERED=1
 USER app
 EXPOSE 8000
