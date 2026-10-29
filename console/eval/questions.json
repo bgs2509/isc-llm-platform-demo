@@ -22,13 +22,13 @@
   {"id": "P1", "kind": "platform", "question": "Is any alert firing on the platform right now?",
    "expected_tool": "platform_status", "snapshot": "idle", "expected_facts": ["no alert is firing"]},
   {"id": "P2", "kind": "platform", "question": "Which alerts are firing at the moment?",
-   "expected_tool": "platform_status", "snapshot": "overload", "expected_facts": ["ModelQueueBuildingUp is firing", "KvCacheNearlyFull is firing"]},
+   "expected_tool": "platform_status", "snapshot": "overload", "expected_facts": ["ModelQueueBuildingUp is firing", "TimeToFirstTokenSlow is pending, not firing"]},
   {"id": "P3", "kind": "platform", "question": "Are requests waiting for the model, and how many?",
-   "expected_tool": "platform_status", "snapshot": "overload", "expected_facts": ["8 requests are waiting"]},
+   "expected_tool": "platform_status", "snapshot": "overload", "expected_facts": ["7 requests are waiting"]},
   {"id": "P4", "kind": "platform", "question": "Which team sends the most requests per second?",
    "expected_tool": "platform_status", "snapshot": "idle", "expected_facts": ["research sends the most requests per second"]},
   {"id": "P5", "kind": "platform", "question": "How many tokens per second is the research team using?",
-   "expected_tool": "platform_status", "snapshot": "overload", "expected_facts": ["research uses about 150 tokens per second"]},
+   "expected_tool": "platform_status", "snapshot": "overload", "expected_facts": ["research uses about 108 tokens per second"]},
   {"id": "P6", "kind": "platform", "question": "Is the KV cache of the model close to full?",
-   "expected_tool": "platform_status", "snapshot": "overload", "expected_facts": ["KvCacheNearlyFull is firing", "KV cache use is 0.95"]}
+   "expected_tool": "platform_status", "snapshot": "overload", "expected_facts": ["KvCacheNearlyFull is not firing", "KV cache use is about 0.59, below the 0.9 threshold"]}
 ]

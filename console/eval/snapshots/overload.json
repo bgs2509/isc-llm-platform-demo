@@ -1,16 +1,53 @@
 {
-  "source": "synthetic: shaped like platform_status alerts and teams views; load as in the alert drill (research 16 plus engineering 8 parallel requests on 16 model slots); to be replaced by a capture taken during drill D.4",
+  "source": "captured from GET /api/status (alerts, teams) when ModelQueueBuildingUp fired in drill D.4, 2026-10-29 15:28; rows of the two deleted drill keys removed",
   "alerts": [
-    {"name": "ModelEndpointDown", "state": "inactive", "query": "up{job=\"vllm\"} == 0", "value": 1.0},
-    {"name": "ModelQueueBuildingUp", "state": "firing", "query": "sum(vllm:num_requests_waiting) > 4", "value": 8.0},
-    {"name": "TimeToFirstTokenSlow", "state": "inactive", "query": "histogram_quantile(0.95, sum(rate(vllm:time_to_first_token_seconds_bucket[5m])) by (le)) > 5", "value": 3.9},
-    {"name": "KvCacheNearlyFull", "state": "firing", "query": "max(vllm:kv_cache_usage_perc) > 0.9", "value": 0.95},
-    {"name": "GatewayErrorRateHigh", "state": "inactive", "query": "sum(rate(litellm_proxy_failed_requests_metric_total[5m])) / clamp_min(sum(rate(litellm_proxy_total_requests_metric_total[5m])), 0.001) > 0.05", "value": 0.0},
-    {"name": "GpuUnderusedUnderLoad", "state": "inactive", "query": "avg_over_time(gpu_utilization_percent[2m]) < 30 and sum(vllm:num_requests_running) > 4", "value": null}
+    {
+      "name": "ModelEndpointDown",
+      "state": "inactive",
+      "query": "up{job=\"vllm\"} == 0",
+      "value": 1.0
+    },
+    {
+      "name": "ModelQueueBuildingUp",
+      "state": "firing",
+      "query": "sum(vllm:num_requests_waiting) > 4",
+      "value": 7.0
+    },
+    {
+      "name": "TimeToFirstTokenSlow",
+      "state": "pending",
+      "query": "histogram_quantile(0.95, sum by (le) (rate(vllm:time_to_first_token_seconds_bucket[5m]))) > 5",
+      "value": 17.61904761904762
+    },
+    {
+      "name": "KvCacheNearlyFull",
+      "state": "inactive",
+      "query": "max(vllm:kv_cache_usage_perc) > 0.9",
+      "value": 0.5913757700205339
+    },
+    {
+      "name": "GatewayErrorRateHigh",
+      "state": "inactive",
+      "query": "sum(rate(litellm_proxy_failed_requests_metric_total[5m])) / clamp_min(sum(rate(litellm_proxy_total_requests_metric_total[5m])), 0.001) > 0.05",
+      "value": 0.01931300389818363
+    },
+    {
+      "name": "GpuUnderusedUnderLoad",
+      "state": "inactive",
+      "query": "avg_over_time(gpu_utilization_percent[2m]) < 30 and sum(vllm:num_requests_running) > 4",
+      "value": null
+    }
   ],
   "teams": [
-    {"team": "research", "requests_per_s": 1.3, "tokens_per_s": 150.0},
-    {"team": "engineering", "requests_per_s": 0.6, "tokens_per_s": 70.0},
-    {"team": "operations", "requests_per_s": 0.0, "tokens_per_s": 0.0}
+    {
+      "team": "research",
+      "requests_per_s": 0.21744294108151735,
+      "tokens_per_s": 108.32203389830508
+    },
+    {
+      "team": "engineering",
+      "requests_per_s": 0.08103733333333334,
+      "tokens_per_s": 55.832203939393935
+    }
   ]
 }
