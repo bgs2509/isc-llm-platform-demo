@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>AI Gateway with LiteLLM</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="mock.css">
+</head>
+<body>
+<header class="top"><div class="top-in">
+  <a class="brand" href="index.html" target="_blank" rel="noopener">Private LLM platform</a>
+  <nav>
+    <a href="inference.html" target="_blank" rel="noopener">1 Inference</a>
+    <a href="infrastructure.html" target="_blank" rel="noopener">2 Infrastructure</a>
+    <a href="gateway.html" target="_blank" rel="noopener" aria-current="page">3 Gateway</a>
+    <a href="rag.html" target="_blank" rel="noopener">4 RAG and agent</a>
+    <a href="observability.html" target="_blank" rel="noopener">5 Observability</a>
+    <a href="delivery.html" target="_blank" rel="noopener">6 Delivery</a>
+  </nav>
+  <button id="notes-toggle" class="notes-btn" type="button">Hide mock notes</button>
+</div></header>
+
+<main>
+  <section>
+    <p class="eyebrow">Requirement 3 of 6</p>
+    <h1>AI gateway and model routing with LiteLLM</h1>
+    <div class="kw"><span>LiteLLM</span><span>tenant keys</span><span>quotas</span><span>rate limits</span><span>cache</span><span>usage</span><span>cost</span></div>
+  </section>
+
+  <section data-picker aria-label="Live traffic per team">
+    <div class="picker-row">
+      <button class="chip" type="button" data-show="research">research</button>
+      <button class="chip" type="button" data-show="engineering">engineering</button>
+      <button class="chip" type="button" data-show="operations">operations</button>
+    </div>
+    <div data-panel="research" style="margin-top:8px">
+      <div class="strip">
+        <div><b><span class="ph">#.#</span></b><span>requests/s</span></div>
+        <div><b><span class="ph">###</span></b><span>tokens/s</span></div>
+        <div><b><span class="ph">#.####</span> of 50</b><span>USD spent of daily budget</span></div>
+        <div><b>16 &middot; 600</b><span>parallel limit &middot; requests/min limit</span></div>
+      </div>
+    </div>
+    <div data-panel="engineering" hidden style="margin-top:8px">
+      <div class="strip">
+        <div><b><span class="ph">#.#</span></b><span>requests/s</span></div>
+        <div><b><span class="ph">###</span></b><span>tokens/s</span></div>
+        <div><b><span class="ph">#.####</span> of 20</b><span>USD spent of daily budget</span></div>
+        <div><b>8 &middot; 300</b><span>parallel limit &middot; requests/min limit</span></div>
+      </div>
+    </div>
+    <div data-panel="operations" hidden style="margin-top:8px">
+      <div class="strip">
+        <div><b><span class="ph">#.#</span></b><span>requests/s</span></div>
+        <div><b><span class="ph">###</span></b><span>tokens/s</span></div>
+        <div><b><span class="ph">#.####</span> of 5</b><span>USD spent of daily budget</span></div>
+        <div><b>2 &middot; 30</b><span>parallel limit &middot; requests/min limit</span></div>
+      </div>
+    </div>
+    <p class="src" style="margin-top:6px"><span class="pill live">live</span> /console/api/status?view=teams, 5-minute rate</p>
+    <p class="mock-note">Limits and budgets are the real values from <code>chart/llm-platform/values.yaml</code>. Whether the budget resets daily is to be checked against the gateway settings before the build.</p>
+  </section>
+
+  <section class="case">
+    <h2><small>Challenge</small></h2>
+    <ul>
+      <li>Several teams share one model; one team must not starve the others</li>
+      <li>Every request is attributed to a team: tokens, spend, errors</li>
+      <li>Repeated questions should not cost GPU time twice</li>
+    </ul>
+  </section>
+
+  <section class="case">
+    <h2><small>Solution</small> follow one request</h2>
+    <div data-picker>
+      <div class="journey">
+        <button class="chip" type="button" data-show="key">1 team key</button><span class="arrow">&rarr;</span>
+        <button class="chip" type="button" data-show="limits">2 limits and budget</button><span class="arrow">&rarr;</span>
+        <button class="chip" type="button" data-show="cache">3 cache</button><span class="arrow">&rarr;</span>
+        <button class="chip" type="button" data-show="model">4 model</button><span class="arrow">&rarr;</span>
+        <button class="chip" type="button" data-show="account">5 accounting</button>
+      </div>
+      <div class="panel detail" data-panel="key" style="margin-top:10px"><h3>Team key</h3><ul><li>One virtual key per team, created by the bootstrap job from <code>values.yaml</code></li><li>Unknown or revoked key &rarr; 401 before any model work</li></ul></div>
+      <div class="panel detail" data-panel="limits" hidden style="margin-top:10px"><h3>Limits and budget</h3><ul><li>Parallel requests and requests per minute per key</li><li>Spend budget per key; over budget &rarr; refused with a budget error</li></ul></div>
+      <div class="panel detail" data-panel="cache" hidden style="margin-top:10px"><h3>Cache</h3><ul><li>Same request &rarr; answer from cache, no GPU time, no model tokens</li><li>Exact-match cache; semantic cache in "What I'd change"</li></ul></div>
+      <div class="panel detail" data-panel="model" hidden style="margin-top:10px"><h3>Model</h3><ul><li>One model alias <code>qwen38</code> &rarr; the vLLM server</li><li>Streaming passes through unchanged</li></ul></div>
+      <div class="panel detail" data-panel="account" hidden style="margin-top:10px"><h3>Accounting</h3><ul><li>Tokens and spend per key in Postgres; metrics per key alias in Prometheus</li><li>Cost per 1M tokens on the dashboard from GPU price per hour</li></ul></div>
+    </div>
+  </section>
+
+  <section class="case">
+    <h2><small>Results</small></h2>
+    <div class="tiles">
+      <div class="tile"><span class="lbl">parallel limit</span><b><span class="ph">#</span> of <span class="ph">#,###</span></b><span class="sub">requests got through for a team limited to 2 parallel</span></div>
+      <div class="tile"><span class="lbl">cache</span><b><span class="ph">#,###</span> of <span class="ph">#,###</span></b><span class="sub">repeated requests answered from cache</span></div>
+      <div class="tile"><span class="lbl">budget</span><b>refused after <span class="ph">##</span></b><span class="sub">requests on a key with 0.001 USD budget; spend recorded <span class="ph">#.#####</span> vs computed <span class="ph">#.#####</span> USD</span></div>
+      <div class="tile"><span class="lbl">requests per minute</span><b><span class="ph">#</span> of <span class="ph">##</span></b><span class="sub">requests in one minute on a key limited to 5 rpm</span></div>
+    </div>
+    <p class="src"><span class="pill build">build</span> docs/benchmark-results.json and docs/measurements/budget-drill.json, <span class="ph">YYYY-MM-DD</span></p>
+    <p class="mock-note">Budget and rpm tiles are the new drill C.3 on a temporary key, deleted afterwards.</p>
+  </section>
+
+  <section class="case">
+    <h2><small>Trade-offs</small></h2>
+    <ul>
+      <li>LiteLLM: keys, budgets and accounting out of the box; the gateway adds <span class="ph">##</span> ms per request</li>
+      <li>Exact-match cache only: safe, but a reworded question misses it</li>
+      <li>Budgets in USD come from an assumed GPU price, not a bill</li>
+    </ul>
+  </section>
+
+  <section class="case">
+    <h2><small>What I'd change at scale</small></h2>
+    <ul>
+      <li>Fallback to a second model and model pools per team: not possible here, no GPU memory for a second model on this host</li>
+      <li>Two gateway replicas with a shared Redis for limits and cache</li>
+      <li>Semantic cache measured on real traffic before it is turned on</li>
+      <li>SSO in front of key issuing instead of keys from configuration</li>
+    </ul>
+  </section>
+
+  <section class="case">
+    <h2><small>Links</small></h2>
+    <ul>
+      <li><a href="#runbook-04" target="_blank" rel="noopener">Runbook: gateway errors and team limits</a></li>
+      <li><a href="#benchmark" target="_blank" rel="noopener">Benchmark report: what the gateway adds</a></li>
+      <li><a href="#grafana" target="_blank" rel="noopener">Grafana: gateway row</a></li>
+      <li><a href="#console" target="_blank" rel="noopener">Console: run as a team</a></li>
+    </ul>
+  </section>
+</main>
+<script src="mock.js"></script>
+</body>
+</html>

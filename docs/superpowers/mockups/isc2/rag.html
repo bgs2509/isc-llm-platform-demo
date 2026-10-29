@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>RAG Agent and Evaluation</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="mock.css">
+</head>
+<body>
+<header class="top"><div class="top-in">
+  <a class="brand" href="index.html" target="_blank" rel="noopener">Private LLM platform</a>
+  <nav>
+    <a href="inference.html" target="_blank" rel="noopener">1 Inference</a>
+    <a href="infrastructure.html" target="_blank" rel="noopener">2 Infrastructure</a>
+    <a href="gateway.html" target="_blank" rel="noopener">3 Gateway</a>
+    <a href="rag.html" target="_blank" rel="noopener" aria-current="page">4 RAG and agent</a>
+    <a href="observability.html" target="_blank" rel="noopener">5 Observability</a>
+    <a href="delivery.html" target="_blank" rel="noopener">6 Delivery</a>
+  </nav>
+  <button id="notes-toggle" class="notes-btn" type="button">Hide mock notes</button>
+</div></header>
+
+<main>
+  <section>
+    <p class="eyebrow">Requirement 4 of 6</p>
+    <h1>RAG, an agent with tools, an evaluation set and an API</h1>
+    <div class="kw"><span>RAG</span><span>BM25</span><span>chunking</span><span>tool calling</span><span>agent</span><span>evaluation set</span><span>API</span></div>
+  </section>
+
+  <section class="case">
+    <h2><small>Ask the agent</small></h2>
+    <form id="ask-form" class="ask">
+      <input id="ask-input" type="text" maxlength="500" value="Which alerts are firing right now, and what does the runbook say?" aria-label="Question">
+      <button class="btn" type="submit">Ask as research</button>
+    </form>
+    <div id="ask-out" class="panel" hidden>
+      <p class="src">Question: <span id="ask-q"></span></p>
+      <div class="steps">
+        <div><span class="pill build">step 1</span> <code>platform_status(view="alerts")</code> &rarr; <span class="ph">#</span> of 6 rules firing</div>
+        <div><span class="pill build">step 2</span> <code>search_docs(query="...")</code> &rarr; 3 chunks, best score <span class="ph">#.##</span></div>
+        <div><b>Answer.</b> <span class="ph">Answer text appears here, two to five sentences, citing the sources below.</span></div>
+        <div>Sources: <a href="#source-1" target="_blank" rel="noopener"><span class="ph">Blog article title</span></a> &middot; <a href="#source-2" target="_blank" rel="noopener"><span class="ph">Blog article title</span></a></div>
+        <div class="src"><span><span class="ph">#.#</span> s</span><span><span class="ph">###</span> prompt + <span class="ph">###</span> completion tokens</span><span><span class="ph">#</span> rounds of 3</span><span>accounted to team research</span></div>
+      </div>
+    </div>
+    <p class="mock-note">Here the button shows a canned reply. On the site it calls <code>POST /console/api/agent/ask</code> with the visitor's chosen team; the reply shows each tool call and its result.</p>
+  </section>
+
+  <section class="case">
+    <h2><small>Challenge</small></h2>
+    <ul>
+      <li>Answer questions about the client firm's public blog with the source article</li>
+      <li>Answer questions about the running platform from live data, not from the model's memory</li>
+      <li>Prove the quality with numbers, re-run after every change</li>
+    </ul>
+  </section>
+
+  <section class="case">
+    <h2><small>Solution</small></h2>
+    <ul>
+      <li>Corpus: 36 blog articles, chunked by text kind (whole case study, by section, or paragraph windows)</li>
+      <li>Retrieval: BM25, standard library only; every chunk starts with its title and URL</li>
+      <li>Agent: the model picks tools through OpenAI <code>tools</code>; at most 3 rounds; temperature 0</li>
+      <li>Tools: <code>search_docs(query)</code>, <code>platform_status(view)</code> (alerts or teams from Prometheus; the model never writes PromQL)</li>
+      <li>Calls go through the gateway with a team key: agent tokens and spend are accounted like any team's</li>
+    </ul>
+  </section>
+
+  <section class="case">
+    <h2><small>Results</small> evaluation set, 16 questions</h2>
+    <div class="tiles">
+      <div class="tile"><span class="lbl">hit@3</span><b><span class="ph">##</span> of 10</b><span class="sub">blog questions with the expected article in the top 3</span></div>
+      <div class="tile"><span class="lbl">tool accuracy</span><b><span class="ph">#</span> of 6</b><span class="sub">platform questions where the first tool was right</span></div>
+      <div class="tile"><span class="lbl">faithfulness</span><b><span class="ph">##</span> of <span class="ph">##</span></b><span class="sub">answer claims supported by retrieved text</span></div>
+      <div class="tile"><span class="lbl">latency p95</span><b><span class="ph">#.#</span> s</b><span class="sub">per answer, over 16 questions</span></div>
+      <div class="tile"><span class="lbl">cost</span><b><span class="ph">#.##</span> USD</b><span class="sub">per 1,000 questions at 0.20 USD per GPU hour</span></div>
+    </div>
+    <p class="src"><span class="pill saved">saved run</span> /console/api/agent/eval &middot; run <span class="ph">YYYY-MM-DD HH:MM</span> &middot; judge: the same model</p>
+
+    <div class="panel">
+      <div class="tbl">
+        <details class="row"><summary><span class="q">B1 &middot; <span class="ph">Blog question text</span></span><span class="pill live">hit</span><span><span class="ph">#.#</span> s</span></summary><div><span>Expected: <span class="ph">article URL</span></span><span>Top 3: <span class="ph">URL 1, URL 2, URL 3</span></span><span>Claims supported: <span class="ph">#</span> of <span class="ph">#</span></span></div></details>
+        <details class="row"><summary><span class="q">B2 &middot; <span class="ph">Blog question text</span></span><span class="pill firing">miss</span><span><span class="ph">#.#</span> s</span></summary><div><span>Expected: <span class="ph">article URL</span></span><span>Top 3: <span class="ph">URL 1, URL 2, URL 3</span></span><span>Claims supported: <span class="ph">#</span> of <span class="ph">#</span></span></div></details>
+        <details class="row"><summary><span class="q">B3 &hellip; B10 &middot; <span class="ph">8 more blog questions</span></span></summary><div><span>Same row shape</span></div></details>
+        <details class="row"><summary><span class="q">P1 &middot; <span class="ph">Platform question, snapshot idle</span></span><span class="pill live">tool ok</span><span><span class="ph">#.#</span> s</span></summary><div><span>Expected tool: <code>platform_status</code> (alerts)</span><span>Expected facts: <span class="ph">fact list</span></span><span>Claims supported: <span class="ph">#</span> of <span class="ph">#</span></span></div></details>
+        <details class="row"><summary><span class="q">P2 &hellip; P6 &middot; <span class="ph">5 more platform questions</span></span></summary><div><span>Same row shape</span></div></details>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h3>Decision backed by the evaluation set: chunking</h3>
+      <div class="tbl"><table>
+        <tr><th>chunker</th><th class="num">chunks</th><th class="num">hit@3 on 10 blog questions</th></tr>
+        <tr><td>by text kind (chosen)</td><td class="num"><span class="ph">##</span></td><td class="num"><span class="ph">##</span> of 10</td></tr>
+        <tr><td>fixed windows, about 250 words</td><td class="num"><span class="ph">##</span></td><td class="num"><span class="ph">##</span> of 10</td></tr>
+      </table></div>
+      <p class="src"><span class="pill saved">saved run</span> search only, no model calls</p>
+    </div>
+  </section>
+
+  <section class="case">
+    <h2><small>API</small></h2>
+    <pre><code>curl -u reviewer:*** -X POST https://&lt;site&gt;/console/api/agent/ask \
+  -H 'Content-Type: application/json' \
+  -d '{"tenant": "research", "question": "Which alerts are firing?"}'</code></pre>
+    <pre><code>{
+  "answer": "...",
+  "steps": [{"tool": "platform_status", "args": {"view": "alerts"}, "result": [...]}],
+  "sources": [{"title": "...", "url": "https://..."}],
+  "prompt_tokens": 0, "completion_tokens": 0, "latency_s": 0.0, "rounds": 1
+}</code></pre>
+  </section>
+
+  <section class="case">
+    <h2><small>Trade-offs</small></h2>
+    <ul>
+      <li>BM25 instead of embeddings: no new service and no second model in GPU memory; no synonyms</li>
+      <li>The judge is the model under test; questions written by us from the corpus</li>
+      <li>16 questions: enough to catch a regression, too few for a confidence interval</li>
+    </ul>
+  </section>
+
+  <section class="case">
+    <h2><small>What I'd change at scale</small></h2>
+    <ul>
+      <li>Dense retrieval through an embedding model behind the same gateway (vLLM pooling runner)</li>
+      <li>A judge from a different model family; questions from real user logs</li>
+      <li>Evaluation in CI: block a release when hit@3 or faithfulness drops</li>
+    </ul>
+  </section>
+
+  <section class="case">
+    <h2><small>Links</small></h2>
+    <ul>
+      <li><a href="#design" target="_blank" rel="noopener">RAG agent design and contracts</a></li>
+      <li><a href="#questions" target="_blank" rel="noopener">The 16 evaluation questions</a></li>
+      <li><a href="#grafana" target="_blank" rel="noopener">Grafana: RAG agent row</a></li>
+      <li><a href="#blog" target="_blank" rel="noopener">Source blog</a></li>
+    </ul>
+  </section>
+</main>
+<script src="mock.js"></script>
+</body>
+</html>

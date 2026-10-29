@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>GPU Infrastructure and Kubernetes</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="mock.css">
+</head>
+<body>
+<header class="top"><div class="top-in">
+  <a class="brand" href="index.html" target="_blank" rel="noopener">Private LLM platform</a>
+  <nav>
+    <a href="inference.html" target="_blank" rel="noopener">1 Inference</a>
+    <a href="infrastructure.html" target="_blank" rel="noopener" aria-current="page">2 Infrastructure</a>
+    <a href="gateway.html" target="_blank" rel="noopener">3 Gateway</a>
+    <a href="rag.html" target="_blank" rel="noopener">4 RAG and agent</a>
+    <a href="observability.html" target="_blank" rel="noopener">5 Observability</a>
+    <a href="delivery.html" target="_blank" rel="noopener">6 Delivery</a>
+  </nav>
+  <button id="notes-toggle" class="notes-btn" type="button">Hide mock notes</button>
+</div></header>
+
+<main>
+  <section>
+    <p class="eyebrow">Requirement 2 of 6</p>
+    <h1>GPU infrastructure, Kubernetes and operations</h1>
+    <div class="kw"><span>GPU</span><span>Kubernetes</span><span>Helm</span><span>kind</span><span>distributed services</span><span>operations</span></div>
+  </section>
+
+  <section aria-label="Live dependency health">
+    <div class="strip">
+      <div><b><span class="pill live">up</span></b><span>model server (vLLM)</span></div>
+      <div><b><span class="pill live">up</span></b><span>GPU exporter</span></div>
+      <div><b><span class="pill live">up</span></b><span>gateway (LiteLLM)</span></div>
+      <div><b><span class="pill live">up</span></b><span>Prometheus</span></div>
+      <div><b><span class="pill live">up</span></b><span>console</span></div>
+    </div>
+    <p class="src" style="margin-top:6px"><span class="pill live">live</span> /console/api/status?view=health, every 15 s &middot; checked <span class="ph">HH:MM:SS</span></p>
+    <p class="mock-note">States shown as "up" for layout only; the real strip shows <code>up</code>, <code>down</code> or <code>unknown</code> from Prometheus <code>up</code> series.</p>
+  </section>
+
+  <section class="case">
+    <h2><small>Challenge</small></h2>
+    <ul>
+      <li>The model server already runs on the GPU host as a plain container; it must not be restarted</li>
+      <li>Ship the platform around it as one installable unit, reachable from the internet without opening the GPU host</li>
+      <li>Every component has a failure mode an operator can find and fix from a runbook</li>
+    </ul>
+  </section>
+
+  <section class="case">
+    <h2><small>Solution</small> click a component</h2>
+    <div data-picker>
+      <div class="diagram panel">
+        <svg viewBox="0 0 770 330" role="group" aria-label="Two-host diagram">
+          <rect class="host" x="8" y="24" width="480" height="298" rx="10"/>
+          <text class="cap" x="20" y="18">GPU host</text>
+          <rect class="host" x="560" y="24" width="200" height="298" rx="10"/>
+          <text class="cap" x="572" y="18">Web server</text>
+          <rect class="cluster" x="170" y="44" width="304" height="268" rx="8"/>
+          <text class="cap" x="182" y="62">kind cluster (Helm release llm-platform)</text>
+
+          <g class="node" data-show="model" tabindex="0" role="button" aria-label="Model server"><rect class="box" x="24" y="60" width="130" height="44" rx="6"/><text x="36" y="80">vLLM model server</text><text class="cap" x="36" y="96">container, GPU</text></g>
+          <g class="node" data-show="relay" tabindex="0" role="button" aria-label="Relay"><rect class="box" x="24" y="130" width="130" height="44" rx="6"/><text x="36" y="150">relay</text><text class="cap" x="36" y="166">model_forward.py</text></g>
+          <g class="node" data-show="gpu" tabindex="0" role="button" aria-label="GPU exporter"><rect class="box" x="24" y="200" width="130" height="44" rx="6"/><text x="36" y="220">GPU exporter</text><text class="cap" x="36" y="236">gpu_exporter.py</text></g>
+
+          <g class="node" data-show="gateway" tabindex="0" role="button" aria-label="Gateway"><rect class="box" x="186" y="76" width="134" height="40" rx="6"/><text x="198" y="100">gateway (LiteLLM)</text></g>
+          <g class="node" data-show="postgres" tabindex="0" role="button" aria-label="Postgres"><rect class="box" x="332" y="76" width="128" height="40" rx="6"/><text x="344" y="100">Postgres + volume</text></g>
+          <g class="node" data-show="prometheus" tabindex="0" role="button" aria-label="Prometheus"><rect class="box" x="186" y="136" width="134" height="40" rx="6"/><text x="198" y="160">Prometheus</text></g>
+          <g class="node" data-show="grafana" tabindex="0" role="button" aria-label="Grafana"><rect class="box" x="332" y="136" width="128" height="40" rx="6"/><text x="344" y="160">Grafana</text></g>
+          <g class="node" data-show="console" tabindex="0" role="button" aria-label="Console"><rect class="box" x="186" y="196" width="134" height="40" rx="6"/><text x="198" y="220">console + volume</text></g>
+          <g class="node" data-show="bootstrap" tabindex="0" role="button" aria-label="Bootstrap job"><rect class="box" x="332" y="196" width="128" height="40" rx="6"/><text x="344" y="220">bootstrap job</text></g>
+          <g class="node" data-show="ingress" tabindex="0" role="button" aria-label="Site entry"><rect class="box" x="186" y="256" width="274" height="40" rx="6"/><text x="198" y="280">site entry: /console, /grafana, static pages</text></g>
+
+          <g class="node" data-show="tunnel" tabindex="0" role="button" aria-label="Reverse tunnel"><rect class="box" x="494" y="150" width="60" height="40" rx="6"/><text x="502" y="174">tunnel</text></g>
+          <g class="node" data-show="proxy" tabindex="0" role="button" aria-label="Portal proxy"><rect class="box" x="576" y="76" width="168" height="44" rx="6"/><text x="588" y="96">portal proxy (Caddy)</text><text class="cap" x="588" y="112">TLS, one block per site</text></g>
+          <g class="node" data-show="origin" tabindex="0" role="button" aria-label="Origin"><rect class="box" x="576" y="150" width="168" height="44" rx="6"/><text x="588" y="170">origin (Caddy)</text><text class="cap" x="588" y="186">site login, routes</text></g>
+
+          <path class="wire" d="M154 152 H170 V96 H186"/>
+          <path class="wire" d="M89 104 V130"/>
+          <path class="wire" d="M460 276 H480 V170 H494"/>
+          <path class="wire" d="M554 170 H576"/>
+          <path class="wire" d="M660 120 V150"/>
+        </svg>
+      </div>
+
+      <div class="panel detail" data-panel="model"><h3>vLLM model server</h3><dl><dt>What</dt><dd>OpenAI-compatible server for <code>qwen38-lil</code>, outside Kubernetes</dd><dt>Why</dt><dd>Already running for its owner; the platform wraps it and never restarts it</dd><dt>Failure</dt><dd>Endpoint down &rarr; every team gets 5xx from the gateway</dd><dt>Runbook</dt><dd><a href="#runbook-01" target="_blank" rel="noopener">Model endpoint down</a></dd></dl></div>
+      <div class="panel detail" data-panel="relay" hidden><h3>Relay</h3><dl><dt>What</dt><dd>Host-side TCP relay from the cluster network to the model port</dd><dt>Why</dt><dd>The model listens on localhost only; the relay exposes it to the cluster and nothing else</dd><dt>Failure</dt><dd>Relay stopped &rarr; same symptom as model down; check the relay first</dd><dt>Runbook</dt><dd><a href="#runbook-01" target="_blank" rel="noopener">Model endpoint down</a></dd></dl></div>
+      <div class="panel detail" data-panel="gpu" hidden><h3>GPU exporter</h3><dl><dt>What</dt><dd><code>nvidia-smi</code> readings as Prometheus metrics</dd><dt>Why</dt><dd>GPU utilization and memory next to model and gateway metrics</dd><dt>Failure</dt><dd>Exporter down &rarr; GPU panels empty, <code>GpuUnderusedUnderLoad</code> cannot fire</dd><dt>Runbook</dt><dd><a href="#handover" target="_blank" rel="noopener">Handover: host services</a></dd></dl></div>
+      <div class="panel detail" data-panel="gateway" hidden><h3>Gateway (LiteLLM)</h3><dl><dt>What</dt><dd>Team keys, limits, budgets, cache, spend accounting</dd><dt>Why</dt><dd>One entry point for every team and the agent</dd><dt>Failure</dt><dd>Pod restart &rarr; requests fail for <span class="ph">##</span> s (drill below)</dd><dt>Runbook</dt><dd><a href="#runbook-04" target="_blank" rel="noopener">Gateway errors and team limits</a></dd></dl></div>
+      <div class="panel detail" data-panel="postgres" hidden><h3>Postgres + volume</h3><dl><dt>What</dt><dd>Gateway keys, budgets and spend logs on a persistent volume</dd><dt>Why</dt><dd>Keys and spend survive pod and release restarts</dd><dt>Failure</dt><dd>Database down &rarr; the gateway refuses key checks</dd><dt>Runbook</dt><dd><a href="#runbook-05" target="_blank" rel="noopener">Upgrade and roll back a release</a></dd></dl></div>
+      <div class="panel detail" data-panel="prometheus" hidden><h3>Prometheus</h3><dl><dt>What</dt><dd>Scrapes model, GPU exporter, gateway and console; holds 6 alert rules</dd><dt>Why</dt><dd>One source for the dashboard, the alerts and the agent's <code>platform_status</code> tool</dd><dt>Failure</dt><dd>Down &rarr; live widgets show "unknown"; the agent says so</dd><dt>Runbook</dt><dd><a href="#handover" target="_blank" rel="noopener">Handover: monitoring</a></dd></dl></div>
+      <div class="panel detail" data-panel="grafana" hidden><h3>Grafana</h3><dl><dt>What</dt><dd>Dashboard generated from code (<code>make_dashboard.py</code>)</dd><dt>Why</dt><dd>Dashboard changes are reviewed like code</dd><dt>Failure</dt><dd>Down &rarr; no panels; alerts still fire in Prometheus</dd><dt>Runbook</dt><dd><a href="#handover" target="_blank" rel="noopener">Handover: dashboard</a></dd></dl></div>
+      <div class="panel detail" data-panel="console" hidden><h3>Console + volume</h3><dl><dt>What</dt><dd>Load tests, run history, RAG agent, status API for this site</dd><dt>Why</dt><dd>The browser reads live data only through the console</dd><dt>Failure</dt><dd>Down &rarr; widgets fall back to the build-time numbers</dd><dt>Runbook</dt><dd><a href="#handover" target="_blank" rel="noopener">Handover: console</a></dd></dl></div>
+      <div class="panel detail" data-panel="bootstrap" hidden><h3>Bootstrap job</h3><dl><dt>What</dt><dd>Helm hook that creates team keys and limits from <code>values.yaml</code></dd><dt>Why</dt><dd>Teams are configuration, not manual clicks</dd><dt>Failure</dt><dd>Job failed &rarr; release marked failed; fix and re-run the upgrade</dd><dt>Runbook</dt><dd><a href="#runbook-05" target="_blank" rel="noopener">Upgrade and roll back a release</a></dd></dl></div>
+      <div class="panel detail" data-panel="ingress" hidden><h3>Site entry</h3><dl><dt>What</dt><dd>One port on the GPU host for the console, Grafana and the static pages</dd><dt>Why</dt><dd>One path for the tunnel; one login at the origin</dd><dt>Failure</dt><dd>Wrong route &rarr; 404 on one tool, the rest still work</dd><dt>Runbook</dt><dd><a href="#deploy" target="_blank" rel="noopener">Publishing</a></dd></dl></div>
+      <div class="panel detail" data-panel="tunnel" hidden><h3>Reverse tunnel</h3><dl><dt>What</dt><dd>Outbound tunnel from the GPU host to the web server (systemd unit)</dd><dt>Why</dt><dd>No inbound port opened on the GPU host's network</dd><dt>Failure</dt><dd>Tunnel down &rarr; site returns 502; the platform itself keeps working</dd><dt>Runbook</dt><dd><a href="#deploy" target="_blank" rel="noopener">Publishing</a></dd></dl></div>
+      <div class="panel detail" data-panel="proxy" hidden><h3>Portal proxy</h3><dl><dt>What</dt><dd>Shared TLS proxy on the web server, one block per site</dd><dt>Why</dt><dd>Certificates and the public port stay with the portal's owners</dd><dt>Failure</dt><dd>Block missing &rarr; certificate error or the portal's own page</dd><dt>Runbook</dt><dd><a href="#deploy" target="_blank" rel="noopener">Publishing</a></dd></dl></div>
+      <div class="panel detail" data-panel="origin" hidden><h3>Origin</h3><dl><dt>What</dt><dd>Small Caddy container: site login, routes into the tunnel</dd><dt>Why</dt><dd>The login lives in this project, not in the shared proxy</dd><dt>Failure</dt><dd>Host mismatch &rarr; every page an empty 200 (fixed in this build, see page 6)</dd><dt>Runbook</dt><dd><a href="#deploy" target="_blank" rel="noopener">Publishing</a></dd></dl></div>
+    </div>
+    <p class="mock-note">Component texts are drafts for review; the final wording comes from <code>docs/architecture.md</code> and the runbooks.</p>
+  </section>
+
+  <section class="case">
+    <h2><small>Results</small></h2>
+    <div class="two">
+      <div class="panel">
+        <h3>Helm release history</h3>
+        <div class="tbl"><table>
+          <tr><th class="num">rev</th><th>status</th><th>change</th></tr>
+          <tr><td class="num">1</td><td><span class="ph">superseded</span></td><td><span class="ph">description</span></td></tr>
+          <tr><td class="num">2</td><td><span class="ph">failed</span></td><td><span class="ph">description</span> &mdash; fixed in <span class="ph">##</span> s</td></tr>
+          <tr><td class="num">&hellip;</td><td></td><td></td></tr>
+          <tr><td class="num"><span class="ph">#</span></td><td><span class="ph">deployed</span></td><td><span class="ph">description</span></td></tr>
+        </table></div>
+        <p class="src"><span class="pill build">build</span> docs/measurements/helm-history.json, <span class="ph">YYYY-MM-DD</span></p>
+      </div>
+      <div class="panel">
+        <h3>Drill: gateway pod deleted under load</h3>
+        <ul>
+          <li>Load: 60 s at 8 parallel requests; pod deleted at 20 s</li>
+          <li>Back to ready: <span class="ph">##</span> s</li>
+          <li>Failed requests: <span class="ph">##</span> of <span class="ph">###</span></li>
+          <li>Throughput back to <span class="ph">##</span> % of the first 20 s within <span class="ph">##</span> s</li>
+        </ul>
+        <svg class="spark" viewBox="0 0 100 34" preserveAspectRatio="none" aria-hidden="true"><path d="M0 10 L33 10 L36 30 L48 30 L55 12 L100 10"/></svg>
+        <p class="src"><span class="pill build">build</span> docs/measurements/gateway-drill.json, <span class="ph">YYYY-MM-DD</span></p>
+      </div>
+    </div>
+  </section>
+
+  <section class="case">
+    <h2><small>Trade-offs</small></h2>
+    <ul>
+      <li>kind on one node: real Kubernetes objects and Helm, but no node failure and no GPU scheduling by Kubernetes</li>
+      <li>Model outside the cluster: no restart of a shared model, but the cluster cannot scale it</li>
+      <li>One gateway replica: simple, and the drill shows the cost (<span class="ph">##</span> s of errors)</li>
+    </ul>
+  </section>
+
+  <section class="case">
+    <h2><small>What I'd change at scale</small></h2>
+    <ul>
+      <li>Managed Kubernetes with GPU nodes and the NVIDIA GPU Operator; model as a Deployment</li>
+      <li>Two gateway replicas behind a Service, PodDisruptionBudget, readiness on the database</li>
+      <li>GitOps (Argo CD or Flux) instead of a manual <code>helm upgrade</code></li>
+    </ul>
+  </section>
+
+  <section class="case">
+    <h2><small>Links</small></h2>
+    <ul>
+      <li><a href="#architecture" target="_blank" rel="noopener">Architecture</a></li>
+      <li><a href="#chart" target="_blank" rel="noopener">Helm chart</a></li>
+      <li><a href="#runbook-05" target="_blank" rel="noopener">Runbook: upgrade and roll back a release</a></li>
+      <li><a href="#deploy" target="_blank" rel="noopener">Publishing (tunnel, origin, proxy)</a></li>
+    </ul>
+  </section>
+</main>
+<script src="mock.js"></script>
+</body>
+</html>

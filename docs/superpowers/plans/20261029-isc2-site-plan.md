@@ -1,7 +1,8 @@
 # isc-2 site — implementation plan
 
-Status (2026-10-29): page contents approved (design file); plan NOT yet approved. Next: static mockups of the
-home page and the 6 pages without real data, owner approval, then a detailed execution plan. No task started.
+Status (2026-10-29): page contents approved (design file); plan NOT yet approved. Static mockups of the home
+page and the 6 pages (placeholders, no real data) are in `docs/superpowers/mockups/isc2/`, awaiting owner
+approval; then a detailed execution plan. No task started.
 
 Design: `docs/superpowers/specs/2026-10-29-isc2-site-design.md`. Depends on the RAG agent plan
 (`docs/superpowers/plans/20261029-rag-agent-plan.md`), which runs first. Tests: `cd console && python -m pytest`,
