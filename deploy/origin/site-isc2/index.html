@@ -23,13 +23,13 @@
 <main>
   <section class="intro">
     <h1>Private LLM platform</h1>
-    <p class="stackline">Qwen &middot; vLLM &middot; NVIDIA GB10 (DGX Spark) &middot; Kubernetes (kind + Helm) &middot; LiteLLM &middot; Prometheus + Grafana</p>
+    <p class="stackline">qwen38-flash-next-125B &middot; vLLM &middot; NVIDIA GB10 (DGX Spark 128G) &middot; Kubernetes (kind + Helm) &middot; LiteLLM &middot; Prometheus + Grafana</p>
     <ul class="tldr">
       <li>3 teams share one model through one gateway with keys and limits</li>
       <li>Every number below is measured, live or from a saved run</li>
       <li>One-command install, 5 runbooks, 6 incidents written up</li>
     </ul>
-    <figure class="stack"><svg viewBox="0 0 760 240" role="group" aria-label="Platform diagram"><defs><marker id="arr" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L8 4L0 8z"/></marker></defs><rect class="team" x="10" y="50" width="110" height="46" rx="7"/><text class="lbl" x="22" y="70">3 teams</text><text class="sub" x="22" y="87">OpenAI API</text><path class="flow" d="M120 73H178"/><path class="flow" d="M250 112V98"/><path class="flow" d="M480 73H568"/><path class="flow dash" d="M480 135H548"/><a href="infrastructure.html" class="node" aria-label="Kubernetes and operations"><rect class="frame" x="150" y="12" width="356" height="164" rx="10"/><text class="cap" x="164" y="34">Kubernetes (kind + Helm)</text></a><a href="inference.html" class="node" aria-label="vLLM inference"><rect class="frame" x="550" y="12" width="200" height="164" rx="10"/><text class="cap" x="564" y="34">GPU host: NVIDIA GB10</text><text class="sub" x="564" y="130">model server outside</text><text class="sub" x="564" y="146">the cluster</text></a><a href="gateway.html" class="node" aria-label="LiteLLM gateway"><rect class="box" x="180" y="50" width="300" height="46" rx="7"/><text class="lbl" x="192" y="70">LiteLLM gateway</text><text class="sub" x="192" y="87">team keys, limits, cache</text></a><a href="rag.html" class="node" aria-label="RAG agent"><rect class="box" x="180" y="112" width="140" height="46" rx="7"/><text class="lbl" x="192" y="132">RAG agent</text><text class="sub" x="192" y="149">tools, evaluation set</text></a><a href="observability.html" class="node" aria-label="Observability"><rect class="box" x="340" y="112" width="140" height="46" rx="7"/><text class="lbl" x="352" y="132">Prometheus + Grafana</text><text class="sub" x="352" y="149">6 alert rules</text></a><a href="inference.html" class="node" aria-label="vLLM inference"><rect class="box" x="570" y="50" width="160" height="46" rx="7"/><text class="lbl" x="582" y="70">vLLM</text><text class="sub" x="582" y="87">Qwen, 16 parallel slots</text></a><a href="delivery.html" class="node" aria-label="Delivery"><rect class="box" x="10" y="192" width="740" height="40" rx="7"/><text class="lbl" x="24" y="217">Delivery</text><text class="sub" x="100" y="217">one-command install, tests, 5 runbooks, incident write-ups</text></a></svg></figure>
+    <figure class="stack"><svg viewBox="0 0 760 240" role="group" aria-label="Platform diagram"><defs><marker id="arr" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L8 4L0 8z"/></marker></defs><rect class="team" x="10" y="50" width="110" height="46" rx="7"/><text class="lbl" x="22" y="70">3 teams</text><text class="sub" x="22" y="87">OpenAI API</text><path class="flow" d="M120 73H178"/><path class="flow" d="M250 112V98"/><path class="flow" d="M480 73H560"/><path class="flow dash" d="M480 135H548"/><a href="infrastructure.html" class="node" aria-label="Kubernetes and operations"><rect class="frame" x="150" y="12" width="356" height="164" rx="10"/><text class="cap" x="164" y="34">Kubernetes (kind + Helm)</text></a><a href="inference.html" class="node" aria-label="vLLM inference"><rect class="frame" x="550" y="12" width="200" height="164" rx="10"/><text class="cap" x="564" y="34">GPU host</text><text class="sub" x="564" y="118">NVIDIA GB10</text><text class="sub" x="564" y="134">(DGX Spark 128G)</text><text class="sub" x="564" y="154">model server outside</text><text class="sub" x="564" y="170">the cluster</text></a><a href="gateway.html" class="node" aria-label="LiteLLM gateway"><rect class="box" x="180" y="50" width="300" height="46" rx="7"/><text class="lbl" x="192" y="70">LiteLLM gateway</text><text class="sub" x="192" y="87">team keys, limits, cache</text></a><a href="rag.html" class="node" aria-label="RAG agent"><rect class="box" x="180" y="112" width="140" height="46" rx="7"/><text class="lbl" x="192" y="132">RAG agent</text><text class="sub" x="192" y="149">tools, evaluation set</text></a><a href="observability.html" class="node" aria-label="Observability"><rect class="box" x="340" y="112" width="140" height="46" rx="7"/><text class="lbl" x="352" y="132">Prometheus + Grafana</text><text class="sub" x="352" y="149">6 alert rules</text></a><a href="inference.html" class="node" aria-label="vLLM inference"><rect class="box" x="562" y="50" width="180" height="46" rx="7"/><text class="lbl" x="574" y="70">vLLM</text><text class="sub" x="574" y="87">qwen38-flash-next-125B</text></a><a href="delivery.html" class="node" aria-label="Delivery"><rect class="box" x="10" y="192" width="740" height="40" rx="7"/><text class="lbl" x="24" y="217">Delivery</text><text class="sub" x="100" y="217">one-command install, tests, 5 runbooks, incident write-ups</text></a></svg></figure>
   </section>
 
   <section class="widgets" aria-label="Pages">
@@ -75,7 +75,7 @@
     <a class="widget" href="delivery.html">
       <h2>Delivery</h2>
       <span class="big">6<span class="unit">incidents fixed and written up</span></span>
-      <span class="row"><span>104 tests passing</span><span>5 runbooks</span><span>9 releases</span></span>
+      <span class="row"><span>113 tests passing</span><span>5 runbooks</span><span>9 releases</span></span>
       <span class="row"><span>last deploy 2026-10-29</span></span>
       <span class="src"><span class="pill build">build</span></span>
     </a>
@@ -91,7 +91,7 @@
     </ul>
   </section>
 </main>
-<footer>Inputs: commit f2fabc2, newest measurement 2026-10-29. GPU price for cost figures: 0.20 USD per hour (assumed).</footer>
+<footer>Inputs: commit 6e9355e, newest measurement 2026-10-29. GPU price for cost figures: 0.20 USD per hour (assumed).</footer>
 <script src="static/site.js"></script>
 </body>
 </html>

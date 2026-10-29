@@ -4,7 +4,7 @@ Generated 2026-10-28 21:10:20 by `scripts/make_report.py` from `docs/benchmark-r
 
 ## What was measured
 
-One large model (a Qwen3.8 Flash Next build, served by vLLM on one NVIDIA GB10 GPU with unified memory)
+One large model (qwen38-flash-next-125B, served by vLLM on one NVIDIA GB10 (DGX Spark 128G) GPU with unified memory)
 shared by several teams through the gateway. Each run lasts 30 seconds;
 every request is a streamed chat completion with a unique prompt of about
 60 words and a limit of 128 output tokens;
