@@ -53,6 +53,19 @@ origin container is separate, so the change to the existing setup is one site bl
 4. Check without the portal, on the web server: `curl -H 'Host: <isc-2 host>' http://172.17.0.1:19080/`
    answers 401, and 200 with the login; the same with the isc-1 host answers 200 without it.
 
+## Who visited
+
+The origin writes one JSON access line per request to stdout (`log` in `deploy/origin/Caddyfile`); the
+visitor's address is `request.client_ip` (taken from the portal's `X-Forwarded-For`). On the web server:
+
+```bash
+docker logs --since 24h origin-isc1-origin-1 | grep '"logger":"http.log.access'
+```
+
+Static pages record page views only: a click on a button of a static page leaves no trace. Console buttons
+call `/console/api/...`, and those requests are in the same log. Requests made before the logging was turned
+on are not recorded.
+
 ## Pitfalls met
 
 1. The origin's site address has no host (`http://:19080`, with `bind` for the address): the portal passes the

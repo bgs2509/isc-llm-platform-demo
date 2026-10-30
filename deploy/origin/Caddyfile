@@ -1,12 +1,20 @@
 {
 	admin off
 	auto_https off
+	# The portal Caddy is the only client of the origin: trust its X-Forwarded-For so the access
+	# log records the visitor's address, not the portal's container address.
+	servers {
+		trusted_proxies static private_ranges
+	}
 }
 
 # Any Host: the portal Caddy passes the public name, and a site address with a host would answer
 # an empty 200 to it. The listening address is limited by bind, not by the site address.
 http://:19080 {
 	bind 172.17.0.1
+	# Access log (one JSON line per request) to stdout: `docker logs origin-isc1-origin-1`. Authorization and
+	# Cookie headers are replaced with REDACTED by Caddy's default log filter.
+	log
 	encode zstd gzip
 	redir /console /console/ 301
 	redir /grafana /grafana/ 301
