@@ -348,3 +348,16 @@ None (the three earlier ones and the documents gap were decided on 2026-10-29: d
 2. Prose names the model `qwen38-flash-next-125B` and the host `NVIDIA GB10 (DGX Spark 128G)`; identifiers
    `qwen38`, `qwen38-lil` and parser flags unchanged; the isc-2 stack diagram frame relaid to fit (commit 2560c26).
 3. Tests: site 31, scripts 16, console 67, all passing.
+
+### 2026-10-30 — Access log of the origin
+
+1. Question: who opened the sites and what they pressed. Cause of "no data": the origin Caddy had no `log` directive and
+   the portal Caddy writes warnings only; the static pages have no counter.
+2. `deploy/origin/Caddyfile`: `log` in the site block and `trusted_proxies static private_ranges`, so `request.client_ip`
+   is the visitor, not the portal container (commits fa25f46, merge 7d090a5). `caddy validate` passed.
+3. Delivered through GitHub: `git pull --ff-only` and `docker compose up -d --force-recreate` on vpn-2. Checked from
+   outside: a request to the isc-1 host appears in `docker logs origin-isc1-origin-1` with `client_ip` of the caller.
+4. Limits (also in `deploy/README.md`, "Who visited"): clicks on static pages leave no trace; the log lives in the
+   container and goes with it on recreate; nothing is recorded before 2026-10-30.
+5. Follow-up moved to a new repository `178-208-78-85.sslip.io` (bd epic `sslip-ts2`): it takes over the shared Caddy,
+   the site registry, the credentials and the admin page.
